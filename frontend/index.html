@@ -2925,6 +2925,17 @@ function toggleBrokerPanel() {
             }
         }
 
+        async function fetchJsonSafe(url, options = {}) {
+            const res = await fetch(url, options);
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (!ct.includes('application/json')) {
+                const txt = await res.text();
+                const brief = (txt || '').replace(/\s+/g, ' ').slice(0, 120);
+                throw new Error(`接口未返回 JSON（${res.status}）: ${brief || 'empty response'}`);
+            }
+            return await res.json();
+        }
+
         async function renderHomeFavorites(force = false) {
             const box = document.getElementById('asset-home-favorites-list');
             if (!box) return;
@@ -2933,13 +2944,15 @@ function toggleBrokerPanel() {
                 // 使用缓存，避免频繁请求
             } else {
                 try {
-                    const res = await fetch('/assets/home-favorites/list', { cache: 'no-store' });
-                    const data = await res.json();
+                    const data = await fetchJsonSafe('/assets/home-favorites/list', { cache: 'no-store' });
                     if (data && data.ok && Array.isArray(data.items)) {
                         homeFavoritesCache = data.items;
                         homeFavoritesLoadedAt = now;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
+                    if (out) out.textContent = `❌ 收藏列表加载失败：${e.message || e}`;
+                }
             }
 
             if (!homeFavoritesCache.length) {
@@ -2964,16 +2977,15 @@ function toggleBrokerPanel() {
             flashButtonActive(btn);
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
             try {
-                const res = await fetch('/assets/home-favorites/save-current', { method: 'POST' });
-                const data = await res.json();
+                const data = await fetchJsonSafe('/assets/home-favorites/save-current', { method: 'POST' });
                 if (!data.ok) {
-                    out.textContent = `❌ 收藏失败：${data.msg || res.status}`;
+                    out.textContent = `❌ 收藏失败：${data.msg || 'unknown error'}`;
                     return;
                 }
                 out.textContent = t('homeFavSaved');
                 await renderHomeFavorites(true);
             } catch (e) {
-                out.textContent = `❌ 收藏失败：${e}`;
+                out.textContent = `❌ 收藏失败：${e.message || e}`;
             }
         }
 
@@ -2983,21 +2995,20 @@ function toggleBrokerPanel() {
             showRoomLoadingOverlay();
             setWorkingStatus('正在替换收藏地图');
             try {
-                const res = await fetch('/assets/home-favorites/apply', {
+                const data = await fetchJsonSafe('/assets/home-favorites/apply', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id })
                 });
-                const data = await res.json();
                 if (!data.ok) {
-                    out.textContent = `❌ 替换失败：${data.msg || res.status}`;
+                    out.textContent = `❌ 替换失败：${data.msg || 'unknown error'}`;
                     return;
                 }
                 const ok = await refreshOfficeBackgroundOnly();
                 out.textContent = ok ? t('homeFavApplied') : `${t('homeFavApplied')}（局部刷新失败，可手动刷新页面）`;
                 try { setState('idle', '已应用收藏地图'); } catch (e) {}
             } catch (e) {
-                out.textContent = `❌ 替换失败：${e}`;
+                out.textContent = `❌ 替换失败：${e.message || e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
