@@ -160,8 +160,41 @@ def extract_memo_from_file(file_path):
         print(f"提取 memo 失败: {e}")
         return "「昨日记录加载失败」\n\n「往者不可谏，来者犹可追。」"
 
+def _is_production_mode() -> bool:
+    env = (os.getenv("STAR_OFFICE_ENV") or os.getenv("FLASK_ENV") or "").strip().lower()
+    return env in {"prod", "production"}
+
+
+def _is_strong_secret(secret: str) -> bool:
+    if not secret:
+        return False
+    secret = secret.strip()
+    if len(secret) < 24:
+        return False
+    weak_markers = {"change-me", "dev", "example", "test", "default"}
+    low = secret.lower()
+    return not any(m in low for m in weak_markers)
+
+
+def _is_strong_drawer_pass(pwd: str) -> bool:
+    if not pwd:
+        return False
+    pwd = pwd.strip()
+    if pwd == "1234":
+        return False
+    return len(pwd) >= 8
+
+
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="/static")
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.getenv("STAR_OFFICE_SECRET") or "star-office-dev-secret-change-me"
+
+# Session hardening
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=_is_production_mode(),
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
+)
 
 # Guard join-agent critical section to enforce per-key concurrency under parallel requests
 join_lock = threading.Lock()
@@ -169,6 +202,15 @@ join_lock = threading.Lock()
 # Generate a version timestamp once at server startup for cache busting
 VERSION_TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 ASSET_DRAWER_PASS_DEFAULT = os.getenv("ASSET_DRAWER_PASS", "1234")
+
+if _is_production_mode():
+    hardening_errors = []
+    if not _is_strong_secret(str(app.secret_key)):
+        hardening_errors.append("FLASK_SECRET_KEY / STAR_OFFICE_SECRET is weak (need >=24 chars, non-default)")
+    if not _is_strong_drawer_pass(ASSET_DRAWER_PASS_DEFAULT):
+        hardening_errors.append("ASSET_DRAWER_PASS is weak (do not use default 1234; recommend >=8 chars)")
+    if hardening_errors:
+        raise RuntimeError("Security hardening check failed in production mode: " + "; ".join(hardening_errors))
 
 
 def _is_asset_editor_authed() -> bool:
@@ -393,6 +435,11 @@ def save_runtime_config(data):
     cfg.update(data or {})
     with open(RUNTIME_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
+    # Best-effort protect secrets on disk
+    try:
+        os.chmod(RUNTIME_CONFIG_FILE, 0o600)
+    except Exception:
+        pass
 
 
 def _ensure_home_favorites_index():
@@ -788,6 +835,13 @@ if not os.path.exists(AGENTS_STATE_FILE):
     save_agents_state(DEFAULT_AGENTS)
 if not os.path.exists(JOIN_KEYS_FILE):
     save_join_keys({"keys": []})
+
+# Tighten runtime-config file perms if exists
+if os.path.exists(RUNTIME_CONFIG_FILE):
+    try:
+        os.chmod(RUNTIME_CONFIG_FILE, 0o600)
+    except Exception:
+        pass
 
 
 @app.route("/agents", methods=["GET"])
