@@ -193,7 +193,7 @@ def fetch_local_status():
     # 3) 默认 fallback
     if VERBOSE:
         print("[status-source:fallback] state=idle detail=待命中")
-    return {"state": "idle", "detail": "待命中"}
+    return {"state": "idle", "detail": "On standby"}
 
 
 def do_join(local):
@@ -202,7 +202,7 @@ def do_join(local):
         "name": local.get("agentName", AGENT_NAME),
         "joinKey": local.get("joinKey", JOIN_KEY),
         "state": "idle",
-        "detail": "刚刚加入"
+        "detail": "Just joined"
     }
     r = requests.post(f"{OFFICE_URL}{JOIN_ENDPOINT}", json=payload, timeout=10)
     if r.status_code in (200, 201):
