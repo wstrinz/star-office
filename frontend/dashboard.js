@@ -729,6 +729,8 @@
         '</div>' +
         '<div class="oc-sa-time">' + escHtml(r.createdAtRelative || '—') + '</div>' +
         (fullTask ? '<div class="oc-sa-task oc-truncatable" data-full="' + escHtml(fullTask) + '" data-short="' + escHtml(truncTask) + '">' + escHtml(truncTask) + '</div>' : '') +
+        (r.result && (r.status === 'ok' || r.status === 'completed') ? '<div class="oc-sa-result-snippet" style="margin-top:4px;padding:4px 6px;background:rgba(63,185,80,0.08);border-left:2px solid #3fb950;font-size:11px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;" title="' + escHtml(r.result) + '">✅ ' + escHtml(r.result.substring(0, 100)) + (r.result.length > 100 ? '…' : '') + '</div>' : '') +
+        (r.status === 'error' && r.result ? '<div class="oc-sa-result-snippet" style="margin-top:4px;padding:4px 6px;background:rgba(248,81,73,0.08);border-left:2px solid #f85149;font-size:11px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;" title="' + escHtml(r.result) + '">❌ ' + escHtml(r.result.substring(0, 100)) + (r.result.length > 100 ? '…' : '') + '</div>' : '') +
       '</div>';
     }).join('');
   }

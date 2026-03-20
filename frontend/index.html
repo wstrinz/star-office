@@ -4827,7 +4827,12 @@ function toggleBrokerPanel() {
                     var nameFontSize = mobile ? '16px' : '11px';
                     var namePadding = mobile ? { x: 6, y: 3 } : { x: 3, y: 1 };
                     var nameStroke = mobile ? 4 : 3;
+                    // Add completion badge for finished subagents
+                    var completionBadge = '';
+                    if (agent.type === 'subagent' && state === 'idle') completionBadge = ' ✅';
+                    if (agent.type === 'subagent' && state === 'error') completionBadge = ' ❌';
                     var shortName = name.length > maxNameLen ? name.substring(0, maxNameLen - 2) + '…' : name;
+                    shortName = shortName + completionBadge;
                     var nameText = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 110, shortName, {
                         fontFamily: 'ArkPixel, monospace',
                         fontSize: nameFontSize,
@@ -4903,6 +4908,16 @@ function toggleBrokerPanel() {
                         // Smooth transition to new zone
                         game.tweens.add({ targets: existing.sprite, x: target.x, y: target.y, duration: 2000, ease: 'Sine.easeInOut' });
                         game.tweens.add({ targets: existing.nameText, x: target.x, y: target.y - 110, duration: 2000, ease: 'Sine.easeInOut' });
+
+                        // Update name label with completion badge on state change
+                        if (stateChanged) {
+                            var updBadge = '';
+                            if (agent.type === 'subagent' && state === 'idle') updBadge = ' ✅';
+                            if (agent.type === 'subagent' && state === 'error') updBadge = ' ❌';
+                            var updMaxLen = isMobile() ? 12 : 24;
+                            var updShort = name.length > updMaxLen ? name.substring(0, updMaxLen - 2) + '…' : name;
+                            existing.nameText.setText(updShort + updBadge);
+                        }
 
                         // Mobile: show/hide label based on state
                         if (isMobile()) {

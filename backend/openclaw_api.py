@@ -1478,6 +1478,8 @@ def openclaw_agents_combined():
 
         task = r.get("task", "")
         result_text = r.get("frozenResultText", "")
+        # Result snippet: first 100 chars for dashboard preview
+        result_snippet = (result_text[:100] + "…") if result_text and len(result_text) > 100 else (result_text or "")
         agents.append({
             "name": r.get("label", run_id[:8]),
             "type": "subagent",
@@ -1489,14 +1491,14 @@ def openclaw_agents_combined():
             "runId": run_id,
             "endedAt": ended_at,
             "result": result_text[:300] if result_text else "",
+            "resultSnippet": result_snippet,
             "endedReason": r.get("endedReason", ""),
         })
 
     # 2b. Active sessions not covered by runs.json
-    #     Surfaces orphaned subagents and cron sessions.
+    #     Surfaces orphaned subagents (NOT cron sessions — handled in section 3).
     #     Thread sessions are NOT included as separate agents — they are
     #     folded into the main Cali entry as activeThreads.
-    thirty_min_ms = 30 * 60 * 1000
     five_min_ms = 5 * 60 * 1000
 
     # Build a set of session keys already represented by subagent runs
@@ -1515,7 +1517,8 @@ def openclaw_agents_combined():
     for session_key, s in sessions.items():
         updated_at = s.get("updatedAt", 0)
         age_ms = now_ms - updated_at
-        if age_ms > thirty_min_ms:
+        # Tightened freshness window: 5 minutes (was 30)
+        if age_ms > five_min_ms:
             continue
 
         # Skip the main heartbeat session
@@ -1540,7 +1543,8 @@ def openclaw_agents_combined():
         elif "discord:channel:" in session_key:
             sess_type = "thread"
         elif "cron:" in session_key:
-            sess_type = "cron"
+            # Cron sessions are handled by section 3 — skip here entirely
+            continue
         else:
             sess_type = "thread"  # default for other active sessions
 
@@ -1623,8 +1627,14 @@ def openclaw_agents_combined():
     if main_entry is not None:
         main_entry["activeThreads"] = active_threads
 
-    # 3. Currently-running cron jobs
+    # 3. Cron jobs — ephemeral workers, short linger
+    #    - Running: show at desk
+    #    - Finished: show for 60 seconds max, then leave
+    #    - Cron run sub-sessions (cron:*:run:*) are NOT shown as separate characters
     jobs = _read_jobs()
+    # Regex to detect cron run sub-sessions (e.g. "cron:weekend-activities:run:1f412cb")
+    _cron_run_re = re.compile(r'cron:.*:run:', re.IGNORECASE)
+
     for j in jobs:
         if not j.get("enabled"):
             continue
@@ -1632,20 +1642,43 @@ def openclaw_agents_combined():
         last_run_ms = state.get("lastRunAtMs", 0)
         last_duration = state.get("lastDurationMs", 0)
         last_status = state.get("lastRunStatus") or state.get("lastStatus", "")
+        job_name = j.get("name", j.get("id", "cron"))
 
-        # Consider a cron job "running" if it ran recently and hasn't finished
-        # Heuristic: last run was within 5 minutes and status isn't a terminal state
-        if last_run_ms and (now_ms - last_run_ms) < 5 * 60 * 1000:
-            if last_status not in ("ok", "error", "skipped"):
-                agents.append({
-                    "name": j.get("name", j.get("id", "cron")),
-                    "type": "cron",
-                    "state": "executing",
-                    "detail": f"cron: {j.get('schedule', {}).get('expr', '')}",
-                    "model": j.get("payload", {}).get("model", ""),
-                    "startedAt": last_run_ms,
-                    "tokens": 0,
-                })
+        # Skip if dismissed
+        if job_name in dismissed:
+            continue
+
+        if not last_run_ms:
+            continue
+
+        age_since_run_ms = now_ms - last_run_ms
+
+        # Only show cron jobs active in the last 2 minutes
+        if age_since_run_ms > 2 * 60 * 1000:
+            continue
+
+        # Determine cron state
+        if last_status not in ("ok", "error", "skipped", ""):
+            # Still running
+            cron_state = "executing"
+        else:
+            # Finished — show for 60 seconds max, then they leave
+            estimated_end_ms = last_run_ms + (last_duration or 0)
+            time_since_end = now_ms - estimated_end_ms
+            if time_since_end < 60 * 1000:  # 60 second linger
+                cron_state = "idle"
+            else:
+                continue  # Don't show — finished and linger expired
+
+        agents.append({
+            "name": job_name,
+            "type": "cron",
+            "state": cron_state,
+            "detail": f"cron: {j.get('schedule', {}).get('expr', '')}",
+            "model": j.get("payload", {}).get("model", ""),
+            "startedAt": last_run_ms,
+            "tokens": 0,
+        })
 
     # --- Write main agent state to state.json (server-side sync) ---
     # Only write if state or detail actually changed to prevent flickering
