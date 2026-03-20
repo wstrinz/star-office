@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Star 的像素办公室</title>
+    <title>The Hearth — Pixel Office</title>
     <style>
         @font-face {
             font-family: 'ArkPixel';
@@ -13,7 +13,7 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #1a1a2e;
+            background: #1a1210;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -61,7 +61,7 @@
             /* 再兜底一次：即使外层高度变化，也不要拉伸变形 */
             object-fit: contain;
             /* 边框改为直接贴合画布内部，避免“框比地图大” */
-            box-shadow: inset 0 0 0 4px #64477d;
+            box-shadow: inset 0 0 0 4px #8b5e34;
             position: relative;
             z-index: 10;
         }
@@ -70,7 +70,7 @@
             position: absolute;
             inset: 0;
             z-index: 5;
-            background: radial-gradient(ellipse at center, #2a2a45 0%, #1a1a2e 65%, #151522 100%);
+            background: radial-gradient(ellipse at center, #2a1f14 0%, #1a1210 65%, #120e0a 100%);
             overflow: hidden;
         }
         #game-skeleton::before {
@@ -102,7 +102,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #1a1a2e;
+            background: #1a1210;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -117,13 +117,13 @@
         #loading-progress-container {
             width: 300px;
             height: 20px;
-            background: #333;
-            border: 2px solid #555;
+            background: #2d2218;
+            border: 2px solid #4a3926;
             border-radius: 4px;
         }
         #loading-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #e94560, #ffd700);
+            background: linear-gradient(90deg, #d4883a, #ffd700);
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -150,10 +150,10 @@
         /* 状态控制栏 */
         #control-bar {
             position: relative;
-            background: #141722;
+            background: #1a1510;
             padding: 10px 10px 12px;
             border-radius: 0;
-            border: 4px solid #0e1119;
+            border: 4px solid #0f0b07;
             box-shadow: none;
             width: 390px;
             height: 300px;
@@ -168,10 +168,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 calc(50% - 14px) 2px, calc(50% - 14px) 2px,
@@ -190,10 +190,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 9px 4px, 4px 9px,
@@ -253,8 +253,8 @@
             max-width: 92vw;
             height: 100vh;
             height: 100dvh;
-            background: #111827;
-            border-left: 2px solid #22c55e;
+            background: #1a1510;
+            border-left: 2px solid #d4883a;
             box-shadow: -8px 0 24px rgba(0,0,0,0.45);
             transition: right 0.25s ease;
             z-index: 1000010;
@@ -264,14 +264,14 @@
         }
         #asset-drawer.open { right: 0; }
         #asset-drawer-header {
-            color: #ecfdf5;
+            color: #fef3e2;
             font-size: 15px;
             padding: 12px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.22);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #0b1220;
+            background: #120e0a;
         }
         #asset-drawer-body {
             padding: 10px;
@@ -284,9 +284,9 @@
             min-height: 0;
         }
         .asset-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
-        .asset-toolbar input { flex:1; min-width: 150px; padding:6px 8px; border-radius:6px; border:1px solid rgba(148, 163, 184, 0.22); background:#1f2937; color:#fff; }
-        .asset-toolbar button, #asset-drawer-header button { cursor:pointer; border:1px solid rgba(148, 163, 184, 0.24); background:#1f2937; color:#fff; border-radius:6px; padding:6px 8px; font-family:'ArkPixel', monospace; }
-        .asset-toolbar button:hover, #asset-drawer-header button:hover { border-color:#64748b; }
+        .asset-toolbar input { flex:1; min-width: 150px; padding:6px 8px; border-radius:6px; border:1px solid rgba(148, 163, 184, 0.22); background:#2d2218; color:#fff; }
+        .asset-toolbar button, #asset-drawer-header button { cursor:pointer; border:1px solid rgba(148, 163, 184, 0.24); background:#2d2218; color:#fff; border-radius:6px; padding:6px 8px; font-family:'ArkPixel', monospace; }
+        .asset-toolbar button:hover, #asset-drawer-header button:hover { border-color:#8b6b3d; }
         #asset-list {
             display:flex;
             flex-direction:column;
@@ -296,12 +296,12 @@
             max-height: none;
             overflow-y: auto;
             padding-right: 2px;
-            scrollbar-color: #1f2937 #0b1220;
+            scrollbar-color: #2d2218 #120e0a;
             scrollbar-width: thin;
         }
         #asset-list::-webkit-scrollbar { width: 8px; }
-        #asset-list::-webkit-scrollbar-track { background: #0b1220; }
-        #asset-list::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 0; border: 1px solid #111827; }
+        #asset-list::-webkit-scrollbar-track { background: #120e0a; }
+        #asset-list::-webkit-scrollbar-thumb { background: #2d2218; border-radius: 0; border: 1px solid #1a1510; }
         #asset-upload-panel {
             position: sticky;
             left: 8px;
@@ -336,18 +336,18 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            background: #111827;
+            background: #1a1510;
             color: #e5e7eb;
-            border: 1px solid #334155;
+            border: 1px solid #3d2f1f;
         }
         .asset-upload-grid > button:hover {
-            background: #1f2937;
-            border-color: #475569;
+            background: #2d2218;
+            border-color: #4a3926;
             color: #f8fafc;
         }
         .asset-item {
             border: 1px solid rgba(148, 163, 184, 0.16);
-            background: #0f172a;
+            background: #160f0a;
             border-radius: 8px;
             padding: 8px;
             display: grid;
@@ -358,7 +358,7 @@
             transition: border-color .12s ease, background-color .12s ease;
         }
         .asset-item:hover { border-color: rgba(148, 163, 184, 0.34); background:#111b2f; }
-        .asset-item.active { border-color: #22c55e; box-shadow: 0 0 0 1px rgba(34,197,94,.55) inset; }
+        .asset-item.active { border-color: #d4883a; box-shadow: 0 0 0 1px rgba(34,197,94,.55) inset; }
         .asset-vis-btn {
             min-width: 34px;
             height: 28px;
@@ -371,17 +371,17 @@
             cursor: pointer;
             font-family:'ArkPixel', monospace;
         }
-        .asset-vis-btn:hover { border-color:rgba(148, 163, 184, 0.38); color:#ecfccb; background:rgba(30,41,59,.92); }
-        .asset-thumb { width:56px; height:56px; object-fit: contain; background:#0b1220; border:1px solid rgba(148, 163, 184, 0.16); border-radius:6px; }
+        .asset-vis-btn:hover { border-color:rgba(148, 163, 184, 0.38); color:#fde8c8; background:rgba(30,41,59,.92); }
+        .asset-thumb { width:56px; height:56px; object-fit: contain; background:#120e0a; border:1px solid rgba(148, 163, 184, 0.16); border-radius:6px; }
         .asset-meta { line-height: 1.45; }
-        .asset-path { color:#d1fae5; word-break: break-all; }
+        .asset-path { color:#fde8c8; word-break: break-all; }
         .asset-sub { color:#9ca3af; font-size:11px; }
         #asset-upload-result { white-space: normal; line-height: 1.5; }
         #asset-upload-result .hint-p { margin: 0 0 6px 0; }
         #asset-upload-result .hint-p:last-child { margin-bottom: 0; }
-        .asset-plus-box { width:100%; height:92px; border:2px dashed #4b5563; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:34px; cursor:pointer; user-select:none; }
-        .asset-plus-box:hover { border-color:#22c55e; color:#22c55e; }
-        .asset-preview-box { border:1px solid rgba(148, 163, 184, 0.10); border-radius:8px; padding:6px; background:#0b1220; margin-bottom:8px; }
+        .asset-plus-box { width:100%; height:92px; border:2px dashed #4a3926; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:34px; cursor:pointer; user-select:none; }
+        .asset-plus-box:hover { border-color:#d4883a; color:#d4883a; }
+        .asset-preview-box { border:1px solid rgba(148, 163, 184, 0.10); border-radius:8px; padding:6px; background:#120e0a; margin-bottom:8px; }
         .asset-preview-title { color:#9ca3af; font-size:11px; margin-bottom:4px; }
         #asset-auth-gate {
             border: 0;
@@ -407,17 +407,17 @@
             align-items: center;
             min-height: 20px;
         }
-        .asset-preview-img { width:100%; height:92px; object-fit:contain; background:#111827; border:1px solid rgba(148, 163, 184, 0.14); border-radius:6px; }
+        .asset-preview-img { width:100%; height:92px; object-fit:contain; background:#1a1510; border:1px solid rgba(148, 163, 184, 0.14); border-radius:6px; }
         .home-fav-list { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
-        .home-fav-item { min-width:126px; max-width:126px; border:0; border-radius:8px; background:#111827; padding:6px; box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12); }
+        .home-fav-item { min-width:126px; max-width:126px; border:0; border-radius:8px; background:#1a1510; padding:6px; box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12); }
         .home-fav-item img { width:100%; height:70px; object-fit:cover; border:1px solid rgba(148, 163, 184, 0.14); border-radius:6px; image-rendering:pixelated; }
         .home-fav-meta { color:#9ca3af; font-size:10px; margin-top:4px; line-height:1.3; min-height:24px; }
-        .home-fav-item button { width:100%; margin-top:4px; border:1px solid rgba(148, 163, 184, 0.20); background:#1f2937; color:#fff; border-radius:6px; padding:4px 6px; font-family:'ArkPixel', monospace; cursor:pointer; }
-        .home-fav-item button:hover { border-color:#64748b; }
+        .home-fav-item button { width:100%; margin-top:4px; border:1px solid rgba(148, 163, 184, 0.20); background:#2d2218; color:#fff; border-radius:6px; padding:4px 6px; font-family:'ArkPixel', monospace; cursor:pointer; }
+        .home-fav-item button:hover { border-color:#8b6b3d; }
         .home-fav-del { background:#2a1416 !important; border-color: rgba(248,113,113,.35) !important; color:#fecaca !important; }
         .home-fav-del:hover { border-color: rgba(248,113,113,.55) !important; }
-        #gemini-api-doc-link { color:#86efac; text-decoration: underline; text-underline-offset: 2px; }
-        #gemini-api-doc-link:hover { color:#bbf7d0; }
+        #gemini-api-doc-link { color:#e8a849; text-decoration: underline; text-underline-offset: 2px; }
+        #gemini-api-doc-link:hover { color:#fde8c8; }
 
 
         #asset-move-panel { border:0; background:transparent; border-radius:0; padding:6px 0 8px; margin-bottom:6px; border-bottom: 1px solid rgba(148, 163, 184, 0.18); display:flex; flex-direction:column; justify-content:center; gap:6px; min-height:132px; }
@@ -466,7 +466,7 @@
             transition: padding-top .08s ease, filter .12s ease;
             box-shadow:none;
         }
-        #asset-move-row .btn-move { color:#1f2937; }
+        #asset-move-row .btn-move { color:#2d2218; }
         #asset-move-row .btn-move {
             background-image:url('/static/btn-move-house-sprite.png?v={{VERSION_TIMESTAMP}}');
         }
@@ -497,10 +497,10 @@
         }
         #asset-broker-panel {
             margin-top:0;
-            border:1px dashed #334155;
+            border:1px dashed #3d2f1f;
             border-radius:8px;
             padding:8px;
-            background:#0f172a;
+            background:#160f0a;
             max-height:0;
             opacity:0;
             transform:translateY(-6px);
@@ -518,7 +518,7 @@
         #asset-broker-prompt {
             width:100%; min-height:66px; resize:vertical;
             padding:8px; border-radius:6px;
-            border:1px solid #334155; background:#111827; color:#e5e7eb;
+            border:1px solid #3d2f1f; background:#1a1510; color:#e5e7eb;
             font-family:'ArkPixel', monospace; font-size:12px;
             box-sizing:border-box;
         }
@@ -578,7 +578,7 @@
 
         #asset-highlight {
             position: fixed;
-            border: 3px solid #22c55e;
+            border: 3px solid #d4883a;
             background: transparent;
             box-shadow: none;
             pointer-events: none;
@@ -629,9 +629,9 @@
         }
         #control-buttons button { height: 52px; }
         #control-bar button {
-            background: #3a3f4f;
+            background: #2d2218;
             color: #fff;
-            border: 2px solid #555;
+            border: 2px solid #4a3926;
             border-radius: 4px;
             padding: 8px 10px;
             cursor: pointer;
@@ -640,8 +640,8 @@
             transition: all 0.2s;
         }
         #control-bar button:hover {
-            background: #4a4f5f;
-            border-color: #e94560;
+            background: #3d2f1f;
+            border-color: #d4883a;
         }
         /* Star 状态四按钮（不含装修）使用像素精灵皮肤 */
         #control-bar #btn-state-idle,
@@ -716,10 +716,10 @@
             position: relative;
             width: 390px;
             height: 300px;
-            background: #141722;
+            background: #1a1510;
             padding: 10px 10px 12px;
             border-radius: 0;
-            border: 4px solid #0e1119;
+            border: 4px solid #0f0b07;
             box-shadow: none;
             display: flex;
             flex-direction: column;
@@ -732,10 +732,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 calc(50% - 14px) 2px, calc(50% - 14px) 2px,
@@ -754,10 +754,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 9px 4px, 4px 9px,
@@ -789,17 +789,17 @@
             padding-right: 4px;
         }
         #guest-agent-list::-webkit-scrollbar { width: 6px; }
-        #guest-agent-list::-webkit-scrollbar-track { background: #1a1a2e; }
-        #guest-agent-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        #guest-agent-list::-webkit-scrollbar-track { background: #1a1210; }
+        #guest-agent-list::-webkit-scrollbar-thumb { background: #4a3926; border-radius: 3px; }
         .guest-agent-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            background: #3a3f4f;
+            background: #2d2218;
             padding: 8px 10px;
             border-radius: 6px;
-            border: 1px solid #555;
+            border: 1px solid #4a3926;
         }
         .guest-agent-name {
             color: #fff;
@@ -814,8 +814,8 @@
         .guest-agent-buttons button {
             padding: 6px 10px;
             border-radius: 4px;
-            border: 2px solid #555;
-            background: #4a4f5f;
+            border: 2px solid #4a3926;
+            background: #3d2f1f;
             color: #fff;
             font-family: 'ArkPixel', monospace;
             font-size: 12px;
@@ -823,12 +823,12 @@
             transition: all 0.2s;
         }
         .guest-agent-buttons button:hover {
-            background: #5a5f6f;
-            border-color: #e94560;
+            background: #4a3d2a;
+            border-color: #d4883a;
         }
         .guest-agent-buttons button.leave-btn {
             background: #5a1818;
-            border-color: #e94560;
+            border-color: #d4883a;
         }
         .guest-agent-buttons button.leave-btn:hover {
             background: #6a2828;
@@ -841,7 +841,7 @@
             background-image: url('/static/memo-bg.webp');
             background-size: cover;
             background-position: center;
-            border: 4px solid #0e1119;
+            border: 4px solid #0f0b07;
             border-radius: 0;
             padding: 14px 16px;
             box-shadow: none;
@@ -855,10 +855,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 calc(50% - 14px) 2px, calc(50% - 14px) 2px,
@@ -877,10 +877,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
-                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14),
+                linear-gradient(#2a1e14, #2a1e14), linear-gradient(#2a1e14, #2a1e14);
             background-repeat: no-repeat;
             background-size:
                 9px 4px, 4px 9px,
@@ -895,10 +895,10 @@
         }
         #memo-panel.no-bg {
             background-image: none !important;
-            background-color: #111827;
+            background-color: #1a1510;
         }
         #memo-title {
-            color: #1a1b2f;
+            color: #2a1e14;
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 6px;
@@ -935,7 +935,7 @@
             width: 6px;
         }
         #memo-content::-webkit-scrollbar-track {
-            background: #1a1a2e;
+            background: #1a1210;
         }
         #memo-content::-webkit-scrollbar-thumb {
             background: #444;
@@ -1129,6 +1129,127 @@
             }
         }
 
+        /* ═══ Agent Detail Modal ═══ */
+        #agent-detail-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            z-index: 2000000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #agent-detail-modal-backdrop.open {
+            display: flex;
+        }
+        #agent-detail-modal {
+            background: #1a1510;
+            border: 3px solid #d4883a;
+            border-radius: 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px #2d2218;
+            max-width: 420px;
+            width: 92vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 0;
+            font-family: 'ArkPixel', 'Courier New', monospace;
+            color: #c9d1d9;
+            image-rendering: pixelated;
+            position: relative;
+        }
+        #agent-detail-modal::-webkit-scrollbar { width: 6px; }
+        #agent-detail-modal::-webkit-scrollbar-track { background: #120e0a; }
+        #agent-detail-modal::-webkit-scrollbar-thumb { background: #3d2f1f; }
+        .adm-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 10px;
+            border-bottom: 2px solid #2d2218;
+            background: #120e0a;
+        }
+        .adm-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .adm-icon { font-size: 20px; }
+        .adm-name {
+            color: #ffd700;
+            font-size: 15px;
+            font-weight: bold;
+            word-break: break-word;
+        }
+        .adm-close {
+            background: none;
+            border: 1px solid #3d2f1f;
+            color: #8b949e;
+            font-family: 'ArkPixel', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 8px;
+            line-height: 1;
+        }
+        .adm-close:hover { color: #f85149; border-color: #f85149; }
+        .adm-body { padding: 12px 14px 16px; }
+        .adm-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .adm-label {
+            color: #484f58;
+            min-width: 72px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .adm-value {
+            color: #c9d1d9;
+            word-break: break-word;
+            flex: 1;
+        }
+        .adm-state-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            font-size: 11px;
+            border: 1px solid;
+        }
+        .adm-state-executing { color: #3fb950; border-color: #3fb950; background: rgba(63,185,80,0.1); }
+        .adm-state-writing { color: #d29922; border-color: #d29922; background: rgba(210,153,34,0.1); }
+        .adm-state-researching { color: #e8a849; border-color: #e8a849; background: rgba(232,168,73,0.1); }
+        .adm-state-idle { color: #484f58; border-color: #484f58; background: rgba(72,79,88,0.1); }
+        .adm-state-error { color: #f85149; border-color: #f85149; background: rgba(248,81,73,0.1); }
+        .adm-state-syncing { color: #d29922; border-color: #d29922; background: rgba(210,153,34,0.1); }
+        .adm-detail-text {
+            color: #8b949e;
+            font-size: 11px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #120e0a;
+            padding: 8px;
+            border: 1px solid #2d2218;
+            margin-top: 4px;
+        }
+        .adm-separator {
+            border: none;
+            border-top: 1px dashed #2d2218;
+            margin: 10px 0;
+        }
+        .adm-loading {
+            color: #484f58;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
         /* ═══ OpenClaw Dashboard ═══ */
         .oc-toggle-btn {
             display: block;
@@ -1137,21 +1258,21 @@
             padding: 8px 0;
             font-family: 'ArkPixel', 'Courier New', monospace;
             font-size: 14px;
-            background: #16213e;
-            color: #7fdbca;
-            border: 2px solid #0f3460;
+            background: #1e1710;
+            color: #e8a849;
+            border: 2px solid #3d2f1f;
             cursor: pointer;
             text-align: center;
             image-rendering: pixelated;
             letter-spacing: 2px;
         }
-        .oc-toggle-btn:hover { background: #1a1a4e; border-color: #7fdbca; }
+        .oc-toggle-btn:hover { background: #2a1e14; border-color: #e8a849; }
 
         #oc-dashboard {
             margin-top: 4px;
             padding: 12px 16px 16px;
-            background: #0d1117;
-            border: 2px solid #0f3460;
+            background: #120e0a;
+            border: 2px solid #3d2f1f;
             font-family: 'ArkPixel', 'Courier New', monospace;
             color: #c9d1d9;
             font-size: 12px;
@@ -1168,8 +1289,8 @@
                 0deg,
                 transparent,
                 transparent 2px,
-                rgba(0, 255, 100, 0.015) 2px,
-                rgba(0, 255, 100, 0.015) 4px
+                rgba(255, 180, 60, 0.015) 2px,
+                rgba(255, 180, 60, 0.015) 4px
             );
         }
 
@@ -1179,33 +1300,33 @@
             gap: 12px;
             margin-bottom: 10px;
             padding-bottom: 6px;
-            border-bottom: 1px solid #21262d;
+            border-bottom: 1px solid #2d2218;
         }
         .oc-panel-title {
             font-size: 14px;
-            color: #7fdbca;
+            color: #e8a849;
             letter-spacing: 3px;
             flex: 1;
         }
         .oc-refresh-ts { color: #484f58; font-size: 11px; }
         .oc-refresh-btn {
             background: none;
-            border: 1px solid #30363d;
+            border: 1px solid #3d2f1f;
             color: #8b949e;
             cursor: pointer;
             font-family: inherit;
             font-size: 14px;
             padding: 2px 8px;
         }
-        .oc-refresh-btn:hover { color: #7fdbca; border-color: #7fdbca; }
+        .oc-refresh-btn:hover { color: #e8a849; border-color: #e8a849; }
 
         /* Status bar */
         .oc-status-bar {
             display: flex;
             gap: 20px;
             padding: 6px 10px;
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: #1e1710;
+            border: 1px solid #2d2218;
             margin-bottom: 10px;
             flex-wrap: wrap;
         }
@@ -1225,7 +1346,7 @@
             color: #484f58;
             letter-spacing: 2px;
             margin: 10px 0 6px;
-            border-bottom: 1px dashed #21262d;
+            border-bottom: 1px dashed #2d2218;
             padding-bottom: 2px;
         }
 
@@ -1236,8 +1357,8 @@
             gap: 8px;
         }
         .oc-job-card {
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: #1e1710;
+            border: 1px solid #2d2218;
             padding: 8px 10px;
             position: relative;
         }
@@ -1265,10 +1386,10 @@
             flex-wrap: wrap;
         }
         .oc-model-tag {
-            background: #1c2333;
+            background: #211a12;
             padding: 0 4px;
-            border: 1px solid #30363d;
-            color: #7ee787;
+            border: 1px solid #3d2f1f;
+            color: #e8a849;
         }
         .oc-err-count { color: #f85149; }
 
@@ -1283,15 +1404,15 @@
             align-items: center;
             gap: 8px;
             padding: 4px 6px;
-            border-bottom: 1px solid #161b22;
+            border-bottom: 1px solid #1e1710;
             cursor: default;
             font-size: 11px;
         }
-        .oc-activity-row:hover { background: #161b22; }
+        .oc-activity-row:hover { background: #1e1710; }
         .oc-act-time { color: #484f58; min-width: 90px; white-space: nowrap; }
         .oc-act-name { flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .oc-act-dur { color: #8b949e; min-width: 48px; text-align: right; }
-        .oc-act-tok { color: #7ee787; min-width: 64px; text-align: right; }
+        .oc-act-tok { color: #e8a849; min-width: 64px; text-align: right; }
 
         /* Badges */
         .oc-badge {
@@ -1302,9 +1423,9 @@
             min-width: 28px;
             text-align: center;
         }
-        .oc-badge-ok { color: #3fb950; border-color: #238636; background: #0d1117; }
-        .oc-badge-err { color: #f85149; border-color: #da3633; background: #0d1117; }
-        .oc-badge-warn { color: #d29922; border-color: #9e6a03; background: #0d1117; }
+        .oc-badge-ok { color: #3fb950; border-color: #b87a2e; background: #120e0a; }
+        .oc-badge-err { color: #f85149; border-color: #da3633; background: #120e0a; }
+        .oc-badge-warn { color: #d29922; border-color: #9e6a03; background: #120e0a; }
 
         /* Costs panel */
         .oc-costs-panel { padding: 4px 0; }
@@ -1316,7 +1437,7 @@
             color: #8b949e;
             font-size: 11px;
         }
-        .oc-costs-total { color: #7ee787; }
+        .oc-costs-total { color: #e8a849; }
         .oc-costs-models { display: flex; flex-direction: column; gap: 6px; }
         .oc-cost-row {
             display: flex;
@@ -1335,19 +1456,19 @@
         .oc-cost-bar-wrap {
             flex: 1;
             height: 10px;
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: #1e1710;
+            border: 1px solid #2d2218;
         }
         .oc-cost-bar {
             height: 100%;
-            background: linear-gradient(90deg, #238636, #3fb950);
+            background: linear-gradient(90deg, #b87a2e, #3fb950);
             transition: width 0.3s;
         }
         .oc-cost-val {
             min-width: 80px;
             text-align: right;
             font-size: 10px;
-            color: #7ee787;
+            color: #e8a849;
             white-space: nowrap;
         }
 
@@ -1364,8 +1485,8 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: #1e1710;
+            border: 1px solid #2d2218;
             padding: 6px 10px;
             flex: 1 1 auto;
             min-width: 200px;
@@ -1381,13 +1502,13 @@
             align-items: center;
             gap: 6px;
             padding: 4px 6px;
-            border-bottom: 1px solid #161b22;
+            border-bottom: 1px solid #1e1710;
             font-size: 11px;
         }
-        .oc-session-row:hover { background: #161b22; }
+        .oc-session-row:hover { background: #1e1710; }
         .oc-session-name { flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
         .oc-session-time { color: #484f58; min-width: 50px; text-align: right; white-space: nowrap; }
-        .oc-session-tok { color: #7ee787; min-width: 50px; text-align: right; white-space: nowrap; }
+        .oc-session-tok { color: #e8a849; min-width: 50px; text-align: right; white-space: nowrap; }
         .oc-session-more { color: #484f58; font-size: 10px; text-align: center; padding: 4px 0; }
         .oc-dot-yellow { background: #d29922; box-shadow: 0 0 4px #d29922; }
         .oc-dot-dim { background: #484f58; }
@@ -1395,8 +1516,8 @@
         /* Subagents list */
         .oc-subagents-list { max-height: 220px; overflow-y: auto; }
         .oc-sa-card {
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: #1e1710;
+            border: 1px solid #2d2218;
             padding: 6px 8px;
             margin-bottom: 4px;
         }
@@ -1413,8 +1534,8 @@
         .oc-sa-task { color: #8b949e; font-size: 10px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* Badge variants */
-        .oc-badge-info { color: #58a6ff; border-color: #1f6feb; background: #0d1117; }
-        .oc-badge-dim { color: #484f58; border-color: #30363d; background: #0d1117; }
+        .oc-badge-info { color: #e8a849; border-color: #b87a2e; background: #120e0a; }
+        .oc-badge-dim { color: #484f58; border-color: #3d2f1f; background: #120e0a; }
 
         /* Responsive */
         @media (max-width: 900px) {
@@ -1427,7 +1548,7 @@
 <body>
     <!-- 加载遮罩 -->
     <div id="loading-overlay">
-        <div id="loading-text">Loading Star’s pixel office...</div>
+        <div id="loading-text">Warming up The Hearth...</div>
         <div id="loading-progress-container">
             <div id="loading-progress-bar"></div>
         </div>
@@ -1435,7 +1556,7 @@
     
     <div id="main-stage">
         <div id="game-container">
-            <div id="game-skeleton"><div class="hint">正在进入像素办公室…</div></div>
+            <div id="game-skeleton"><div class="hint">正在进入 The Hearth…</div></div>
             <div id="status-text">加载中...</div>
         </div>
     
@@ -1454,7 +1575,7 @@
         
         <!-- 状态控制栏 -->
         <div id="control-bar">
-            <div id="control-bar-title">Star 状态</div>
+            <div id="control-bar-title">Cali 状态</div>
             <div id="control-buttons">
                 <button id="btn-state-idle" onclick="setState('idle','待命')">待命</button>
                 <button id="btn-state-writing" onclick="setState('writing','工作中')">工作</button>
@@ -1514,15 +1635,15 @@
                         <textarea id="asset-broker-prompt" placeholder="例如：像素风赛博东京夜景，霓虹灯、雨夜地面反光、蓝紫主色"></textarea>
                         <div class="asset-toolbar" style="margin-top:6px; gap:8px; align-items:center; justify-content:flex-start;">
                             <span id="speed-mode-label" class="asset-sub" style="min-width:62px;">生成模式</span>
-                            <button id="speed-fast-btn" type="button" onclick="setSpeedMode('fast')" style="background:#22c55e;color:#052e16;border-color:#16a34a;">🍌2</button>
-                            <button id="speed-quality-btn" type="button" onclick="setSpeedMode('quality')" style="background:#334155;color:#e5e7eb;border-color:#475569;">🍌Pro</button>
+                            <button id="speed-fast-btn" type="button" onclick="setSpeedMode('fast')" style="background:#d4883a;color:#052e16;border-color:#16a34a;">🍌2</button>
+                            <button id="speed-quality-btn" type="button" onclick="setSpeedMode('quality')" style="background:#3d2f1f;color:#e5e7eb;border-color:#4a3926;">🍌Pro</button>
                         </div>
                         <details id="asset-gemini-panel" style="margin-top:6px; border:0; border-top:1px solid rgba(148,163,184,.18); border-radius:0; padding:8px 0 0; background:transparent;">
                             <summary id="gemini-panel-summary" style="cursor:pointer; color:#cbd5e1;">🔐 API 设置（可折叠）</summary>
                             <div id="asset-gemini-config" style="display:block; margin-top:6px;">
                                 <div id="gemini-config-hint" class="asset-sub" style="margin-bottom:4px;">可选：填写你的生图 API Key（留空不影响基础功能）</div>
                                 <div class="asset-sub" style="margin-bottom:6px;"><a id="gemini-api-doc-link" href="https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn" target="_blank" rel="noopener noreferrer">📘 如何申请 Google API Key</a></div>
-                                <div id="gemini-mask-status" class="asset-sub" style="margin-bottom:6px; color:#a7f3d0;"></div>
+                                <div id="gemini-mask-status" class="asset-sub" style="margin-bottom:6px; color:#e8c88a;"></div>
                                 <div class="asset-toolbar" style="gap:6px; flex-wrap:wrap;">
                                     <input id="gemini-api-key-input" type="password" placeholder="粘贴 GEMINI_API_KEY（不会回显）" style="min-width:220px; flex:1;" autocomplete="new-password" />
                                     <button id="btn-save-gemini-key" onclick="saveGeminiConfigFromUI()">保存 Key</button>
@@ -1569,16 +1690,32 @@
     <div id="coords-overlay" style="display:none; position:fixed; pointer-events:none; background:rgba(0,0,0,0.85); color:#fff; font-family:ArkPixel,monospace; font-size:14px; padding:8px 12px; border-radius:4px; z-index:99999;">
         <div id="coords-display">X: 0 | Y: 0</div>
     </div>
-    <button id="coords-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">
+    <button id="coords-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">
         显示坐标
     </button>
-    <button id="pan-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); left:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">
+    <button id="pan-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); left:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">
         移动视野
     </button>
     <div id="lang-toggle-group" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 52px); left:12px; z-index:1000002; display:flex; gap:2px; align-items:center;">
-        <button id="lang-btn-en" onclick="setUILanguage('en')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">EN</button>
-        <button id="lang-btn-jp" onclick="setUILanguage('ja')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">JP</button>
-        <button id="lang-btn-cn" onclick="setUILanguage('zh')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">CN</button>
+        <button id="lang-btn-en" onclick="setUILanguage('en')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">EN</button>
+        <button id="lang-btn-jp" onclick="setUILanguage('ja')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">JP</button>
+        <button id="lang-btn-cn" onclick="setUILanguage('zh')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">CN</button>
+    </div>
+
+    <!-- Agent Detail Modal -->
+    <div id="agent-detail-modal-backdrop" onclick="closeAgentDetailModal(event)">
+        <div id="agent-detail-modal">
+            <div class="adm-header">
+                <div class="adm-header-left">
+                    <span class="adm-icon" id="adm-icon">🔥</span>
+                    <span class="adm-name" id="adm-name">Agent</span>
+                </div>
+                <button class="adm-close" onclick="closeAgentDetailModal(null, true)">✕</button>
+            </div>
+            <div class="adm-body" id="adm-body">
+                <div class="adm-loading">Loading...</div>
+            </div>
+        </div>
     </div>
 
     <script src="/static/vendor/phaser-3.80.1.min.js?v={{VERSION_TIMESTAMP}}"></script>
@@ -1587,7 +1724,7 @@
         let uiLang = localStorage.getItem('uiLang') || 'en';
         const I18N = {
             zh: {
-                controlTitle: 'Star 状态',
+                controlTitle: 'Cali 状态',
                 btnIdle: '待命', btnWork: '工作', btnSync: '同步', btnError: '报警', btnDecor: '装修房间',
                 drawerTitle: '装修房间 · 资产侧边栏', drawerClose: '关闭',
                 authTitle: '请输入装修验证码', authPlaceholder: '输入验证码', authVerify: '验证', authDefaultPassHint: '默认密码：1234（可随时让我帮你改，建议改成强密码）',
@@ -1611,11 +1748,11 @@
                 assetHintNotInScene: '当前场景未检测到此对象，仍可替换文件（刷新后生效）',
                 assetHintDefault: '通用素材：建议保持原图尺寸、透明通道与视觉重心一致，避免错位或失真',
                 showCoords: '显示坐标', hideCoords: '隐藏坐标', moveView: '移动视野', lockView: '锁定视野',
-                memoTitle: '昨 日 小 记', guestTitle: '访 客 列 表', officeTitle: '海辛小龙虾的办公室',
-                loadingOffice: '正在加载 Star 的像素办公室...'
+                memoTitle: '昨 日 小 记', guestTitle: '访 客 列 表', officeTitle: 'The Hearth 🔥',
+                loadingOffice: '正在加载 The Hearth...'
             },
             en: {
-                controlTitle: 'Star Status',
+                controlTitle: 'Cali Status',
                 btnIdle: 'Idle', btnWork: 'Work', btnSync: 'Sync', btnError: 'Alert', btnDecor: 'Decorate Room',
                 drawerTitle: 'Decorate Room · Asset Sidebar', drawerClose: 'Close',
                 authTitle: 'Enter Decor Passcode', authPlaceholder: 'Enter passcode', authVerify: 'Verify', authDefaultPassHint: 'Default passcode: 1234 (ask me anytime to change it; stronger passcode recommended)',
@@ -1639,11 +1776,11 @@
                 assetHintNotInScene: 'This object is not detected in current scene; you can still replace file (effective after refresh)',
                 assetHintDefault: 'Generic asset: keep source size, alpha channel, and visual anchor to avoid drift/distortion',
                 showCoords: 'Show Coords', hideCoords: 'Hide Coords', moveView: 'Pan View', lockView: 'Lock View',
-                memoTitle: 'YESTERDAY NOTES', guestTitle: 'VISITOR LIST', officeTitle: 'Haixin Lobster Office',
-                loadingOffice: 'Loading Star’s pixel office...'
+                memoTitle: 'YESTERDAY NOTES', guestTitle: 'VISITOR LIST', officeTitle: 'The Hearth',
+                loadingOffice: 'Warming up The Hearth...'
             },
             ja: {
-                controlTitle: 'Star ステータス',
+                controlTitle: 'Cali ステータス',
                 btnIdle: '待機', btnWork: '作業', btnSync: '同期', btnError: '警報', btnDecor: '部屋を編集',
                 drawerTitle: '部屋編集・アセットサイドバー', drawerClose: '閉じる',
                 authTitle: '編集パスコードを入力', authPlaceholder: 'パスコード入力', authVerify: '認証', authDefaultPassHint: '初期パスコード：1234（いつでも変更を相談可。強固なパス推奨）',
@@ -1667,8 +1804,8 @@
                 assetHintNotInScene: '現在のシーンでこのオブジェクトは未検出です。ファイル差し替えは可能（更新後に反映）',
                 assetHintDefault: '汎用素材：元サイズ・透過・視覚アンカーを維持し、ズレや崩れを防いでください',
                 showCoords: '座標表示', hideCoords: '座標非表示', moveView: '視点移動', lockView: '視点固定',
-                memoTitle: '昨日のメモ', guestTitle: '訪問者リスト', officeTitle: 'ハイシン・ロブスターのオフィス',
-                loadingOffice: 'Star のピクセルオフィスを読み込み中...'
+                memoTitle: '昨日のメモ', guestTitle: '訪問者リスト', officeTitle: 'The Hearth 🔥',
+                loadingOffice: 'The Hearth を読み込み中...'
             }
         };
 
@@ -1707,8 +1844,8 @@
                 const el = document.getElementById(id);
                 if (!el) return;
                 const active = (uiLang === lang);
-                el.style.background = active ? '#22c55e' : '#333';
-                el.style.borderColor = active ? '#22c55e' : '#333';
+                el.style.background = active ? '#d4883a' : '#333';
+                el.style.borderColor = active ? '#d4883a' : '#333';
                 el.style.color = '#fff';
             });
 
@@ -1984,12 +2121,12 @@
             const qBtn = document.getElementById('speed-quality-btn');
             if (!fastBtn || !qBtn) return;
             const fastOn = speedMode === 'fast';
-            fastBtn.style.background = fastOn ? '#22c55e' : '#334155';
+            fastBtn.style.background = fastOn ? '#d4883a' : '#3d2f1f';
             fastBtn.style.color = fastOn ? '#052e16' : '#e5e7eb';
-            fastBtn.style.borderColor = fastOn ? '#16a34a' : '#475569';
-            qBtn.style.background = fastOn ? '#334155' : '#22c55e';
+            fastBtn.style.borderColor = fastOn ? '#16a34a' : '#4a3926';
+            qBtn.style.background = fastOn ? '#3d2f1f' : '#d4883a';
             qBtn.style.color = fastOn ? '#e5e7eb' : '#052e16';
-            qBtn.style.borderColor = fastOn ? '#475569' : '#16a34a';
+            qBtn.style.borderColor = fastOn ? '#4a3926' : '#16a34a';
         }
         try { localStorage.removeItem('assetPositionOverrides'); } catch (e) {}
         let isMoving = false;
@@ -2046,7 +2183,7 @@
                 { x: 950, y: 280 }, { x: 1100, y: 250 },
             ],
         };
-        const OC_AGENT_COLORS = [0x58a6ff, 0xbc8cff, 0xff7b72, 0x79c0ff, 0xd2a8ff, 0xffa657, 0x7ee787, 0xf778ba];
+        const OC_AGENT_COLORS = [0xe8a849, 0xd4883a, 0xff9966, 0xcc7733, 0xffbb66, 0xffa657, 0xe8c88a, 0xf7a858];
 
         // 状态控制栏函数（用于测试）
         function setState(state, detail) {
@@ -4284,6 +4421,14 @@ function toggleBrokerPanel() {
                     }
                     sprite.setDepth(2500);
 
+                    // Make clickable for detail modal
+                    sprite.setInteractive({ useHandCursor: true });
+                    (function(agentName, agentType) {
+                        sprite.on('pointerdown', function() {
+                            openAgentDetailModal(agentName, agentType);
+                        });
+                    })(name, agent.type || 'subagent');
+
                     // Name label
                     var shortName = name.length > 24 ? name.substring(0, 22) + '…' : name;
                     var nameText = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 110, shortName, {
@@ -4322,7 +4467,7 @@ function toggleBrokerPanel() {
                     }
 
                     // State indicator dot
-                    var stateColors = { executing: 0x3fb950, writing: 0xd29922, researching: 0x58a6ff, idle: 0x484f58, error: 0xf85149 };
+                    var stateColors = { executing: 0x3fb950, writing: 0xd29922, researching: 0xe8a849, idle: 0x484f58, error: 0xf85149 };
                     var dotColor = stateColors[state] || 0x484f58;
                     var stateDot = game.add.circle(OC_DOOR_POS.x + 16, OC_DOOR_POS.y - 100, 4, dotColor);
                     stateDot.setDepth(2502);
@@ -4358,7 +4503,7 @@ function toggleBrokerPanel() {
                         game.tweens.add({ targets: existing.nameText, x: target.x, y: target.y - 110, duration: 2000, ease: 'Sine.easeInOut' });
 
                         // Update state dot color and position
-                        var stateColors2 = { executing: 0x3fb950, writing: 0xd29922, researching: 0x58a6ff, idle: 0x484f58, error: 0xf85149 };
+                        var stateColors2 = { executing: 0x3fb950, writing: 0xd29922, researching: 0xe8a849, idle: 0x484f58, error: 0xf85149 };
                         existing.stateDot.fillColor = stateColors2[state] || 0x484f58;
                         game.tweens.add({ targets: existing.stateDot, x: target.x + 16, y: target.y - 100, duration: 2000, ease: 'Sine.easeInOut' });
                     }
@@ -4406,16 +4551,9 @@ function toggleBrokerPanel() {
                 var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
                 var mappedState = stateMap[ocState] || 'idle';
 
-                // POST to /set_state to actually move the main character (only if state changed)
-                if (typeof window._lastPostedOcState === 'undefined') window._lastPostedOcState = null;
-                if (mappedState !== window._lastPostedOcState) {
-                    window._lastPostedOcState = mappedState;
-                    fetch('/set_state', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ state: mappedState, detail: mainAgent.detail || '' })
-                    }).catch(function(e) { console.warn('set_state POST failed:', e); });
-                }
+                // [REMOVED] Client-side /set_state POST — backend now writes state.json
+                // directly in GET /openclaw/agents (see openclaw_api.py).
+                // Old code removed to avoid redundant/unreliable client-side sync.
 
                 // Update status text detail with what Cali is actually doing
                 if (statusText) {
@@ -4561,6 +4699,8 @@ function toggleBrokerPanel() {
             game = this;
             hideGameSkeleton();
             officeBgSprite = this.add.image(640, 360, 'office_bg');
+            // Apply a subtle warm tint to the background for cozy hearth feel
+            officeBgSprite.setTint(0xffe8d0);
 
             // Place furniture: Sofa
             // NOTE: coordinates are interpreted as the TOP-LEFT corner of the sprite
@@ -4608,6 +4748,12 @@ function toggleBrokerPanel() {
             star.setVisible(true);
             star.anims.play('star_idle', true);
 
+            // Make main character clickable for detail modal
+            star.setInteractive({ useHandCursor: true });
+            star.on('pointerdown', function() {
+                openAgentDetailModal('Cali', 'main');
+            });
+
             // Sofa stays static when idle (no longer the main idle animation)
             sofa.anims.stop();
             sofa.setTexture('sofa_idle');
@@ -4615,8 +4761,8 @@ function toggleBrokerPanel() {
             // 加像素风小牌匾：海辛小龙虾的办公室
             const plaqueX = config.width / 2;
             const plaqueY = config.height - 36;
-            const plaqueBg = game.add.rectangle(plaqueX, plaqueY, 420, 44, 0x5d4037);
-            plaqueBg.setStrokeStyle(3, 0x3e2723);
+            const plaqueBg = game.add.rectangle(plaqueX, plaqueY, 420, 44, 0x3d2a1a);
+            plaqueBg.setStrokeStyle(3, 0x2a1a0e);
             const plaqueText = game.add.text(plaqueX, plaqueY, t('officeTitle'), {
                 fontFamily: 'ArkPixel, monospace',
                 fontSize: '18px',
@@ -4628,10 +4774,83 @@ function toggleBrokerPanel() {
                 wordWrap: { width: 400 },
                 align: 'center'
             }).setOrigin(0.5);
-            // 牌匾两边加个小装饰（跟随牌匾居中）
-            game.add.text(plaqueX - 190, plaqueY, '⭐', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
-            game.add.text(plaqueX + 190, plaqueY, '⭐', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
+            // 牌匾两边加个小装饰（跟随牌匾居中）— fire crabs for The Hearth
+            game.add.text(plaqueX - 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
+            game.add.text(plaqueX + 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
             window.officePlaqueText = plaqueText;
+
+            // ═══ The Hearth — Warm Atmospheric Effects ═══
+
+            // 1. Warm ambient overlay (subtle orange tint across the whole scene)
+            const warmOverlay = game.add.rectangle(640, 360, 1280, 720, 0xff8c00, 0.04);
+            warmOverlay.setDepth(3000);
+            warmOverlay.setBlendMode(Phaser.BlendModes.ADD);
+
+            // 2. Ember particles — tiny warm dots floating upward
+            const emberGfx = game.make.graphics({ add: false });
+            emberGfx.fillStyle(0xffaa44, 1);
+            emberGfx.fillCircle(3, 3, 3);
+            emberGfx.generateTexture('ember_particle', 6, 6);
+            emberGfx.destroy();
+
+            // Create ember particles using Phaser 3 particle manager
+            const embers = game.add.particles(0, 0, 'ember_particle', {
+                x: { min: 100, max: 1180 },
+                y: { min: 600, max: 720 },
+                lifespan: { min: 3000, max: 6000 },
+                speed: { min: 8, max: 25 },
+                angle: { min: -100, max: -80 },
+                scale: { start: 0.6, end: 0 },
+                alpha: { start: 0.5, end: 0 },
+                blendMode: Phaser.BlendModes.ADD,
+                frequency: 400,
+                quantity: 1,
+                tint: [0xffaa44, 0xff8833, 0xffcc66, 0xff6622],
+            });
+            embers.setDepth(2900);
+
+            // 3. Warm glow near the breakroom/sofa area (hearth glow)
+            const glowGfx = game.make.graphics({ add: false });
+            glowGfx.fillStyle(0xff9944, 1);
+            glowGfx.fillCircle(64, 64, 64);
+            glowGfx.generateTexture('hearth_glow', 128, 128);
+            glowGfx.destroy();
+
+            const hearthGlow = game.add.image(750, 400, 'hearth_glow');
+            hearthGlow.setScale(4);
+            hearthGlow.setAlpha(0.06);
+            hearthGlow.setBlendMode(Phaser.BlendModes.ADD);
+            hearthGlow.setDepth(1);
+
+            // Pulse the glow subtly
+            game.tweens.add({
+                targets: hearthGlow,
+                alpha: { from: 0.04, to: 0.08 },
+                duration: 3000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            // 4. Clock display (current time, updated every second)
+            const clockText = game.add.text(1220, 16, '', {
+                fontFamily: 'ArkPixel, monospace',
+                fontSize: '14px',
+                fill: '#e8a849',
+                stroke: '#000',
+                strokeThickness: 3,
+                backgroundColor: 'rgba(26, 18, 10, 0.8)',
+                padding: { x: 6, y: 3 }
+            }).setOrigin(1, 0).setDepth(3100);
+
+            function updateClock() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                clockText.setText(h + ':' + m);
+            }
+            updateClock();
+            setInterval(updateClock, 30000);
 
             // Random plant at (565,178) (frame 0-15, 160x160 each)
             const plantFrameCount = 16;
@@ -4784,6 +5003,11 @@ function toggleBrokerPanel() {
             starWorking.setVisible(false);
             starWorking.setScale(0.9);
             starWorking.setDepth(900);  // starWorking under desk so desk partially covers it
+            // Make starWorking also clickable for detail modal
+            starWorking.setInteractive({ useHandCursor: true });
+            starWorking.on('pointerdown', function() {
+                openAgentDetailModal('Cali', 'main');
+            });
             // Store reference to starWorking for state logic
             window.starWorking = starWorking;
 
@@ -4826,7 +5050,7 @@ function toggleBrokerPanel() {
                 showCoords = !showCoords;
                 coordsOverlay.style.display = showCoords ? 'block' : 'none';
                 coordsToggle.textContent = showCoords ? t('hideCoords') : t('showCoords');
-                coordsToggle.style.background = showCoords ? '#e94560' : '#333';
+                coordsToggle.style.background = showCoords ? '#d4883a' : '#333';
             });
 
             // 允许手机端“拖动/滑动”来移动视野（本质：移动 Phaser Camera）
@@ -4901,7 +5125,7 @@ function toggleBrokerPanel() {
                 if (panToggle) {
                     panToggle.dataset.on = on ? '1' : '0';
                     panToggle.textContent = on ? t('lockView') : t('moveView');
-                    panToggle.style.background = on ? '#e94560' : '#333';
+                    panToggle.style.background = on ? '#d4883a' : '#333';
                 }
                 game.input.setDefaultCursor(on ? 'grab' : 'default');
                 if (isTouchDevice && statusText) {
@@ -5409,8 +5633,8 @@ function toggleBrokerPanel() {
             const text = texts[Math.floor(Math.random() * texts.length)];
             const anchorX = window.catSprite.x;
             const anchorY = window.catSprite.y - 60;
-            const bg = game.add.rectangle(anchorX, anchorY, text.length * 10 + 20, 24, 0xfffbeb, 0.95);
-            bg.setStrokeStyle(2, 0xd4a574);
+            const bg = game.add.rectangle(anchorX, anchorY, text.length * 10 + 20, 24, 0xfff3e0, 0.95);
+            bg.setStrokeStyle(2, 0xd4883a);
             const txt = game.add.text(anchorX, anchorY, text, { fontFamily: 'ArkPixel, monospace', fontSize: '11px', fill: '#8b6914', align: 'center' }).setOrigin(0.5);
             window.catBubble = game.add.container(0, 0, [bg, txt]);
             window.catBubble.setDepth(2100); // top layer above cat
@@ -5418,6 +5642,156 @@ function toggleBrokerPanel() {
         }
 
         // 假 Agent 气泡逻辑已移除，统一以真实 /agents 数据为准
+
+        // ═══ Agent Detail Modal ═══
+        function closeAgentDetailModal(event, force) {
+            if (event && event.target && event.target.id !== 'agent-detail-modal-backdrop' && !force) return;
+            const backdrop = document.getElementById('agent-detail-modal-backdrop');
+            if (backdrop) backdrop.classList.remove('open');
+        }
+
+        function openAgentDetailModal(agentName, agentType) {
+            const backdrop = document.getElementById('agent-detail-modal-backdrop');
+            const nameEl = document.getElementById('adm-name');
+            const iconEl = document.getElementById('adm-icon');
+            const bodyEl = document.getElementById('adm-body');
+            if (!backdrop || !bodyEl) return;
+
+            // Set icon based on type
+            const icons = { main: '🔥', subagent: '⚡', cron: '⏰' };
+            if (iconEl) iconEl.textContent = icons[agentType] || '⚡';
+            if (nameEl) nameEl.textContent = agentName || 'Agent';
+            bodyEl.innerHTML = '<div class="adm-loading">Loading agent details...</div>';
+            backdrop.classList.add('open');
+
+            // Fetch detail
+            const url = '/openclaw/agent/' + encodeURIComponent(agentName);
+            fetch(url, { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        bodyEl.innerHTML = '<div class="adm-loading">Agent data unavailable</div>';
+                        return;
+                    }
+                    renderAgentDetailModal(data, bodyEl);
+                })
+                .catch(function(e) {
+                    bodyEl.innerHTML = '<div class="adm-loading">Failed to load agent details</div>';
+                });
+        }
+
+        function renderAgentDetailModal(data, bodyEl) {
+            var stateClass = 'adm-state-' + (data.state || 'idle');
+            var html = '';
+
+            // Type badge
+            html += '<div class="adm-row"><span class="adm-label">Type</span><span class="adm-value">' + escHtmlSimple(data.type || '?') + '</span></div>';
+
+            // State
+            html += '<div class="adm-row"><span class="adm-label">State</span><span class="adm-value"><span class="adm-state-badge ' + stateClass + '">' + escHtmlSimple(data.state || 'idle') + '</span></span></div>';
+
+            // Model
+            if (data.model) {
+                html += '<div class="adm-row"><span class="adm-label">Model</span><span class="adm-value">' + escHtmlSimple(data.model) + '</span></div>';
+            }
+            if (data.modelProvider) {
+                html += '<div class="adm-row"><span class="adm-label">Provider</span><span class="adm-value">' + escHtmlSimple(data.modelProvider) + '</span></div>';
+            }
+
+            // Time
+            if (data.startedAtRelative) {
+                html += '<div class="adm-row"><span class="adm-label">Active</span><span class="adm-value">' + escHtmlSimple(data.startedAtRelative) + '</span></div>';
+            }
+            if (data.endedAtRelative) {
+                html += '<div class="adm-row"><span class="adm-label">Ended</span><span class="adm-value">' + escHtmlSimple(data.endedAtRelative) + '</span></div>';
+            }
+
+            // Tokens
+            if (data.totalTokens || data.inputTokens || data.outputTokens) {
+                var tokStr = '';
+                if (data.inputTokens) tokStr += 'In: ' + fmtTokensSimple(data.inputTokens) + '  ';
+                if (data.outputTokens) tokStr += 'Out: ' + fmtTokensSimple(data.outputTokens) + '  ';
+                if (data.totalTokens) tokStr += 'Total: ' + fmtTokensSimple(data.totalTokens);
+                html += '<div class="adm-row"><span class="adm-label">Tokens</span><span class="adm-value">' + tokStr.trim() + '</span></div>';
+            }
+
+            // Detail / Task
+            if (data.detail) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Detail</span></div>';
+                html += '<div class="adm-detail-text">' + escHtmlSimple(data.detail) + '</div>';
+            }
+
+            // Outcome (subagents)
+            if (data.outcome && Object.keys(data.outcome).length > 0) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Outcome</span><span class="adm-value">' + escHtmlSimple(data.outcome.status || 'unknown') + '</span></div>';
+                if (data.endedReason) {
+                    html += '<div class="adm-row"><span class="adm-label">Reason</span><span class="adm-value">' + escHtmlSimple(data.endedReason) + '</span></div>';
+                }
+            }
+
+            // Schedule (cron)
+            if (data.schedule) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Schedule</span><span class="adm-value">' + escHtmlSimple(data.schedule) + '</span></div>';
+                if (data.tz) html += '<div class="adm-row"><span class="adm-label">Timezone</span><span class="adm-value">' + escHtmlSimple(data.tz) + '</span></div>';
+                if (data.nextRunAtRelative) html += '<div class="adm-row"><span class="adm-label">Next Run</span><span class="adm-value">' + escHtmlSimple(data.nextRunAtRelative) + '</span></div>';
+            }
+
+            // Recent runs (cron)
+            if (data.recentRuns && data.recentRuns.length > 0) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Recent Runs</span></div>';
+                data.recentRuns.slice(0, 5).forEach(function(run) {
+                    var ts = run.ts ? new Date(run.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '?';
+                    var dur = run.durationMs ? (run.durationMs < 1000 ? run.durationMs + 'ms' : (run.durationMs / 1000).toFixed(1) + 's') : '—';
+                    var tok = run.tokens ? fmtTokensSimple(run.tokens.total || 0) : '0';
+                    var status = run.status || '?';
+                    var statusColor = status === 'ok' ? '#3fb950' : (status === 'error' ? '#f85149' : '#d29922');
+                    html += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #1e1710;display:flex;gap:6px;align-items:center;">';
+                    html += '<span style="color:#484f58;min-width:90px;">' + ts + '</span>';
+                    html += '<span style="color:' + statusColor + ';min-width:32px;">' + status + '</span>';
+                    html += '<span style="color:#8b949e;">' + dur + '</span>';
+                    html += '<span style="color:#e8a849;margin-left:auto;">' + tok + ' tok</span>';
+                    html += '</div>';
+                    if (run.summary) {
+                        html += '<div style="font-size:10px;color:#484f58;padding:2px 0 4px;white-space:pre-wrap;max-height:60px;overflow:hidden;">' + escHtmlSimple(run.summary.substring(0, 200)) + '</div>';
+                    }
+                });
+            }
+
+            // Recent sessions (main)
+            if (data.recentSessions && data.recentSessions.length > 0) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Sessions</span></div>';
+                data.recentSessions.slice(0, 5).forEach(function(s) {
+                    var name = s.displayName || s.sessionKey || '?';
+                    if (name.length > 50) name = name.substring(0, 47) + '…';
+                    var model = (s.model || '').split('/').pop();
+                    html += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #1e1710;display:flex;gap:6px;align-items:center;">';
+                    html += '<span style="color:#c9d1d9;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtmlSimple(name) + '</span>';
+                    if (model) html += '<span class="oc-model-tag" style="font-size:9px;">' + escHtmlSimple(model) + '</span>';
+                    html += '<span style="color:#484f58;font-size:10px;">' + escHtmlSimple(s.updatedAtRelative || '') + '</span>';
+                    html += '</div>';
+                });
+            }
+
+            bodyEl.innerHTML = html;
+        }
+
+        function escHtmlSimple(s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+
+        function fmtTokensSimple(n) {
+            if (!n) return '0';
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+            return String(n);
+        }
 
         // 启动游戏
         initGame();

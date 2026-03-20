@@ -179,9 +179,18 @@ def openclaw_activity():
     """Recent cron completions across all jobs."""
     limit = request.args.get("limit", 20, type=int)
     limit = max(1, min(limit, 200))
+    job_name_filter = request.args.get("jobName", "", type=str).strip()
 
     name_map = _job_name_map()
     runs = _read_all_runs()
+
+    # Filter by jobName if requested
+    if job_name_filter:
+        job_ids_for_name = [jid for jid, jname in name_map.items() if jname == job_name_filter]
+        if job_ids_for_name:
+            runs = [r for r in runs if r.get("jobId") in job_ids_for_name]
+        else:
+            runs = []
 
     # Sort by timestamp descending
     runs.sort(key=lambda r: r.get("ts", 0), reverse=True)
@@ -497,4 +506,220 @@ def openclaw_agents_combined():
                     "tokens": 0,
                 })
 
+    # --- Write main agent state to state.json (server-side sync) ---
+    main_entry = next((a for a in agents if a.get("type") == "main"), None)
+    if main_entry:
+        state_map = {
+            "executing": "writing",
+            "writing": "writing",
+            "researching": "researching",
+            "idle": "idle",
+            "error": "error",
+            "syncing": "syncing",
+        }
+        mapped = state_map.get(main_entry.get("state", "idle"), "idle")
+        state_json_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state.json")
+        try:
+            state_payload = {
+                "state": mapped,
+                "detail": main_entry.get("detail", ""),
+                "progress": 0,
+                "updated_at": datetime.now().isoformat(),
+            }
+            with open(state_json_path, "w", encoding="utf-8") as sf:
+                json.dump(state_payload, sf)
+        except Exception:
+            pass  # non-fatal; don't break the API response
+
     return jsonify(agents)
+
+
+# ---------------------------------------------------------------------------
+# Detail endpoints
+# ---------------------------------------------------------------------------
+
+@openclaw_bp.route("/openclaw/agent/<name>", methods=["GET"])
+def openclaw_agent_detail(name):
+    """Full detail for a single agent by name."""
+    now_ms = time.time() * 1000
+
+    # Check if it's the main agent
+    if name.lower() in ("cali", "main"):
+        sessions = _read_sessions()
+        most_recent = None
+        for sk, s in sessions.items():
+            updated = s.get("updatedAt", 0)
+            if most_recent is None or updated > most_recent.get("updatedAt", 0):
+                most_recent = s
+
+        if most_recent:
+            age_ms = now_ms - most_recent.get("updatedAt", 0)
+            if age_ms < 5 * 60 * 1000:
+                main_state = "executing"
+            elif age_ms < 30 * 60 * 1000:
+                main_state = "writing"
+            else:
+                main_state = "idle"
+        else:
+            main_state = "idle"
+
+        # Collect recent sessions
+        recent_sessions = []
+        for sk, s in sessions.items():
+            recent_sessions.append({
+                "sessionKey": sk,
+                "displayName": s.get("displayName", sk),
+                "channel": s.get("channel", ""),
+                "chatType": s.get("chatType", ""),
+                "model": s.get("model", ""),
+                "modelProvider": s.get("modelProvider", ""),
+                "updatedAt": s.get("updatedAt", 0),
+                "updatedAtRelative": _relative_time_label(s.get("updatedAt", 0)),
+                "totalTokens": s.get("totalTokens", 0),
+                "inputTokens": s.get("inputTokens", 0),
+                "outputTokens": s.get("outputTokens", 0),
+                "cacheRead": s.get("cacheRead", 0),
+                "cacheWrite": s.get("cacheWrite", 0),
+                "compactionCount": s.get("compactionCount", 0),
+                "status": _session_status(s.get("updatedAt", 0)),
+            })
+        recent_sessions.sort(key=lambda x: x.get("updatedAt", 0), reverse=True)
+
+        return jsonify({
+            "name": "Cali",
+            "type": "main",
+            "state": main_state,
+            "detail": most_recent.get("displayName", "") if most_recent else "",
+            "model": most_recent.get("model", "") if most_recent else "",
+            "modelProvider": most_recent.get("modelProvider", "") if most_recent else "",
+            "startedAt": most_recent.get("updatedAt", 0) if most_recent else 0,
+            "startedAtRelative": _relative_time_label(most_recent.get("updatedAt", 0)) if most_recent else None,
+            "totalTokens": most_recent.get("totalTokens", 0) if most_recent else 0,
+            "inputTokens": most_recent.get("inputTokens", 0) if most_recent else 0,
+            "outputTokens": most_recent.get("outputTokens", 0) if most_recent else 0,
+            "recentSessions": recent_sessions[:10],
+        })
+
+    # Check subagent runs
+    runs = _read_subagent_runs()
+    for run_id, r in runs.items():
+        label = r.get("label", run_id[:8])
+        if label == name or run_id.startswith(name):
+            task = r.get("task", "")
+            outcome = r.get("outcome", {}) or {}
+            created_at = r.get("createdAt", 0)
+            ended_at = r.get("endedAt", 0)
+
+            if ended_at and ended_at > 0:
+                outcome_status = outcome.get("status", "completed")
+                sa_state = "error" if outcome_status == "error" else "idle"
+            else:
+                age_ms = now_ms - created_at
+                if age_ms < 5 * 60 * 1000:
+                    sa_state = "executing"
+                elif age_ms < 30 * 60 * 1000:
+                    sa_state = "researching"
+                else:
+                    sa_state = "writing"
+
+            return jsonify({
+                "name": label,
+                "type": "subagent",
+                "state": sa_state,
+                "detail": task,
+                "model": r.get("model", ""),
+                "runtime": r.get("runtime", ""),
+                "startedAt": created_at,
+                "startedAtRelative": _relative_time_label(created_at),
+                "endedAt": ended_at,
+                "endedAtRelative": _relative_time_label(ended_at) if ended_at else None,
+                "endedReason": r.get("endedReason", ""),
+                "outcome": outcome,
+                "runId": run_id,
+            })
+
+    # Check cron jobs
+    jobs = _read_jobs()
+    for j in jobs:
+        if j.get("name") == name or j.get("id") == name:
+            state = j.get("state", {}) or {}
+            schedule = j.get("schedule", {}) or {}
+            payload = j.get("payload", {}) or {}
+
+            # Get recent runs for this job
+            job_id = j.get("id", "")
+            all_runs = _read_all_runs()
+            job_runs = [r for r in all_runs if r.get("jobId") == job_id]
+            job_runs.sort(key=lambda r: r.get("ts", 0), reverse=True)
+            recent_runs = []
+            for r in job_runs[:10]:
+                usage = r.get("usage") or {}
+                recent_runs.append({
+                    "ts": r.get("ts"),
+                    "status": r.get("status"),
+                    "durationMs": r.get("durationMs"),
+                    "model": r.get("model"),
+                    "tokens": {
+                        "input": usage.get("input_tokens", 0),
+                        "output": usage.get("output_tokens", 0),
+                        "total": usage.get("total_tokens", 0),
+                    },
+                    "delivered": r.get("delivered"),
+                    "summary": (r.get("summary") or "")[:500],
+                })
+
+            return jsonify({
+                "name": j.get("name"),
+                "type": "cron",
+                "state": "executing" if state.get("lastRunStatus") not in ("ok", "error", "skipped", None, "") else "idle",
+                "detail": f"cron: {schedule.get('expr', '')}",
+                "model": payload.get("model", ""),
+                "jobId": job_id,
+                "enabled": j.get("enabled", False),
+                "schedule": schedule.get("expr", ""),
+                "tz": schedule.get("tz", ""),
+                "lastRun": {
+                    "at": state.get("lastRunAtMs"),
+                    "atRelative": _relative_time_label(state.get("lastRunAtMs")),
+                    "status": state.get("lastRunStatus") or state.get("lastStatus"),
+                    "durationMs": state.get("lastDurationMs"),
+                },
+                "nextRunAt": state.get("nextRunAtMs"),
+                "nextRunAtRelative": _relative_time_label(state.get("nextRunAtMs")),
+                "consecutiveErrors": state.get("consecutiveErrors", 0),
+                "recentRuns": recent_runs,
+            })
+
+    return jsonify({"error": "Agent not found"}), 404
+
+
+@openclaw_bp.route("/openclaw/cron/<job_id>/runs", methods=["GET"])
+def openclaw_cron_runs(job_id):
+    """Recent run history for a specific cron job."""
+    limit = request.args.get("limit", 5, type=int)
+    limit = max(1, min(limit, 50))
+
+    all_runs = _read_all_runs()
+    job_runs = [r for r in all_runs if r.get("jobId") == job_id]
+    job_runs.sort(key=lambda r: r.get("ts", 0), reverse=True)
+
+    result = []
+    for r in job_runs[:limit]:
+        usage = r.get("usage") or {}
+        result.append({
+            "ts": r.get("ts"),
+            "tsRelative": _relative_time_label(r.get("ts")),
+            "status": r.get("status"),
+            "durationMs": r.get("durationMs"),
+            "model": r.get("model"),
+            "provider": r.get("provider"),
+            "tokens": {
+                "input": usage.get("input_tokens", 0),
+                "output": usage.get("output_tokens", 0),
+                "total": usage.get("total_tokens", 0),
+            },
+            "delivered": r.get("delivered"),
+            "summary": (r.get("summary") or "")[:500],
+        })
+
+    return jsonify(result)

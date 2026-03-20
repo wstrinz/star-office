@@ -93,10 +93,12 @@
       const lr = j.lastRun || {};
       const cls = jobStatusClass(j);
       const indicatorIcon = !j.enabled ? '○' : (j.consecutiveErrors > 0 ? '✗' : '●');
-      return '<div class="oc-job-card ' + cls + '">' +
+      var jobId = j.id || '';
+      return '<div class="oc-job-card ' + cls + ' oc-clickable" data-job-id="' + escHtml(jobId) + '" data-job-name="' + escHtml(j.name) + '">' +
         '<div class="oc-job-header">' +
           '<span class="oc-job-indicator">' + indicatorIcon + '</span>' +
           '<span class="oc-job-name">' + escHtml(j.name) + '</span>' +
+          '<span class="oc-expand-icon">▸</span>' +
         '</div>' +
         '<div class="oc-job-detail">' +
           '<span>Last: ' + relTime(lr.at) + (lr.durationMs ? ' (' + fmtDuration(lr.durationMs) + ')' : '') + '</span>' +
@@ -107,8 +109,75 @@
           (j.model ? '<span class="oc-model-tag">' + escHtml(j.model.split('/').pop()) + '</span>' : '') +
           (j.consecutiveErrors > 0 ? '<span class="oc-err-count">err×' + j.consecutiveErrors + '</span>' : '') +
         '</div>' +
+        '<div class="oc-job-expanded" style="display:none;"></div>' +
       '</div>';
     }).join('');
+
+    // Bind click handlers for expansion
+    el.querySelectorAll('.oc-job-card.oc-clickable').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var expanded = card.querySelector('.oc-job-expanded');
+        var icon = card.querySelector('.oc-expand-icon');
+        if (!expanded) return;
+        var isOpen = expanded.style.display !== 'none';
+        if (isOpen) {
+          expanded.style.display = 'none';
+          card.classList.remove('oc-expanded');
+          if (icon) icon.textContent = '▸';
+          return;
+        }
+        // Close other expanded cards
+        el.querySelectorAll('.oc-job-expanded').forEach(function(e) { e.style.display = 'none'; });
+        el.querySelectorAll('.oc-expand-icon').forEach(function(e) { e.textContent = '▸'; });
+        el.querySelectorAll('.oc-job-card').forEach(function(e) { e.classList.remove('oc-expanded'); });
+
+        expanded.innerHTML = '<div style="color:#484f58;padding:8px;font-style:italic;">Loading...</div>';
+        expanded.style.display = 'block';
+        card.classList.add('oc-expanded');
+        if (icon) icon.textContent = '▾';
+
+        var jobId = card.getAttribute('data-job-id');
+        var jobName = card.getAttribute('data-job-name');
+
+        // Fetch detail
+        fetchJSON('/openclaw/agent/' + encodeURIComponent(jobName)).then(function(data) {
+          if (!data || data.error) {
+            expanded.innerHTML = '<div style="color:#484f58;padding:8px;">Data unavailable</div>';
+            return;
+          }
+          var html = '<div style="padding:6px 0;border-top:1px dashed #2d2218;margin-top:6px;">';
+          html += '<div style="font-size:11px;color:#8b949e;margin-bottom:4px;">';
+          if (data.schedule) html += '📅 ' + escHtml(data.schedule);
+          if (data.tz) html += ' (' + escHtml(data.tz) + ')';
+          html += '</div>';
+          if (data.nextRunAtRelative) {
+            html += '<div style="font-size:11px;color:#e8a849;margin-bottom:6px;">Next: ' + escHtml(data.nextRunAtRelative) + '</div>';
+          }
+
+          if (data.recentRuns && data.recentRuns.length > 0) {
+            html += '<div style="font-size:10px;color:#484f58;margin-bottom:4px;letter-spacing:1px;">RECENT RUNS</div>';
+            data.recentRuns.slice(0, 5).forEach(function(run) {
+              var ts = run.ts ? new Date(run.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '?';
+              var dur = run.durationMs ? fmtDuration(run.durationMs) : '—';
+              var tok = run.tokens ? fmtTokens(run.tokens.total || 0) : '0';
+              var status = run.status || '?';
+              var statusColor = status === 'ok' ? '#3fb950' : (status === 'error' ? '#f85149' : '#d29922');
+              html += '<div style="font-size:10px;padding:2px 0;display:flex;gap:4px;align-items:center;border-bottom:1px solid rgba(45,34,24,0.5);">';
+              html += '<span style="color:#484f58;min-width:80px;">' + ts + '</span>';
+              html += '<span style="color:' + statusColor + ';">' + status + '</span>';
+              html += '<span style="color:#8b949e;">' + dur + '</span>';
+              html += '<span style="color:#e8a849;margin-left:auto;">' + tok + '</span>';
+              html += '</div>';
+              if (run.summary) {
+                html += '<div style="font-size:9px;color:#484f58;padding:1px 0 3px;white-space:pre-wrap;max-height:40px;overflow:hidden;">' + escHtml(run.summary.substring(0, 150)) + '</div>';
+              }
+            });
+          }
+          html += '</div>';
+          expanded.innerHTML = html;
+        });
+      });
+    });
   }
 
   function renderActivity(runs) {
@@ -116,18 +185,55 @@
     if (!el) return;
     if (!runs || !runs.length) { el.innerHTML = '<div class="oc-empty">No recent activity</div>'; return; }
 
-    el.innerHTML = runs.map(function (r) {
+    el.innerHTML = runs.map(function (r, i) {
       const ts = r.ts ? new Date(r.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '??:??';
       const day = r.ts ? new Date(r.ts).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
       const tok = r.tokens || {};
-      return '<div class="oc-activity-row" title="' + escHtml(r.summary || '') + '">' +
+      var summaryFull = r.summary || '';
+      var modelStr = r.model ? (r.model.split('/').pop()) : '';
+      var providerStr = r.provider || '';
+      var deliveredStr = r.delivered != null ? String(r.delivered) : '';
+      return '<div class="oc-activity-row oc-clickable" data-idx="' + i + '">' +
         '<span class="oc-act-time">' + day + ' ' + ts + '</span>' +
         statusBadge(r.status) +
         '<span class="oc-act-name">' + escHtml(r.jobName) + '</span>' +
         '<span class="oc-act-dur">' + fmtDuration(r.durationMs) + '</span>' +
         '<span class="oc-act-tok">' + fmtTokens(tok.total) + ' tok</span>' +
+        '<div class="oc-act-expanded" style="display:none;" data-summary="' + escHtml(summaryFull) + '" data-model="' + escHtml(modelStr) + '" data-provider="' + escHtml(providerStr) + '" data-delivered="' + escHtml(deliveredStr) + '" data-tok-in="' + (tok.input || 0) + '" data-tok-out="' + (tok.output || 0) + '" data-tok-total="' + (tok.total || 0) + '"></div>' +
       '</div>';
     }).join('');
+
+    // Bind click handlers
+    el.querySelectorAll('.oc-activity-row.oc-clickable').forEach(function(row) {
+      row.addEventListener('click', function() {
+        var expanded = row.querySelector('.oc-act-expanded');
+        if (!expanded) return;
+        var isOpen = expanded.style.display !== 'none';
+        // Close all
+        el.querySelectorAll('.oc-act-expanded').forEach(function(e) { e.style.display = 'none'; });
+        el.querySelectorAll('.oc-activity-row').forEach(function(e) { e.classList.remove('oc-expanded'); });
+        if (isOpen) return;
+
+        var summary = expanded.getAttribute('data-summary') || '';
+        var model = expanded.getAttribute('data-model') || '';
+        var provider = expanded.getAttribute('data-provider') || '';
+        var delivered = expanded.getAttribute('data-delivered') || '';
+        var tokIn = expanded.getAttribute('data-tok-in') || '0';
+        var tokOut = expanded.getAttribute('data-tok-out') || '0';
+        var tokTotal = expanded.getAttribute('data-tok-total') || '0';
+
+        var html = '<div style="padding:6px 4px;border-top:1px dashed #2d2218;margin-top:4px;font-size:10px;">';
+        if (model) html += '<div style="color:#8b949e;">Model: <span style="color:#e8a849;">' + model + '</span></div>';
+        if (provider) html += '<div style="color:#8b949e;">Provider: ' + provider + '</div>';
+        html += '<div style="color:#8b949e;">Tokens: In ' + fmtTokens(parseInt(tokIn)) + ' / Out ' + fmtTokens(parseInt(tokOut)) + ' / Total ' + fmtTokens(parseInt(tokTotal)) + '</div>';
+        if (delivered) html += '<div style="color:#8b949e;">Delivered: ' + delivered + '</div>';
+        if (summary) html += '<div style="color:#c9d1d9;margin-top:4px;white-space:pre-wrap;max-height:100px;overflow-y:auto;border:1px solid #2d2218;padding:4px;background:#120e0a;">' + escHtml(summary) + '</div>';
+        html += '</div>';
+        expanded.innerHTML = html;
+        expanded.style.display = 'block';
+        row.classList.add('oc-expanded');
+      });
+    });
   }
 
   function renderCosts(data) {
@@ -209,23 +315,73 @@
     var shown = sessions.filter(function (s) { return s.status === 'active' || s.status === 'recent'; });
     if (!shown.length) shown = sessions.slice(0, 5);
 
-    el.innerHTML = shown.map(function (s) {
+    el.innerHTML = shown.map(function (s, i) {
       var name = s.displayName || cleanSessionKey(s.sessionKey);
       var truncName = name.length > 50 ? name.substring(0, 47) + '…' : name;
-      var fullName = name;
       var model = (s.model || '').split('/').pop();
-      return '<div class="oc-session-row oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
+      var provider = s.modelProvider || '';
+      return '<div class="oc-session-row oc-clickable" data-idx="' + i + '">' +
         sessionStatusDot(s.status) +
-        '<span class="oc-session-name oc-truncatable" title="' + escHtml(s.sessionKey) + '" data-full="' + escHtml(fullName) + '" data-short="' + escHtml(truncName) + '">' + escHtml(truncName) + '</span>' +
+        '<span class="oc-session-name" title="' + escHtml(s.sessionKey) + '">' + escHtml(truncName) + '</span>' +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '<span class="oc-session-time">' + escHtml(s.updatedAtRelative || '—') + '</span>' +
         '<span class="oc-session-tok">' + fmtTokens(s.totalTokens) + '</span>' +
+        '<div class="oc-session-expanded" style="display:none;"' +
+          ' data-key="' + escHtml(s.sessionKey || '') + '"' +
+          ' data-channel="' + escHtml(s.channel || '') + '"' +
+          ' data-chat-type="' + escHtml(s.chatType || '') + '"' +
+          ' data-model="' + escHtml(s.model || '') + '"' +
+          ' data-provider="' + escHtml(provider) + '"' +
+          ' data-compaction="' + (s.compactionCount || 0) + '"' +
+          ' data-display-name="' + escHtml(s.displayName || '') + '"' +
+          ' data-cache-read="' + (s.cacheRead || 0) + '"' +
+          ' data-in-tok="' + (s.inputTokens || 0) + '"' +
+          ' data-out-tok="' + (s.outputTokens || 0) + '"' +
+        '></div>' +
       '</div>';
     }).join('');
 
     if (sessions.length > shown.length) {
       el.innerHTML += '<div class="oc-session-more">+ ' + (sessions.length - shown.length) + ' idle sessions</div>';
     }
+
+    // Bind click handlers
+    el.querySelectorAll('.oc-session-row.oc-clickable').forEach(function(row) {
+      row.addEventListener('click', function() {
+        var expanded = row.querySelector('.oc-session-expanded');
+        if (!expanded) return;
+        var isOpen = expanded.style.display !== 'none';
+        // Close all
+        el.querySelectorAll('.oc-session-expanded').forEach(function(e) { e.style.display = 'none'; });
+        el.querySelectorAll('.oc-session-row').forEach(function(e) { e.classList.remove('oc-expanded'); });
+        if (isOpen) return;
+
+        var html = '<div style="padding:6px 4px;border-top:1px dashed #2d2218;margin-top:4px;font-size:10px;">';
+        var key = expanded.getAttribute('data-key');
+        var channel = expanded.getAttribute('data-channel');
+        var chatType = expanded.getAttribute('data-chat-type');
+        var model = expanded.getAttribute('data-model');
+        var provider = expanded.getAttribute('data-provider');
+        var compaction = expanded.getAttribute('data-compaction');
+        var displayName = expanded.getAttribute('data-display-name');
+        var cacheRead = expanded.getAttribute('data-cache-read');
+        var inTok = expanded.getAttribute('data-in-tok');
+        var outTok = expanded.getAttribute('data-out-tok');
+
+        if (displayName) html += '<div style="color:#e6edf3;">Name: ' + displayName + '</div>';
+        if (key) html += '<div style="color:#8b949e;word-break:break-all;">Key: ' + key + '</div>';
+        if (channel) html += '<div style="color:#8b949e;">Channel: ' + channel + (chatType ? ' (' + chatType + ')' : '') + '</div>';
+        if (model) html += '<div style="color:#8b949e;">Model: <span style="color:#e8a849;">' + model + '</span></div>';
+        if (provider) html += '<div style="color:#8b949e;">Provider: ' + provider + '</div>';
+        html += '<div style="color:#8b949e;">Tokens: In ' + fmtTokens(parseInt(inTok)) + ' / Out ' + fmtTokens(parseInt(outTok)) + '</div>';
+        if (parseInt(compaction) > 0) html += '<div style="color:#8b949e;">Compactions: ' + compaction + '</div>';
+        if (parseInt(cacheRead) > 0) html += '<div style="color:#8b949e;">Cache read: ' + fmtTokens(parseInt(cacheRead)) + '</div>';
+        html += '</div>';
+        expanded.innerHTML = html;
+        expanded.style.display = 'block';
+        row.classList.add('oc-expanded');
+      });
+    });
   }
 
   function renderSubagents(subagents) {
@@ -340,7 +496,7 @@
     panel.style.display = 'none';
     panel.innerHTML =
       '<div class="oc-panel-header">' +
-        '<span class="oc-panel-title">≡ OPENCLAW OPS</span>' +
+        '<span class="oc-panel-title">🔥 THE HEARTH OPS</span>' +
         '<span id="oc-last-refresh" class="oc-refresh-ts"></span>' +
         '<button class="oc-refresh-btn" onclick="document.dispatchEvent(new Event(\'oc-refresh\'))">↻</button>' +
       '</div>' +
@@ -409,7 +565,21 @@
       '.oc-agent-detail, .oc-sa-task { word-wrap: break-word; white-space: normal; }' +
       '.oc-expandable.expanded .oc-agent-detail,' +
       '.oc-expandable.expanded .oc-sa-task,' +
-      '.oc-expandable.expanded .oc-session-name { white-space: normal !important; word-break: break-all; overflow: visible !important; text-overflow: unset !important; max-height: none !important; }';
+      '.oc-expandable.expanded .oc-session-name { white-space: normal !important; word-break: break-all; overflow: visible !important; text-overflow: unset !important; max-height: none !important; }' +
+      /* Clickable elements */
+      '.oc-clickable { cursor: pointer; transition: background 0.15s, filter 0.15s; }' +
+      '.oc-clickable:hover { background: rgba(232,168,73,0.06); filter: brightness(1.05); }' +
+      '.oc-expanded { background: rgba(232,168,73,0.08) !important; }' +
+      /* Expand icon in job cards */
+      '.oc-expand-icon { color: #484f58; font-size: 10px; margin-left: auto; transition: transform 0.2s; }' +
+      /* Smooth expand for activity and session inner panels */
+      '.oc-act-expanded, .oc-session-expanded, .oc-job-expanded { animation: oc-slide-down 0.2s ease; }' +
+      '@keyframes oc-slide-down { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }' +
+      /* Activity rows need flex-wrap for expanded content */
+      '.oc-activity-row.oc-clickable { flex-wrap: wrap; }' +
+      '.oc-act-expanded { width: 100%; }' +
+      '.oc-session-row.oc-clickable { flex-wrap: wrap; }' +
+      '.oc-session-expanded { width: 100%; }';
     document.head.appendChild(expandStyle);
 
     // Listen for manual refresh
