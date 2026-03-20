@@ -5,6 +5,7 @@ Provides:
   GET /openclaw/cron      — all cron jobs with state
   GET /openclaw/activity  — recent cron run history
   GET /openclaw/costs     — token usage aggregation
+  GET /openclaw/usage     — usage limits & cost tracking
   GET /openclaw/sessions  — live session registry
   GET /openclaw/subagents — subagent run history
   GET /openclaw/agents    — combined agent view for pixel office
@@ -50,6 +51,7 @@ GATEWAY_HEALTH_URL = "http://127.0.0.1:18789/health"
 # Dismissed agents persistence
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DISMISSED_FILE = os.path.join(PROJECT_ROOT, "dismissed_agents.json")
+USAGE_CONFIG_FILE = os.path.join(PROJECT_ROOT, "usage_config.json")
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -300,6 +302,292 @@ def openclaw_costs():
         "totals": totals,
         "days": days,
     })
+
+
+# ---------------------------------------------------------------------------
+# Usage & Cost Tracking
+# ---------------------------------------------------------------------------
+
+def _read_usage_config():
+    """Read usage_config.json with defaults."""
+    defaults = {
+        "monthlyBudget": 200,
+        "warningThreshold": 0.8,
+        "anthropicMonthlyLimit": None,
+        "openaiMonthlyLimit": None,
+        "pricing": {
+            "claude-opus-4-6": {"inputPer1M": 15, "outputPer1M": 75, "cacheReadPer1M": 1.5},
+            "claude-sonnet-4-6": {"inputPer1M": 3, "outputPer1M": 15, "cacheReadPer1M": 0.3},
+            "gpt-5.4": {"inputPer1M": 2, "outputPer1M": 8, "cacheReadPer1M": 0.2},
+            "gpt-5.3-codex": {"inputPer1M": 2, "outputPer1M": 8, "cacheReadPer1M": 0.2},
+            "gpt-5.3-codex-spark": {"inputPer1M": 2, "outputPer1M": 8, "cacheReadPer1M": 0.2},
+            "default": {"inputPer1M": 3, "outputPer1M": 15, "cacheReadPer1M": 0.3},
+        },
+    }
+    if not os.path.isfile(USAGE_CONFIG_FILE):
+        return defaults
+    try:
+        with open(USAGE_CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        # Merge with defaults
+        for k, v in defaults.items():
+            if k not in data:
+                data[k] = v
+        return data
+    except Exception:
+        return defaults
+
+
+def _estimate_cost(model, input_tokens, output_tokens, cache_read_tokens, pricing):
+    """Estimate USD cost for token counts given model pricing table."""
+    model_short = (model or "").split("/")[-1] if model else ""
+    rates = pricing.get(model_short, pricing.get("default", {}))
+    input_cost = (input_tokens / 1_000_000) * rates.get("inputPer1M", 3)
+    output_cost = (output_tokens / 1_000_000) * rates.get("outputPer1M", 15)
+    cache_cost = (cache_read_tokens / 1_000_000) * rates.get("cacheReadPer1M", 0.3)
+    return round(input_cost + output_cost + cache_cost, 4)
+
+
+def _provider_from_model(model):
+    """Infer provider from model name."""
+    m = (model or "").lower()
+    if "claude" in m or "anthropic" in m:
+        return "anthropic"
+    if "gpt" in m or "codex" in m or "openai" in m:
+        return "openai"
+    if "openrouter" in m:
+        return "openrouter"
+    return "other"
+
+
+def _get_month_start_ms():
+    """Return epoch ms for the start of the current month."""
+    now = datetime.now()
+    month_start = datetime(now.year, now.month, 1)
+    return int(month_start.timestamp() * 1000)
+
+
+def _get_today_start_ms():
+    """Return epoch ms for the start of today."""
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day)
+    return int(today_start.timestamp() * 1000)
+
+
+@openclaw_bp.route("/openclaw/usage", methods=["GET"])
+def openclaw_usage():
+    """Usage limits & cost tracking — aggregates sessions + cron runs."""
+    period = request.args.get("period", "current_month", type=str)
+    config = _read_usage_config()
+    pricing = config.get("pricing", {})
+
+    # Determine time cutoff
+    now_ms = time.time() * 1000
+    if period == "today":
+        cutoff_ms = _get_today_start_ms()
+    elif period == "this_week":
+        cutoff_ms = now_ms - 7 * 86400 * 1000
+    else:  # current_month
+        cutoff_ms = _get_month_start_ms()
+
+    # --- 1. Aggregate from sessions.json ---
+    sessions = _read_sessions()
+    provider_totals = {}  # provider -> {inputTokens, outputTokens, cacheRead, totalTokens, sessions, cost}
+    model_totals = {}     # model -> {inputTokens, outputTokens, cacheRead, totalTokens, sessions, cost}
+    by_day = {}           # date_str -> {date, totalTokens, cost, sessions}
+
+    for session_key, s in sessions.items():
+        updated_at = s.get("updatedAt", 0)
+        if updated_at < cutoff_ms:
+            continue
+
+        model = s.get("model", "") or ""
+        model_provider = s.get("modelProvider", "") or ""
+        input_t = s.get("inputTokens", 0) or 0
+        output_t = s.get("outputTokens", 0) or 0
+        cache_r = s.get("cacheRead", 0) or 0
+        total_t = s.get("totalTokens", 0) or 0
+
+        # Infer provider if not set
+        provider = model_provider if model_provider and model_provider != "unknown" else _provider_from_model(model)
+
+        cost = _estimate_cost(model, input_t, output_t, cache_r, pricing)
+
+        # Provider aggregation
+        if provider not in provider_totals:
+            provider_totals[provider] = {"inputTokens": 0, "outputTokens": 0, "cacheRead": 0,
+                                          "totalTokens": 0, "sessions": 0, "estimatedCost": 0}
+        pt = provider_totals[provider]
+        pt["inputTokens"] += input_t
+        pt["outputTokens"] += output_t
+        pt["cacheRead"] += cache_r
+        pt["totalTokens"] += total_t
+        pt["sessions"] += 1
+        pt["estimatedCost"] = round(pt["estimatedCost"] + cost, 4)
+
+        # Model aggregation
+        model_key = model.split("/")[-1] if model else "unknown"
+        if model_key not in model_totals:
+            model_totals[model_key] = {"inputTokens": 0, "outputTokens": 0, "cacheRead": 0,
+                                        "totalTokens": 0, "sessions": 0, "estimatedCost": 0}
+        mt = model_totals[model_key]
+        mt["inputTokens"] += input_t
+        mt["outputTokens"] += output_t
+        mt["cacheRead"] += cache_r
+        mt["totalTokens"] += total_t
+        mt["sessions"] += 1
+        mt["estimatedCost"] = round(mt["estimatedCost"] + cost, 4)
+
+        # By day aggregation
+        try:
+            day_str = datetime.fromtimestamp(updated_at / 1000).strftime("%Y-%m-%d")
+        except Exception:
+            day_str = "unknown"
+        if day_str not in by_day:
+            by_day[day_str] = {"date": day_str, "totalTokens": 0, "estimatedCost": 0, "sessions": 0}
+        by_day[day_str]["totalTokens"] += total_t
+        by_day[day_str]["estimatedCost"] = round(by_day[day_str]["estimatedCost"] + cost, 4)
+        by_day[day_str]["sessions"] += 1
+
+    # --- 2. Aggregate from cron runs ---
+    runs = _read_all_runs()
+    for r in runs:
+        ts = r.get("ts", 0)
+        if ts < cutoff_ms:
+            continue
+
+        usage = r.get("usage") or {}
+        input_t = usage.get("input_tokens", 0) or 0
+        output_t = usage.get("output_tokens", 0) or 0
+        cache_r = usage.get("cache_read_input_tokens", 0) or 0
+        model = r.get("model", "") or ""
+        provider_raw = r.get("provider", "") or ""
+        provider = provider_raw if provider_raw and provider_raw != "unknown" else _provider_from_model(model)
+
+        cost = _estimate_cost(model, input_t, output_t, cache_r, pricing)
+
+        # Provider
+        if provider not in provider_totals:
+            provider_totals[provider] = {"inputTokens": 0, "outputTokens": 0, "cacheRead": 0,
+                                          "totalTokens": 0, "sessions": 0, "estimatedCost": 0}
+        pt = provider_totals[provider]
+        pt["inputTokens"] += input_t
+        pt["outputTokens"] += output_t
+        pt["cacheRead"] += cache_r
+        pt["totalTokens"] += input_t + output_t
+        pt["sessions"] += 1
+        pt["estimatedCost"] = round(pt["estimatedCost"] + cost, 4)
+
+        # Model
+        model_key = model.split("/")[-1] if model else "unknown"
+        if model_key not in model_totals:
+            model_totals[model_key] = {"inputTokens": 0, "outputTokens": 0, "cacheRead": 0,
+                                        "totalTokens": 0, "sessions": 0, "estimatedCost": 0}
+        mt = model_totals[model_key]
+        mt["inputTokens"] += input_t
+        mt["outputTokens"] += output_t
+        mt["cacheRead"] += cache_r
+        mt["totalTokens"] += input_t + output_t
+        mt["sessions"] += 1
+        mt["estimatedCost"] = round(mt["estimatedCost"] + cost, 4)
+
+        # By day
+        try:
+            day_str = datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d")
+        except Exception:
+            day_str = "unknown"
+        if day_str not in by_day:
+            by_day[day_str] = {"date": day_str, "totalTokens": 0, "estimatedCost": 0, "sessions": 0}
+        by_day[day_str]["totalTokens"] += input_t + output_t
+        by_day[day_str]["estimatedCost"] = round(by_day[day_str]["estimatedCost"] + cost, 4)
+        by_day[day_str]["sessions"] += 1
+
+    # --- 3. Compute totals and warnings ---
+    total_cost = sum(pt["estimatedCost"] for pt in provider_totals.values())
+    total_tokens = sum(pt["totalTokens"] for pt in provider_totals.values())
+    monthly_budget = config.get("monthlyBudget")
+    warning_threshold = config.get("warningThreshold", 0.8)
+
+    warnings = []
+    budget_percent = None
+    if monthly_budget and monthly_budget > 0:
+        budget_percent = round(total_cost / monthly_budget, 4)
+        if budget_percent >= 1.0:
+            warnings.append(f"🔴 Monthly budget exceeded! ${total_cost:.2f} / ${monthly_budget:.2f}")
+        elif budget_percent >= warning_threshold:
+            warnings.append(f"🟡 Approaching monthly budget: ${total_cost:.2f} / ${monthly_budget:.2f} ({budget_percent*100:.0f}%)")
+
+    # Provider-specific limit warnings
+    for pname, limit_key in [("anthropic", "anthropicMonthlyLimit"), ("openai", "openaiMonthlyLimit")]:
+        limit_val = config.get(limit_key)
+        if limit_val and limit_val > 0 and pname in provider_totals:
+            pct = provider_totals[pname]["estimatedCost"] / limit_val
+            provider_totals[pname]["limit"] = limit_val
+            provider_totals[pname]["percentUsed"] = round(pct, 4)
+            if pct >= 1.0:
+                warnings.append(f"🔴 {pname.title()} limit exceeded!")
+            elif pct >= warning_threshold:
+                warnings.append(f"🟡 {pname.title()} approaching limit ({pct*100:.0f}%)")
+
+    # Pro-rated daily budget info
+    now = datetime.now()
+    days_in_month = 30  # approximation
+    day_of_month = now.day
+    daily_budget = monthly_budget / days_in_month if monthly_budget else None
+
+    # Today's spend
+    today_str = now.strftime("%Y-%m-%d")
+    today_data = by_day.get(today_str, {"totalTokens": 0, "estimatedCost": 0, "sessions": 0})
+    today_cost = today_data["estimatedCost"]
+    today_budget_pct = None
+    if daily_budget and daily_budget > 0:
+        today_budget_pct = round(today_cost / daily_budget, 4)
+
+    by_day_list = sorted(by_day.values(), key=lambda d: d["date"])
+
+    return jsonify({
+        "period": period,
+        "totalEstimatedCost": round(total_cost, 2),
+        "totalTokens": total_tokens,
+        "monthlyBudget": monthly_budget,
+        "budgetPercent": budget_percent,
+        "byProvider": provider_totals,
+        "byModel": model_totals,
+        "byDay": by_day_list,
+        "today": {
+            "date": today_str,
+            "estimatedCost": round(today_cost, 2),
+            "totalTokens": today_data["totalTokens"],
+            "sessions": today_data["sessions"],
+            "dailyBudget": round(daily_budget, 2) if daily_budget else None,
+            "budgetPercent": today_budget_pct,
+        },
+        "warnings": warnings,
+    })
+
+
+@openclaw_bp.route("/openclaw/usage/config", methods=["GET"])
+def openclaw_usage_config_get():
+    """Get the current usage config."""
+    return jsonify(_read_usage_config())
+
+
+@openclaw_bp.route("/openclaw/usage/config", methods=["POST"])
+def openclaw_usage_config_set():
+    """Update usage config (partial merge)."""
+    try:
+        updates = request.get_json(force=True)
+        config = _read_usage_config()
+        for k, v in updates.items():
+            if k == "pricing" and isinstance(v, dict):
+                config.setdefault("pricing", {}).update(v)
+            else:
+                config[k] = v
+        with open(USAGE_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+        return jsonify({"ok": True, "config": config})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
 
 
 # ---------------------------------------------------------------------------

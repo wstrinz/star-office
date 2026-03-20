@@ -272,6 +272,178 @@
     el.innerHTML = html;
   }
 
+  // ── Usage & Limits ───────────────────────────────────────
+
+  function fmtCost(n) {
+    if (n == null) return '$0.00';
+    return '$' + n.toFixed(2);
+  }
+
+  function budgetBarClass(pct) {
+    if (pct == null) return 'oc-bar-green';
+    if (pct >= 0.8) return 'oc-bar-red';
+    if (pct >= 0.5) return 'oc-bar-yellow';
+    return 'oc-bar-green';
+  }
+
+  function todayDotClass(pct) {
+    if (pct == null) return 'oc-today-green';
+    if (pct >= 0.8) return 'oc-today-red';
+    if (pct >= 0.5) return 'oc-today-yellow';
+    return 'oc-today-green';
+  }
+
+  function renderUsagePanel(data) {
+    var el = document.getElementById('oc-usage-panel');
+    if (!el || !data) { if (el) el.innerHTML = '<div class="oc-empty">Usage data unavailable</div>'; return; }
+
+    var html = '';
+
+    // Warnings
+    if (data.warnings && data.warnings.length) {
+      html += '<div class="oc-usage-warnings">';
+      data.warnings.forEach(function (w) {
+        var isRed = w.indexOf('🔴') > -1;
+        html += '<div class="oc-usage-warning' + (isRed ? ' oc-usage-warning-red' : '') + '">' + escHtml(w) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Budget meter
+    var budget = data.monthlyBudget;
+    var totalCost = data.totalEstimatedCost || 0;
+    var budgetPct = data.budgetPercent;
+    var barPct = budgetPct != null ? Math.min(budgetPct * 100, 100) : 0;
+    var barCls = budgetBarClass(budgetPct);
+
+    html += '<div class="oc-usage-budget-wrap">';
+    html += '<div class="oc-usage-budget-header">';
+    html += '<span class="oc-usage-budget-label">Monthly Budget</span>';
+    html += '<span class="oc-usage-budget-amount">' + fmtCost(totalCost) + (budget ? ' / ' + fmtCost(budget) : '') + '</span>';
+    html += '</div>';
+    html += '<div class="oc-usage-bar-track">';
+    html += '<div class="oc-usage-bar-fill ' + barCls + '" style="width:' + barPct + '%"></div>';
+    if (budgetPct != null) {
+      html += '<span class="oc-usage-bar-pct">' + Math.round(budgetPct * 100) + '%</span>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Provider cards
+    var providers = data.byProvider || {};
+    var providerKeys = Object.keys(providers).filter(function (k) { return k !== 'unknown' && k !== 'other'; });
+    providerKeys.sort(function (a, b) { return (providers[b].estimatedCost || 0) - (providers[a].estimatedCost || 0); });
+
+    if (providerKeys.length) {
+      html += '<div class="oc-usage-providers">';
+      providerKeys.forEach(function (pname) {
+        var p = providers[pname];
+        html += '<div class="oc-usage-provider-card">';
+        html += '<div class="oc-usage-provider-name">' + escHtml(pname) + '</div>';
+        html += '<div class="oc-usage-provider-cost">' + fmtCost(p.estimatedCost) + '</div>';
+        html += '<div class="oc-usage-provider-tokens">' + fmtTokens(p.totalTokens) + ' tokens · ' + (p.sessions || 0) + ' sessions</div>';
+        if (p.cacheRead) {
+          html += '<div class="oc-usage-provider-tokens">Cache: ' + fmtTokens(p.cacheRead) + '</div>';
+        }
+        if (p.limit) {
+          html += '<div class="oc-usage-provider-tokens">Limit: ' + fmtCost(p.limit) + ' (' + Math.round((p.percentUsed || 0) * 100) + '%)</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Model breakdown
+    var models = data.byModel || {};
+    var modelKeys = Object.keys(models).filter(function (k) { return k !== 'unknown'; });
+    modelKeys.sort(function (a, b) { return (models[b].estimatedCost || 0) - (models[a].estimatedCost || 0); });
+
+    if (modelKeys.length) {
+      var maxModelCost = 0;
+      modelKeys.forEach(function (m) { if (models[m].estimatedCost > maxModelCost) maxModelCost = models[m].estimatedCost; });
+
+      html += '<div class="oc-usage-models">';
+      html += '<div style="font-size:10px;color:#484f58;letter-spacing:1px;margin-bottom:4px;">BY MODEL</div>';
+      modelKeys.forEach(function (m) {
+        var d = models[m];
+        var pct = maxModelCost > 0 ? Math.max(3, Math.round((d.estimatedCost / maxModelCost) * 100)) : 3;
+        html += '<div class="oc-usage-model-row">';
+        html += '<span class="oc-usage-model-name">' + escHtml(m) + '</span>';
+        html += '<div class="oc-usage-model-bar-wrap"><div class="oc-usage-model-bar" style="width:' + pct + '%"></div></div>';
+        html += '<span class="oc-usage-model-cost">' + fmtCost(d.estimatedCost) + '</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Daily trend sparkline
+    var byDay = data.byDay || [];
+    if (byDay.length > 1) {
+      var maxDayCost = 0;
+      byDay.forEach(function (d) { if (d.estimatedCost > maxDayCost) maxDayCost = d.estimatedCost; });
+
+      html += '<div style="font-size:10px;color:#484f58;letter-spacing:1px;margin-bottom:4px;">DAILY SPEND</div>';
+      html += '<div class="oc-usage-sparkline">';
+      byDay.forEach(function (d) {
+        var h = maxDayCost > 0 ? Math.max(2, Math.round((d.estimatedCost / maxDayCost) * 36)) : 2;
+        var shortDate = d.date.substring(5); // MM-DD
+        html += '<div class="oc-usage-spark-bar" style="height:' + h + 'px" data-tip="' + shortDate + ': ' + fmtCost(d.estimatedCost) + '"></div>';
+      });
+      html += '</div>';
+      if (byDay.length >= 2) {
+        html += '<div class="oc-usage-spark-label">';
+        html += '<span>' + byDay[0].date.substring(5) + '</span>';
+        html += '<span>' + byDay[byDay.length - 1].date.substring(5) + '</span>';
+        html += '</div>';
+      }
+    }
+
+    // Today's badge
+    var today = data.today;
+    if (today) {
+      var todayCls = todayDotClass(today.budgetPercent);
+      html += '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">';
+      html += '<div class="oc-usage-today-badge">';
+      html += '<span class="oc-usage-today-dot ' + todayCls + '"></span>';
+      html += 'Today: ' + fmtCost(today.estimatedCost);
+      if (today.dailyBudget) html += ' / ' + fmtCost(today.dailyBudget);
+      html += ' · ' + (today.sessions || 0) + ' sessions';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+
+    // Update the usage indicator badge in the main UI
+    updateUsageIndicator(data);
+  }
+
+  function updateUsageIndicator(data) {
+    // Create or update a small usage badge in the top-right of main-stage
+    var badge = document.getElementById('oc-usage-indicator');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'oc-usage-indicator';
+      badge.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;padding:3px 8px;font-family:ArkPixel,monospace;font-size:10px;border:1px solid #2d2218;background:#1e1710;cursor:pointer;opacity:0.85;transition:opacity 0.2s;';
+      badge.addEventListener('mouseenter', function () { badge.style.opacity = '1'; });
+      badge.addEventListener('mouseleave', function () { badge.style.opacity = '0.85'; });
+      badge.addEventListener('click', function () { toggleDashboard(true); });
+      document.body.appendChild(badge);
+    }
+
+    var today = data && data.today;
+    if (!today) { badge.style.display = 'none'; return; }
+
+    badge.style.display = 'block';
+    var pct = today.budgetPercent;
+    var dotColor = '#3fb950'; // green
+    if (pct != null && pct >= 0.8) dotColor = '#f85149';
+    else if (pct != null && pct >= 0.5) dotColor = '#d29922';
+
+    badge.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + dotColor + ';margin-right:4px;"></span>' +
+      fmtCost(today.estimatedCost) + '/day';
+  }
+
   // ── Sessions & Agents ────────────────────────────────────
 
   function sessionStatusDot(status) {
@@ -458,7 +630,7 @@
   // ── Data refresh ────────────────────────────────────────
 
   async function refreshAll() {
-    const [status, cron, activity, costs, sessions, subagents, agentsCombined] = await Promise.all([
+    const [status, cron, activity, costs, sessions, subagents, agentsCombined, usage] = await Promise.all([
       fetchJSON('/openclaw/status'),
       fetchJSON('/openclaw/cron'),
       fetchJSON('/openclaw/activity?limit=' + ACTIVITY_LIMIT),
@@ -466,8 +638,10 @@
       fetchJSON('/openclaw/sessions?limit=50'),
       fetchJSON('/openclaw/subagents'),
       fetchJSON('/openclaw/agents'),
+      fetchJSON('/openclaw/usage?period=current_month'),
     ]);
     renderStatusBar(status);
+    renderUsagePanel(usage);
     renderCronGrid(cron);
     renderActivity(activity);
     renderCosts(costs);
@@ -520,6 +694,8 @@
         '<button class="oc-refresh-btn" onclick="document.dispatchEvent(new Event(\'oc-refresh\'))">↻</button>' +
       '</div>' +
       '<div id="oc-status-bar" class="oc-status-bar">Loading…</div>' +
+      '<div class="oc-section-label">USAGE &amp; LIMITS</div>' +
+      '<div id="oc-usage-panel" class="oc-usage-panel">Loading…</div>' +
       '<div class="oc-section-label">WHO\'S IN THE OFFICE</div>' +
       '<div id="oc-agents-roster" class="oc-agents-roster"></div>' +
       '<div class="oc-two-col">' +

@@ -1474,6 +1474,178 @@
 
         .oc-empty { color: #484f58; text-align: center; padding: 20px 0; font-style: italic; }
 
+        /* Usage & Limits panel */
+        .oc-usage-panel { padding: 4px 0; }
+        .oc-usage-budget-wrap {
+            background: #1e1710;
+            border: 2px solid #2d2218;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .oc-usage-budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+        .oc-usage-budget-label { color: #8b949e; }
+        .oc-usage-budget-amount { color: #e8a849; font-weight: bold; }
+        .oc-usage-bar-track {
+            height: 14px;
+            background: #120e0a;
+            border: 1px solid #2d2218;
+            position: relative;
+            overflow: hidden;
+        }
+        .oc-usage-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            image-rendering: pixelated;
+        }
+        .oc-usage-bar-fill.oc-bar-green { background: linear-gradient(90deg, #1a4d2e, #3fb950); }
+        .oc-usage-bar-fill.oc-bar-yellow { background: linear-gradient(90deg, #5c3d1a, #d29922); }
+        .oc-usage-bar-fill.oc-bar-red { background: linear-gradient(90deg, #6e2c2c, #f85149); }
+        .oc-usage-bar-pct {
+            position: absolute;
+            right: 4px;
+            top: 0;
+            line-height: 14px;
+            font-size: 9px;
+            color: #e6edf3;
+            text-shadow: 0 0 3px #000;
+        }
+        .oc-usage-providers {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .oc-usage-provider-card {
+            flex: 1;
+            min-width: 140px;
+            background: #1e1710;
+            border: 1px solid #2d2218;
+            padding: 8px 10px;
+        }
+        .oc-usage-provider-name {
+            font-size: 11px;
+            color: #e8a849;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .oc-usage-provider-cost {
+            font-size: 16px;
+            color: #e6edf3;
+            font-weight: bold;
+        }
+        .oc-usage-provider-tokens {
+            font-size: 10px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+        .oc-usage-models { margin-bottom: 10px; }
+        .oc-usage-model-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 0;
+            font-size: 10px;
+        }
+        .oc-usage-model-name {
+            min-width: 110px;
+            color: #c9d1d9;
+            white-space: nowrap;
+        }
+        .oc-usage-model-bar-wrap {
+            flex: 1;
+            height: 8px;
+            background: #120e0a;
+            border: 1px solid #2d2218;
+        }
+        .oc-usage-model-bar {
+            height: 100%;
+            background: #e8a849;
+            transition: width 0.3s;
+        }
+        .oc-usage-model-cost {
+            min-width: 55px;
+            text-align: right;
+            color: #e8a849;
+        }
+        .oc-usage-warnings {
+            margin-bottom: 8px;
+        }
+        .oc-usage-warning {
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            background: #2d1a0a;
+            border-left: 3px solid #d29922;
+            color: #d29922;
+        }
+        .oc-usage-warning-red {
+            border-left-color: #f85149;
+            color: #f85149;
+            background: #2d0a0a;
+        }
+        .oc-usage-sparkline {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 40px;
+            padding: 4px 0;
+        }
+        .oc-usage-spark-bar {
+            flex: 1;
+            min-width: 4px;
+            background: #e8a849;
+            border-top: 1px solid #b87a2e;
+            transition: height 0.3s;
+            position: relative;
+        }
+        .oc-usage-spark-bar:hover { background: #f0c060; }
+        .oc-usage-spark-bar:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1710;
+            border: 1px solid #2d2218;
+            padding: 2px 4px;
+            font-size: 9px;
+            color: #e8a849;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .oc-usage-spark-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #484f58;
+            margin-top: 2px;
+        }
+        .oc-usage-today-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            border: 1px solid #2d2218;
+            background: #1e1710;
+        }
+        .oc-usage-today-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .oc-today-green { background: #3fb950; }
+        .oc-today-yellow { background: #d29922; }
+        .oc-today-red { background: #f85149; }
+
         /* Agents roster - "who\'s in the office" */
         .oc-agents-roster {
             display: flex;
