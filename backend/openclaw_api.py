@@ -14,6 +14,7 @@ Provides:
 import glob
 import json
 import os
+import re
 import time
 import urllib.request
 import urllib.error
@@ -1118,6 +1119,107 @@ def openclaw_agents_combined():
             "endedReason": r.get("endedReason", ""),
         })
 
+    # 2b. Active sessions not covered by runs.json
+    #     Surfaces thread work, orphaned subagents, and cron sessions
+    thirty_min_ms = 30 * 60 * 1000
+    five_min_ms = 5 * 60 * 1000
+
+    # Build a set of session keys already represented by subagent runs
+    covered_session_keys = set()
+    for run_id, r in runs.items():
+        child_key = r.get("childSessionKey", "")
+        if child_key:
+            covered_session_keys.add(child_key)
+
+    for session_key, s in sessions.items():
+        updated_at = s.get("updatedAt", 0)
+        age_ms = now_ms - updated_at
+        if age_ms > thirty_min_ms:
+            continue
+
+        # Skip the main heartbeat session
+        if session_key == "agent:main:main":
+            continue
+
+        # Skip sessions already covered by a subagent run
+        if session_key in covered_session_keys:
+            continue
+        # Also check if any covered key is a substring match
+        skip = False
+        for ck in covered_session_keys:
+            if ck and ck in session_key:
+                skip = True
+                break
+        if skip:
+            continue
+
+        # Determine session type from key
+        if "subagent:" in session_key:
+            sess_type = "subagent"
+        elif "discord:channel:" in session_key:
+            sess_type = "thread"
+        elif "cron:" in session_key:
+            sess_type = "cron"
+        else:
+            sess_type = "thread"  # default for other active sessions
+
+        # Extract display name
+        display_name = s.get("displayName", "") or ""
+        clean_name = ""
+        if display_name:
+            # Try to extract channel name like "#the-assembly-line" from
+            # "discord:782757298497126451#the-assembly-line"
+            channel_match = re.search(r"#([\w-]+)", display_name)
+            if channel_match:
+                clean_name = "#" + channel_match.group(1)
+            else:
+                clean_name = display_name
+        if not clean_name:
+            # Fallback: derive from session key
+            if "discord:channel:" in session_key:
+                clean_name = "Discord thread"
+            elif "subagent:" in session_key:
+                # Try to get label from the key itself
+                parts = session_key.split("subagent:")
+                clean_name = parts[-1][:30] if len(parts) > 1 else "Subagent"
+            elif "cron:" in session_key:
+                parts = session_key.split("cron:")
+                clean_name = parts[-1][:30] if len(parts) > 1 else "Cron job"
+            else:
+                clean_name = session_key[:30]
+
+        # Prefix based on type
+        if sess_type == "thread":
+            agent_name = "💬 " + clean_name
+        elif sess_type == "subagent":
+            agent_name = "⚡ " + clean_name
+        elif sess_type == "cron":
+            agent_name = "⏰ " + clean_name
+        else:
+            agent_name = clean_name
+
+        # Check dismissed
+        if agent_name in dismissed or session_key in dismissed:
+            continue
+
+        # Determine state from freshness
+        if age_ms < five_min_ms:
+            sess_state = "executing"
+        else:
+            sess_state = "writing"
+
+        agents.append({
+            "name": agent_name,
+            "type": sess_type,
+            "state": sess_state,
+            "detail": display_name or session_key,
+            "model": s.get("model", ""),
+            "startedAt": updated_at,
+            "tokens": s.get("totalTokens", 0) or 0,
+            "sessionKey": session_key,
+            "updatedAt": updated_at,
+        })
+
     # 3. Currently-running cron jobs
     jobs = _read_jobs()
     for j in jobs:
@@ -1362,6 +1464,49 @@ def openclaw_agent_detail(name):
                 "nextRunAtRelative": _relative_time_label(state.get("nextRunAtMs")),
                 "consecutiveErrors": state.get("consecutiveErrors", 0),
                 "recentRuns": recent_runs,
+            })
+
+    # Check active sessions (thread/subagent/cron sessions not in runs.json)
+    sessions = _read_sessions()
+    for session_key, s in sessions.items():
+        display_name = s.get("displayName", "") or ""
+        # Match by session key or by cleaned display name containing the search name
+        if name in session_key or name in display_name or session_key == name:
+            updated_at = s.get("updatedAt", 0)
+            age_ms = now_ms - updated_at
+
+            if "subagent:" in session_key:
+                sess_type = "subagent"
+            elif "discord:channel:" in session_key:
+                sess_type = "thread"
+            elif "cron:" in session_key:
+                sess_type = "cron"
+            else:
+                sess_type = "thread"
+
+            if age_ms < 5 * 60 * 1000:
+                sess_state = "executing"
+            elif age_ms < 30 * 60 * 1000:
+                sess_state = "writing"
+            else:
+                sess_state = "idle"
+
+            return jsonify({
+                "name": name,
+                "type": sess_type,
+                "state": sess_state,
+                "detail": display_name or session_key,
+                "model": s.get("model", ""),
+                "modelProvider": s.get("modelProvider", ""),
+                "startedAt": updated_at,
+                "startedAtRelative": _relative_time_label(updated_at),
+                "totalTokens": s.get("totalTokens", 0) or 0,
+                "inputTokens": s.get("inputTokens", 0) or 0,
+                "outputTokens": s.get("outputTokens", 0) or 0,
+                "cacheRead": s.get("cacheRead", 0) or 0,
+                "sessionKey": session_key,
+                "channel": s.get("channel", ""),
+                "chatType": s.get("chatType", ""),
             })
 
     return jsonify({"error": "Agent not found"}), 404

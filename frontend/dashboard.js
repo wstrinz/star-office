@@ -756,7 +756,7 @@
     }
 
     el.innerHTML = agents.map(function (a) {
-      var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : '⏰');
+      var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : (a.type === 'thread' ? '💬' : '⏰'));
       var model = (a.model || '').split('/').pop();
       var fullDetail = a.detail || '';
       var truncDetail = fullDetail.length > 200 ? fullDetail.substring(0, 197) + '…' : fullDetail;
