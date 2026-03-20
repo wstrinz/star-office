@@ -1407,6 +1407,97 @@ def _bg_generate_worker(task_id: str, custom_prompt: str, speed_mode: str):
             _bg_tasks[task_id] = {"status": "error", "result": error_result}
 
 
+@app.route("/openclaw/redecorate", methods=["POST"])
+def openclaw_redecorate():
+    """Agent-accessible room redecoration endpoint. No asset-editor auth required.
+
+    Accepts JSON: {"prompt": "...", "model": "nanobanana-pro"}
+    Returns: {"ok": true, "prompt": "...", "message": "Room redecorated!", "task_id": "..."}
+
+    Kicks off async background generation (same as broker) and returns a task_id for polling.
+    Agents can poll /openclaw/redecorate/poll?task_id=... for completion.
+    """
+    try:
+        req = request.get_json(silent=True) or {}
+        custom_prompt = (req.get("prompt") or "").strip() if isinstance(req, dict) else ""
+        user_model = (req.get("model") or "").strip() if isinstance(req, dict) else ""
+        speed_mode = (req.get("speed_mode") or "quality").strip().lower() if isinstance(req, dict) else "quality"
+        if speed_mode not in {"fast", "quality"}:
+            speed_mode = "quality"
+
+        if not custom_prompt:
+            return jsonify({"ok": False, "msg": "Missing 'prompt' in request body"}), 400
+
+        target = FRONTEND_PATH / "office_bg_small.webp"
+        if not target.exists():
+            return jsonify({"ok": False, "msg": "office_bg_small.webp not found"}), 404
+
+        # Pre-flight checks
+        runtime_cfg = load_runtime_config()
+        api_key = (runtime_cfg.get("gemini_api_key") or "").strip()
+        if not api_key:
+            return jsonify({"ok": False, "code": "MISSING_API_KEY", "msg": "No Gemini API key configured"}), 400
+        if not (os.path.exists(GEMINI_PYTHON) and os.path.exists(GEMINI_SCRIPT)):
+            return jsonify({"ok": False, "msg": "Gemini image generation script not available"}), 500
+
+        # Check for already-running generation
+        with _bg_tasks_lock:
+            for tid, task in _bg_tasks.items():
+                if task.get("status") == "pending":
+                    return jsonify({"ok": True, "async": True, "task_id": tid, "msg": "Generation already in progress, poll for result"}), 200
+
+        # Optionally override model in runtime config temporarily
+        if user_model:
+            normalized = _normalize_user_model(user_model)
+            # We don't persist this — just let the worker use the configured model
+            # The prompt is what matters most for the agent use case
+
+        # Create async task
+        import string as _string
+        task_id = "redecorate_" + str(int(datetime.now().timestamp() * 1000)) + "_" + "".join(random.choices(_string.ascii_lowercase + _string.digits, k=4))
+        with _bg_tasks_lock:
+            _bg_tasks[task_id] = {"status": "pending", "created_at": datetime.now().isoformat(), "prompt": custom_prompt}
+
+        t = threading.Thread(target=_bg_generate_worker, args=(task_id, custom_prompt, speed_mode), daemon=True)
+        t.start()
+
+        return jsonify({
+            "ok": True,
+            "async": True,
+            "task_id": task_id,
+            "prompt": custom_prompt,
+            "message": "Room redecoration started! Poll /openclaw/redecorate/poll?task_id=" + task_id + " for result.",
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "msg": str(e)}), 500
+
+
+@app.route("/openclaw/redecorate/poll", methods=["GET"])
+def openclaw_redecorate_poll():
+    """Poll async redecoration task status. No auth required."""
+    task_id = (request.args.get("task_id") or "").strip()
+    if not task_id:
+        return jsonify({"ok": False, "msg": "Missing task_id"}), 400
+    with _bg_tasks_lock:
+        task = _bg_tasks.get(task_id)
+    if not task:
+        return jsonify({"ok": False, "msg": "Task not found"}), 404
+    status = task.get("status", "pending")
+    if status == "pending":
+        return jsonify({"ok": True, "status": "pending", "message": "Still generating..."})
+    elif status == "done":
+        with _bg_tasks_lock:
+            _bg_tasks.pop(task_id, None)
+        result = task.get("result", {})
+        return jsonify({"ok": True, "status": "done", "message": "Room redecorated!", **result})
+    else:
+        with _bg_tasks_lock:
+            _bg_tasks.pop(task_id, None)
+        result = task.get("result", {})
+        code = 400 if result.get("code") else 500
+        return jsonify({"ok": False, "status": "error", **result}), code
+
+
 @app.route("/assets/generate-rpg-background", methods=["POST"])
 def assets_generate_rpg_background():
     """Start async RPG background generation. Returns a task_id for polling."""
