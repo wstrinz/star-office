@@ -1581,6 +1581,10 @@ def openclaw_agents_combined():
                 "displayName": display_name or session_key,
                 "updatedAt": updated_at,
                 "sessionKey": session_key,
+                "totalTokens": s.get("totalTokens", 0) or 0,
+                "model": s.get("model", "") or "",
+                "sessionAge": _relative_time_label(s.get("createdAt", updated_at) or updated_at),
+                "lastActivityAge": _relative_time_label(updated_at),
             })
             continue
 

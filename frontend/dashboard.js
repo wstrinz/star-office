@@ -773,6 +773,13 @@
       var fullDetail = a.detail || '';
       var truncDetail = fullDetail.length > 200 ? fullDetail.substring(0, 197) + '…' : fullDetail;
 
+      // Thread count badge for main agent
+      var threadCountBadge = '';
+      var threadCount = (a.type === 'main' && a.activeThreads) ? a.activeThreads.length : 0;
+      if (a.type === 'main' && threadCount > 0) {
+        threadCountBadge = '<span style="background:#e8a849;color:#1a1410;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:bold;margin-left:4px;">' + threadCount + ' thread' + (threadCount !== 1 ? 's' : '') + '</span>';
+      }
+
       // For main agent, show formatted thread/channel prominently
       var threadLine = '';
       if (a.type === 'main' && fullDetail && a.state !== 'idle') {
@@ -782,20 +789,38 @@
         }
       }
 
-      // For main agent, render active threads as sub-items
+      // For main agent, render active threads as mini-cards
       var activeThreadsHtml = '';
       if (a.type === 'main' && a.activeThreads && a.activeThreads.length > 0) {
         var threadItems = a.activeThreads.map(function(th) {
-          var threadStateBadge = agentStateBadge(th.state);
           var threadName = th.name || '?';
-          return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0 2px 20px;font-size:11px;">' +
-            '<span style="color:#8b949e;">📍</span>' +
-            '<span style="color:#c9d1d9;">' + escHtml(threadName) + '</span>' +
-            threadStateBadge +
+          var thState = th.state || 'idle';
+          var stateColors = { executing: '#3fb950', writing: '#d29922', idle: '#484f58' };
+          var stateLabels = { executing: 'Working now', writing: 'Writing', idle: 'Idle' };
+          var stateColor = stateColors[thState] || '#484f58';
+          var stateLabel = stateLabels[thState] || thState;
+          var thModel = (th.model || '').split('/').pop();
+          var thTokens = th.totalTokens || 0;
+          var activityLabel = '';
+          if (th.lastActivityAge) {
+            activityLabel = thState === 'executing' ? '⚡ Working now' : th.lastActivityAge;
+          }
+
+          return '<div class="oc-thread-card" style="' +
+            'margin:3px 0 3px 20px;padding:6px 10px;' +
+            'background:rgba(30,23,16,0.8);border:1px solid #2d2218;border-left:3px solid ' + stateColor + ';' +
+            'border-radius:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;' +
+            'cursor:pointer;transition:background 0.15s,border-color 0.15s;' +
+          '" onmouseenter="this.style.background=\'rgba(232,168,73,0.08)\';this.style.borderColor=\'#5c3d1a\'" onmouseleave="this.style.background=\'rgba(30,23,16,0.8)\';this.style.borderColor=\'#2d2218\'">' +
+            '<span style="color:#c9d1d9;font-size:12px;font-weight:bold;min-width:90px;">' + escHtml(threadName) + '</span>' +
+            '<span style="background:' + stateColor + ';color:#1a1410;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:bold;letter-spacing:0.5px;">' + escHtml(stateLabel) + '</span>' +
+            (thTokens > 0 ? '<span style="color:#8b949e;font-size:10px;" title="Total tokens">' + fmtTokens(thTokens) + ' tok</span>' : '') +
+            (thModel ? '<span class="oc-model-tag" style="font-size:9px;">' + escHtml(thModel) + '</span>' : '') +
+            (activityLabel ? '<span style="color:#8b949e;font-size:10px;margin-left:auto;">' + escHtml(activityLabel) + '</span>' : '') +
           '</div>';
         }).join('');
         activeThreadsHtml = '<div style="width:100%;border-top:1px dashed #2d2218;margin-top:4px;padding-top:4px;">' +
-          '<div style="font-size:10px;color:#484f58;letter-spacing:1px;margin-bottom:2px;padding-left:20px;">ACTIVE THREADS</div>' +
+          '<div style="font-size:10px;color:#484f58;letter-spacing:1px;margin-bottom:4px;padding-left:20px;">ACTIVE THREADS</div>' +
           threadItems +
         '</div>';
       }
@@ -803,6 +828,7 @@
       return '<div class="oc-agent-row oc-expandable" onclick="this.classList.toggle(\'expanded\')" style="' + (a.type === 'main' ? 'flex-wrap:wrap;' : '') + '">' +
         '<span class="oc-agent-icon">' + icon + '</span>' +
         '<span class="oc-agent-name">' + escHtml(displayName) + '</span>' +
+        threadCountBadge +
         agentStateBadge(a.state) +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '<span class="oc-agent-detail oc-truncatable" data-full="' + escHtml(fullDetail) + '" data-short="' + escHtml(truncDetail) + '">' + escHtml(truncDetail) + '</span>' +

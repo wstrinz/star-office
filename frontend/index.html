@@ -5004,6 +5004,16 @@ function toggleBrokerPanel() {
                         } else {
                             newLine = '[' + stateInfo.name + '] ' + (stateInfo.name || 'Cali is here, office is open.');
                         }
+                        // Append active thread count if multiple threads are running
+                        var activeThreads = mainAgent.activeThreads || [];
+                        if (activeThreads.length > 1) {
+                            var otherCount = activeThreads.length - 1;
+                            newLine += ' (+' + otherCount + ' more thread' + (otherCount !== 1 ? 's' : '') + ')';
+                        } else if (activeThreads.length === 1 && mappedState === 'idle') {
+                            // If Cali looks idle but has an active thread, show it
+                            var threadName = activeThreads[0].name || 'thread';
+                            newLine = '[Working] ' + threadName;
+                        }
                         if (typewriterTarget !== newLine) {
                             typewriterTarget = newLine;
                             typewriterText = '';
