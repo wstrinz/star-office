@@ -1641,7 +1641,7 @@
                         <details id="asset-gemini-panel" style="margin-top:6px; border:0; border-top:1px solid rgba(148,163,184,.18); border-radius:0; padding:8px 0 0; background:transparent;">
                             <summary id="gemini-panel-summary" style="cursor:pointer; color:#cbd5e1;">🔐 API Settings (collapsible)</summary>
                             <div id="asset-gemini-config" style="display:block; margin-top:6px;">
-                                <div id="gemini-config-hint" class="asset-sub" style="margin-bottom:4px;">Optional: Enter your image generation API Key (leaving blank won't affect basic features)</div>
+                                <div id="gemini-config-hint" class="asset-sub" style="margin-bottom:4px;">Optional: Enter your image generation API Key (leaving blank won\'t affect basic features)</div>
                                 <div class="asset-sub" style="margin-bottom:6px;"><a id="gemini-api-doc-link" href="https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn" target="_blank" rel="noopener noreferrer">📘 How to get Google API Key</a></div>
                                 <div id="gemini-mask-status" class="asset-sub" style="margin-bottom:6px; color:#e8c88a;"></div>
                                 <div class="asset-toolbar" style="gap:6px; flex-wrap:wrap;">
@@ -2063,13 +2063,13 @@
                 cat: ['喵~','咕噜咕噜…','尾巴摇一摇','晒太阳最开心','有人来看我啦','我是这个办公室的吉祥物','伸个懒腰','今天的罐罐准备好了吗','呼噜呼噜','这个位置视野最好']
             },
             en: {
-                idle: ['On standby: ears up.','I'm here, ready to roll.','Let's tidy the desk first.','Taking a quick brain breeze.','Efficient and elegant, as always.','Waiting for a more precise strike.','Coffee is warm, ideas too.','Giving you a quiet backstage buff.','Status: calm / charging.','Cat says: no rush, we're good.'],
-                writing: ['Focus mode on: do not disturb.','Let's clear the critical path first.','I'll make the complex simple.','Putting bugs in a cage.','Save first, then continue.','Every step should be rollback-safe.','Today's progress is tomorrow's confidence.','Converge first, then diverge.','Making the system more explainable.','Steady-this is winnable.'],
+                idle: ['On standby: ears up.','I\'m here, ready to roll.','Let\'s tidy the desk first.','Taking a quick brain breeze.','Efficient and elegant, as always.','Waiting for a more precise strike.','Coffee is warm, ideas too.','Giving you a quiet backstage buff.','Status: calm / charging.','Cat says: no rush, we\'re good.'],
+                writing: ['Focus mode on: do not disturb.','Let\'s clear the critical path first.','I\'ll make the complex simple.','Putting bugs in a cage.','Save first, then continue.','Every step should be rollback-safe.','Today\'s progress is tomorrow's confidence.','Converge first, then diverge.','Making the system more explainable.','Steady-this is winnable.'],
                 researching: ['Digging the evidence chain.','Let me boil info into conclusions.','Found it: key clue here.','Control variables first.','Checking why this happens.','Turn intuition into verification.','Locate first, optimize next.','No rush-draw the causality map first.'],
-                executing: ['Executing-don't blink.','Split tasks, conquer one by one.','Pipeline is running.','One-click push: go go.','Let the results speak.','Build MVP first, then craft beauty.'],
-                syncing: ['Syncing: lock today into the cloud.','Backup is safety, not ceremony.','Writing… don't cut power.','Handing changes to timestamps.','Cloud alignment: click.','Don't shake it before sync finishes.','Saving future-us from disasters.','One more backup, one less regret.'],
-                error: ['Alarm on-stay calm.','I can smell a bug.','Reproduce first, then fix.','Give me logs; I'll translate.','Errors are clues, not enemies.','Circle the impact area first.','Stop the bleeding, then surgery.','On it: tracing root cause now.','Don't worry, seen this many times.','Alert mode: make the issue reveal itself.'],
-                cat: ['Meow~','Purr purr…','Tail wiggle activated.','Sunbathing is the best.','Someone came to see me!','I'm the office mascot.','Big stretch~','Is today's snack ready yet?','Rrrrr purr…','Best view spot secured.']
+                executing: ['Executing-don\'t blink.','Split tasks, conquer one by one.','Pipeline is running.','One-click push: go go.','Let the results speak.','Build MVP first, then craft beauty.'],
+                syncing: ['Syncing: lock today into the cloud.','Backup is safety, not ceremony.','Writing… don\'t cut power.','Handing changes to timestamps.','Cloud alignment: click.','Don\'t shake it before sync finishes.','Saving future-us from disasters.','One more backup, one less regret.'],
+                error: ['Alarm on-stay calm.','I can smell a bug.','Reproduce first, then fix.','Give me logs; I\'ll translate.','Errors are clues, not enemies.','Circle the impact area first.','Stop the bleeding, then surgery.','On it: tracing root cause now.','Don\'t worry, seen this many times.','Alert mode: make the issue reveal itself.'],
+                cat: ['Meow~','Purr purr…','Tail wiggle activated.','Sunbathing is the best.','Someone came to see me!','I\'m the office mascot.','Big stretch~','Is today\'s snack ready yet?','Rrrrr purr…','Best view spot secured.']
             },
             ja: {
                 idle: ['待機中：耳はピン。','ここにいるよ、いつでも開始OK。','まず机を整えよう。','ふー、頭に風を通す。','今日も上品に高効率で。','待つのは、より正確な一撃のため。','コーヒーも発想もまだ温かい。','裏側でそっとバフ中。','状態：静心 / 充電。','猫より：ゆっくりでも大丈夫。'],
@@ -3236,7 +3236,7 @@ function toggleBrokerPanel() {
                     'Waiting for the journey to deliver the next address...'
                 ],
                 en: [
-                    'Packing today's luggage of inspiration…',
+                    'Packing today\'s luggage of inspiration…',
                     'Drawing the digital coordinates for the next stop…',
                     'Checking the destination of this drift…',
                     'Folding the office into portable mode…',
@@ -3385,7 +3385,7 @@ function toggleBrokerPanel() {
             });
             const data = await res.json();
             if (!data.ok) return data;
-            if (!data.async || !data.task_id) return data; // sync fallback (shouldn't happen)
+            if (!data.async || !data.task_id) return data; // sync fallback (shouldn\'t happen)
 
             // Poll for completion
             const taskId = data.task_id;
@@ -4331,8 +4331,8 @@ function toggleBrokerPanel() {
                                     // 临时更换 bubble 文案
                                     const lang = uiLang;
                                     const welcomeTexts = {
-                                        zh: [`Welcome ${newAgent.name} to the office~`,`Hi ${newAgent.name}, let's get to work`,`${newAgent.name} has joined, welcome!`],
-                                        en: [`Welcome ${newAgent.name} to the office!`,`Hi ${newAgent.name}, let's build something.`,`${newAgent.name} just joined - welcome!`],
+                                        zh: [`Welcome ${newAgent.name} to the office~`,`Hi ${newAgent.name}, let\'s get to work`,`${newAgent.name} has joined, welcome!`],
+                                        en: [`Welcome ${newAgent.name} to the office!`,`Hi ${newAgent.name}, let\'s build something.`,`${newAgent.name} just joined - welcome!`],
                                         ja: [`${newAgent.name} さん、オフィスへようこそ！`,`Hi ${newAgent.name}、一緒に進めよう。`,`${newAgent.name} さんが参加しました、歓迎！`]
                                     };
                                     const langPack = BUBBLE_TEXTS[lang] || BUBBLE_TEXTS.zh;
@@ -4545,7 +4545,7 @@ function toggleBrokerPanel() {
             // Update main agent (Cali) state based on /openclaw/agents main entry
             var mainAgent = ocAgentsData.find(function(a) { return a.type === 'main'; });
             if (mainAgent && mainAgent.state) {
-                // Only update if the state is different from current and there's no manual override
+                // Only update if the state is different from current and there\'s no manual override
                 var ocState = mainAgent.state;
                 // Map openclaw states to Star Office states
                 var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
@@ -5436,7 +5436,7 @@ function toggleBrokerPanel() {
                         }
                         const nextState = normalizeState(data.state);
                         const stateInfo = STATES[nextState] || STATES.idle;
-                        // If we're mid-transition, don't restart the path every poll
+                        // If we\'re mid-transition, don\'t restart the path every poll
                         const changed = (pendingDesiredState === null) && (nextState !== currentState);
                         const nextLine = '[' + stateInfo.name + '] ' + (data.detail || '...');
                         // 不论 changed 与否，都按服务端最新状态强制一次视觉同步，避免动画卡旧状态

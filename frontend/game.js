@@ -402,7 +402,7 @@ function create() {
 
   // === 海报（来自 LAYOUT）===
   const postersFrameCount = 32;
-  const CUSTOM_POSTER_FRAMES = [0, 1, 2]; // harbor chart, blueprint, maritime oddity
+  const CUSTOM_POSTER_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7]; // hearth-themed: crest, aurora cabin, winter window, fire, fireplace, crab mug, cave crab, bookshelf
   const randomPosterFrame = CUSTOM_POSTER_FRAMES[Math.floor(Math.random() * CUSTOM_POSTER_FRAMES.length)];
   const poster = game.add.sprite(LAYOUT.furniture.poster.x, LAYOUT.furniture.poster.y, 'posters', randomPosterFrame).setOrigin(0.5);
   poster.setDepth(LAYOUT.furniture.poster.depth);
