@@ -1,18 +1,16 @@
 {
   "anthropic": {
     "sessionWindowHours": 5,
-    "fiveHourTokenLimit": 120000000,
-    "weeklyTokenLimit": 600000000,
+    "fiveHourTokenLimit": 5000000000,
+    "weeklyTokenLimit": 25000000000,
     "tier": "sonnet-plan",
-    "label": "Anthropic (Claude)",
-    "notes": "Anthropic has ~2h session rolling + weekly limits. sessionWindowHours is configurable — set to 2 if you want tighter tracking. Tune based on console.anthropic.com usage page."
+    "notes": "Data from Claude Code project JSONLs + OpenClaw sessions. Limits are rough — tune to match console.anthropic.com."
   },
   "openai": {
     "sessionWindowHours": 5,
-    "fiveHourTokenLimit": 80000000,
-    "weeklyTokenLimit": 400000000,
+    "fiveHourTokenLimit": 5000000000,
+    "weeklyTokenLimit": 25000000000,
     "tier": "pro",
-    "label": "OpenAI (Codex)",
-    "notes": "Codex Pro tier. Session window is 5h for Codex. Data comes from ~/.codex/state_5.sqlite. Tune based on chatgpt.com/codex/settings/usage."
+    "notes": "Data from ~/.codex/state_5.sqlite threads table. Limits are rough — tune to match chatgpt.com/codex/settings/usage."
   }
 }
