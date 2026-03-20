@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Hearth — Pixel Office</title>
+    <title>The Hearth - Pixel Office</title>
     <style>
         @font-face {
             font-family: 'ArkPixel';
@@ -60,7 +60,7 @@
             image-rendering: pixelated;
             /* 再兜底一次：即使外层高度变化，也不要拉伸变形 */
             object-fit: contain;
-            /* 边框改为直接贴合画布内部，避免“框比地图大” */
+            /* 边框改为直接贴合画布内部，避免"框比地图大" */
             box-shadow: inset 0 0 0 4px #8b5e34;
             position: relative;
             z-index: 10;
@@ -1474,7 +1474,7 @@
 
         .oc-empty { color: #484f58; text-align: center; padding: 20px 0; font-style: italic; }
 
-        /* Agents roster — "who's in the office" */
+        /* Agents roster - "who's in the office" */
         .oc-agents-roster {
             display: flex;
             flex-wrap: wrap;
@@ -1553,68 +1553,68 @@
             <div id="loading-progress-bar"></div>
         </div>
     </div>
-    
+
     <div id="main-stage">
         <div id="game-container">
-            <div id="game-skeleton"><div class="hint">正在进入 The Hearth…</div></div>
-            <div id="status-text">加载中...</div>
+            <div id="game-skeleton"><div class="hint">Entering The Hearth…</div></div>
+            <div id="status-text">Loading...</div>
         </div>
-    
+
     <!-- 底部面板容器 -->
     <div id="bottom-panels">
         <!-- Memo 面板 -->
         <div id="memo-panel">
-            <div id="memo-title">昨 日 小 记</div>
+            <div id="memo-title">Yesterday's Notes</div>
             <div id="memo-date"></div>
             <div class="memo-decoration">─ ─ ─ ─ ─</div>
             <div id="memo-content">
-                <div id="memo-placeholder">加载中...</div>
+                <div id="memo-placeholder">Loading...</div>
             </div>
             <div class="memo-decoration">─ ─ ─ ─ ─</div>
         </div>
-        
+
         <!-- 状态控制栏 -->
         <div id="control-bar">
-            <div id="control-bar-title">Cali 状态</div>
+            <div id="control-bar-title">Cali Status</div>
             <div id="control-buttons">
-                <button id="btn-state-idle" onclick="setState('idle','待命')">待命</button>
-                <button id="btn-state-writing" onclick="setState('writing','工作中')">工作</button>
-                <button id="btn-state-syncing" onclick="setState('syncing','同步中')">同步</button>
-                <button id="btn-state-error" onclick="setState('error','报警中')">报警</button>
-                <button id="btn-open-drawer" onclick="toggleAssetDrawer()">装修房间</button>
+                <button id="btn-state-idle" onclick="setState('idle','Idle')">Idle</button>
+                <button id="btn-state-writing" onclick="setState('writing','Working')">Work</button>
+                <button id="btn-state-syncing" onclick="setState('syncing','Syncing')">Sync</button>
+                <button id="btn-state-error" onclick="setState('error','Alert')">Alert</button>
+                <button id="btn-open-drawer" onclick="toggleAssetDrawer()">Decorate</button>
             </div>
         </div>
 
         <!-- Guest Agent 名单面板（右下角） -->
         <div id="guest-agent-panel">
-            <div id="guest-agent-panel-title">访 客 列 表</div>
+            <div id="guest-agent-panel-title">Guest List</div>
             <div id="guest-agent-list">
-                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">正在加载访客...</div>
+                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">Loading guests...</div>
             </div>
             </div>
         </div>
     </div>
-    
+
     <div id="asset-highlight"></div>
     <div id="room-loading-overlay" aria-live="polite" aria-busy="true">
         <div class="room-loading-inner">
             <div id="room-loading-emoji">🦞</div>
-            <div id="room-loading-text">正在打包虾头……</div>
+            <div id="room-loading-text">Packing up...</div>
         </div>
     </div>
 
     <div id="asset-drawer-backdrop" onclick="toggleAssetDrawer(false)"></div>
     <aside id="asset-drawer">
         <div id="asset-drawer-header">
-            <span>装修房间 · 资产侧边栏</span>
-            <button id="btn-close-drawer" onclick="toggleAssetDrawer(false)">关闭</button>
+            <span>Decorate · Asset Sidebar</span>
+            <button id="btn-close-drawer" onclick="toggleAssetDrawer(false)">Close</button>
         </div>
         <div id="asset-drawer-body">
             <div id="asset-auth-gate" class="asset-preview-box">
-                <div class="asset-preview-title">请输入装修验证码</div>
+                <div class="asset-preview-title">Enter decoration passcode</div>
                 <div class="asset-toolbar">
-                    <input id="asset-pass-input" type="password" placeholder="输入验证码" />
-                    <button onclick="unlockAssetDrawer()">验证</button>
+                    <input id="asset-pass-input" type="password" placeholder="Enter passcode" />
+                    <button onclick="unlockAssetDrawer()">Verify</button>
                 </div>
                 <div id="asset-auth-msg" class="asset-sub"></div>
             </div>
@@ -1622,64 +1622,64 @@
             <div id="asset-main-content" style="display:none;">
                 <div id="asset-move-panel">
                     <div class="asset-toolbar" id="asset-move-row">
-                        <button id="btn-move-house" class="btn-move" onclick="generateRpgBackground()">📦 搬新家</button>
-                        <button id="btn-back-home" class="btn-home" onclick="restoreHomeBackground()">🐚 回老家</button>
+                        <button id="btn-move-house" class="btn-move" onclick="generateRpgBackground()">📦 New Home</button>
+                        <button id="btn-back-home" class="btn-home" onclick="restoreHomeBackground()">🐚 Go Home</button>
                     </div>
                     <div class="asset-toolbar" id="asset-broker-row">
-                        <button class="btn-broker" onclick="toggleBrokerPanel()">🤝 找中介</button>
-                        <button id="btn-diy" class="btn-diy" onclick="toggleManualPanel()">🪚 自己装</button>
+                        <button class="btn-broker" onclick="toggleBrokerPanel()">🤝 Broker</button>
+                        <button id="btn-diy" class="btn-diy" onclick="toggleManualPanel()">🪚 DIY</button>
                     </div>
                     <div id="asset-move-result" class="asset-sub" style="margin-top:4px; margin-bottom:6px;"></div>
                     <div id="asset-broker-panel">
-                        <div class="asset-sub" style="margin-bottom:6px;">写你的风格主题（严格保持原始房间结构，只改变视觉风格）</div>
-                        <textarea id="asset-broker-prompt" placeholder="例如：像素风赛博东京夜景，霓虹灯、雨夜地面反光、蓝紫主色"></textarea>
+                        <div class="asset-sub" style="margin-bottom:6px;">Describe your style theme (strictly keep original room structure, only change visual style)</div>
+                        <textarea id="asset-broker-prompt" placeholder="e.g.: Pixel-art cyberpunk Tokyo night, neon lights, rain reflections, blue-purple palette"></textarea>
                         <div class="asset-toolbar" style="margin-top:6px; gap:8px; align-items:center; justify-content:flex-start;">
-                            <span id="speed-mode-label" class="asset-sub" style="min-width:62px;">生成模式</span>
+                            <span id="speed-mode-label" class="asset-sub" style="min-width:62px;">Generation Mode</span>
                             <button id="speed-fast-btn" type="button" onclick="setSpeedMode('fast')" style="background:#d4883a;color:#052e16;border-color:#16a34a;">🍌2</button>
                             <button id="speed-quality-btn" type="button" onclick="setSpeedMode('quality')" style="background:#3d2f1f;color:#e5e7eb;border-color:#4a3926;">🍌Pro</button>
                         </div>
                         <details id="asset-gemini-panel" style="margin-top:6px; border:0; border-top:1px solid rgba(148,163,184,.18); border-radius:0; padding:8px 0 0; background:transparent;">
-                            <summary id="gemini-panel-summary" style="cursor:pointer; color:#cbd5e1;">🔐 API 设置（可折叠）</summary>
+                            <summary id="gemini-panel-summary" style="cursor:pointer; color:#cbd5e1;">🔐 API Settings (collapsible)</summary>
                             <div id="asset-gemini-config" style="display:block; margin-top:6px;">
-                                <div id="gemini-config-hint" class="asset-sub" style="margin-bottom:4px;">可选：填写你的生图 API Key（留空不影响基础功能）</div>
-                                <div class="asset-sub" style="margin-bottom:6px;"><a id="gemini-api-doc-link" href="https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn" target="_blank" rel="noopener noreferrer">📘 如何申请 Google API Key</a></div>
+                                <div id="gemini-config-hint" class="asset-sub" style="margin-bottom:4px;">Optional: Enter your image generation API Key (leaving blank won't affect basic features)</div>
+                                <div class="asset-sub" style="margin-bottom:6px;"><a id="gemini-api-doc-link" href="https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn" target="_blank" rel="noopener noreferrer">📘 How to get Google API Key</a></div>
                                 <div id="gemini-mask-status" class="asset-sub" style="margin-bottom:6px; color:#e8c88a;"></div>
                                 <div class="asset-toolbar" style="gap:6px; flex-wrap:wrap;">
-                                    <input id="gemini-api-key-input" type="password" placeholder="粘贴 GEMINI_API_KEY（不会回显）" style="min-width:220px; flex:1;" autocomplete="new-password" />
-                                    <button id="btn-save-gemini-key" onclick="saveGeminiConfigFromUI()">保存 Key</button>
+                                    <input id="gemini-api-key-input" type="password" placeholder="Paste GEMINI_API_KEY (will not be displayed)" style="min-width:220px; flex:1;" autocomplete="new-password" />
+                                    <button id="btn-save-gemini-key" onclick="saveGeminiConfigFromUI()">Save Key</button>
                                 </div>
                                 <div id="gemini-config-msg" class="asset-sub" style="margin-top:4px;"></div>
                             </div>
                         </details>
                         <div id="asset-broker-actions">
-                            <button onclick="generateCustomRpgBackground()">按中介方案搬家</button>
+                            <button onclick="generateCustomRpgBackground()">Apply Broker Plan</button>
                         </div>
                     </div>
                 </div>
 
                 <div id="asset-home-actions-panel" class="asset-preview-box" style="margin-bottom:10px;">
                     <div class="asset-toolbar" style="margin-bottom:6px; gap:8px;">
-                        <button id="btn-back-last-bg" class="btn-home" onclick="restoreLastGeneratedBackground()">↩️ 回上一个家</button>
-                        <button id="btn-favorite-home" class="btn-home" onclick="saveCurrentHomeFavorite()">⭐ 收藏这个家</button>
+                        <button id="btn-back-last-bg" class="btn-home" onclick="restoreLastGeneratedBackground()">↩️ Previous Home</button>
+                        <button id="btn-favorite-home" class="btn-home" onclick="saveCurrentHomeFavorite()">⭐ Save This Home</button>
                     </div>
                     <details id="asset-home-favorites" style="margin:0;">
-                        <summary id="asset-home-favorites-title" class="asset-preview-title">🏠 收藏的家</summary>
+                        <summary id="asset-home-favorites-title" class="asset-preview-title">🏠 Saved Homes</summary>
                         <div id="asset-home-favorites-list" class="home-fav-list"></div>
                     </details>
                 </div>
 
                 <div id="asset-manual-panel" style="display:flex; flex-direction:column; flex:1; min-height:0;">
                     <div class="asset-toolbar">
-                        <input id="asset-search" placeholder="搜索资产名（如 desk / sofa / star）" oninput="renderAssetDrawerList()" />
+                        <input id="asset-search" placeholder="Search asset name (e.g. desk / sofa / star)" oninput="renderAssetDrawerList()" />
                     </div>
                     <div id="asset-list"></div>
                     <div id="asset-upload-panel">
                         <input id="asset-upload-file" type="file" accept="image/*" style="display:none;" />
                         <div class="asset-upload-grid" style="margin-top:0; margin-bottom:6px; gap:8px;">
-                            <button id="asset-choose-btn" onclick="openInlineAssetUploader()">上传素材</button>
-                            <button id="asset-commit-refresh-btn" onclick="commitAndRefresh()" disabled style="opacity:.55;">确认刷新</button>
-                            <button id="asset-reset-default-btn" onclick="resetSelectedAssetToDefault()" disabled style="opacity:.55;">重置默认</button>
-                            <button id="asset-restore-prev-btn" onclick="restoreSelectedAssetPrev()" disabled style="opacity:.55;">恢复上版</button>
+                            <button id="asset-choose-btn" onclick="openInlineAssetUploader()">Upload Asset</button>
+                            <button id="asset-commit-refresh-btn" onclick="commitAndRefresh()" disabled style="opacity:.55;">Confirm</button>
+                            <button id="asset-reset-default-btn" onclick="resetSelectedAssetToDefault()" disabled style="opacity:.55;">Reset</button>
+                            <button id="asset-restore-prev-btn" onclick="restoreSelectedAssetPrev()" disabled style="opacity:.55;">Restore</button>
                         </div>
                         <div id="asset-upload-result" class="asset-sub"></div>
                     </div>
@@ -1691,10 +1691,10 @@
         <div id="coords-display">X: 0 | Y: 0</div>
     </div>
     <button id="coords-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">
-        显示坐标
+        Show Coords
     </button>
     <button id="pan-toggle" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 12px); left:12px; z-index:999999; padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">
-        移动视野
+        Pan View
     </button>
     <div id="lang-toggle-group" style="position:fixed; top:calc(env(safe-area-inset-top, 0px) + 52px); left:12px; z-index:1000002; display:flex; gap:2px; align-items:center;">
         <button id="lang-btn-en" onclick="setUILanguage('en')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #3d2f1f; border-radius:5px; background:#2d2218; color:#fff;">EN</button>
@@ -1733,7 +1733,7 @@
                 assetHide: '隐藏', assetShow: '显示',
                 resetToDefault: '重置为默认资产', restorePrevAsset: '用上一版',
                 btnMove: '📦 搬新家', btnHome: '🐚 回老家', btnHomeLast: '↩️ 回上一个家', btnHomeFavorite: '⭐ 收藏这个家', btnBroker: '🤝 找中介', btnDIY: '🪚 自己装', btnBrokerGo: '听中介的',
-                homeFavTitle: '🏠 收藏的家', homeFavEmpty: '还没有收藏，先点“⭐ 收藏这个家”', homeFavApply: '替换到当前地图', homeFavDelete: '删除', homeFavSaved: '✅ 已收藏当前地图', homeFavApplied: '✅ 已替换为收藏地图', homeFavDeleted: '🗑️ 已删除收藏',
+                homeFavTitle: '🏠 收藏的家', homeFavEmpty: '还没有收藏，先点"⭐ 收藏这个家"', homeFavApply: '替换到当前地图', homeFavDelete: '删除', homeFavSaved: '✅ 已收藏当前地图', homeFavApplied: '✅ 已替换为收藏地图', homeFavDeleted: '🗑️ 已删除收藏',
                 brokerHint: '你会给龙虾推荐什么样的房子',
                 brokerPromptPh: '例如：故宫主题、莫奈风格、地牢主题、兵马俑主题……',
                 brokerNeedPrompt: '请先输入中介方案描述',
@@ -1761,7 +1761,7 @@
                 assetHide: 'Hide', assetShow: 'Show',
                 resetToDefault: 'Reset to Default', restorePrevAsset: 'Use Previous',
                 btnMove: '📦 New Home', btnHome: '🐚 Go Home', btnHomeLast: '↩️ Last One', btnHomeFavorite: '⭐ Save This Home', btnBroker: '🤝 Broker', btnDIY: '🪚 DIY', btnBrokerGo: 'Follow Broker',
-                homeFavTitle: '🏠 Saved Homes', homeFavEmpty: 'No saved homes yet. Tap “⭐ Save This Home” first.', homeFavApply: 'Apply to Current Map', homeFavDelete: 'Delete', homeFavSaved: '✅ Current map saved', homeFavApplied: '✅ Applied saved home', homeFavDeleted: '🗑️ Saved home deleted',
+                homeFavTitle: '🏠 Saved Homes', homeFavEmpty: 'No saved homes yet. Tap "⭐ Save This Home" first.', homeFavApply: 'Apply to Current Map', homeFavDelete: 'Delete', homeFavSaved: '✅ Current map saved', homeFavApplied: '✅ Applied saved home', homeFavDeleted: '🗑️ Saved home deleted',
                 brokerHint: 'What kind of house would you recommend for Lobster?',
                 brokerPromptPh: 'e.g. Forbidden City theme, Monet style, dungeon theme, Terracotta Warriors theme...',
                 brokerNeedPrompt: 'Please enter broker style prompt first',
@@ -1931,7 +1931,7 @@
 
         // 检测浏览器是否支持 WebP
         let supportsWebP = false;
-        
+
         // 方法 1: 使用 canvas 检测
         function checkWebPSupport() {
             return new Promise((resolve) => {
@@ -1943,7 +1943,7 @@
                 }
             });
         }
-        
+
         // 方法 2: 使用 image 检测（备用）
         function checkWebPSupportFallback() {
             return new Promise((resolve) => {
@@ -1981,20 +1981,20 @@
         async function loadMemo() {
             const memoDate = document.getElementById('memo-date');
             const memoContent = document.getElementById('memo-content');
-            
+
             try {
                 const response = await fetch('/yesterday-memo?t=' + Date.now(), { cache: 'no-store' });
                 const data = await response.json();
-                
+
                 if (data.success && data.memo) {
                     memoDate.textContent = data.date || '';
                     memoContent.innerHTML = data.memo.replace(/\n/g, '<br>');
                 } else {
-                    memoContent.innerHTML = '<div id="memo-placeholder">暂无昨日日记</div>';
+                    memoContent.innerHTML = '<div id="memo-placeholder">No diary entry for yesterday</div>';
                 }
             } catch (e) {
                 console.error('加载 memo 失败:', e);
-                memoContent.innerHTML = '<div id="memo-placeholder">加载失败</div>';
+                memoContent.innerHTML = '<div id="memo-placeholder">Failed to load</div>';
             }
         }
 
@@ -2034,27 +2034,27 @@
             }, 260);
         }
 
-        // 兜底：某些移动网络/CDN 抖动时，避免一直卡在“加载中”遮罩
+        // 兜底：某些移动网络/CDN 抖动时，避免一直卡在"加载中"遮罩
         setTimeout(() => {
             if (loadingOverlay && loadingOverlay.style.display !== 'none') {
                 hideLoadingOverlay();
             }
         }, 8000);
-        
+
         // 懒加载逻辑已取消（体验优先：装饰首屏直接出现）
 
         const STATES = {
-            idle: { name: '待命', area: 'breakroom' },
-            writing: { name: '整理文档', area: 'writing' },
-            researching: { name: '搜索信息', area: 'researching' },
-            executing: { name: '执行任务', area: 'writing' },
-            syncing: { name: '同步备份', area: 'writing' },
-            error: { name: '出错了', area: 'error' }
+            idle: { name: 'Idle', area: 'breakroom' },
+            writing: { name: 'Writing', area: 'writing' },
+            researching: { name: 'Researching', area: 'researching' },
+            executing: { name: 'Executing', area: 'writing' },
+            syncing: { name: 'Syncing', area: 'writing' },
+            error: { name: 'Error', area: 'error' }
         };
 
         const BUBBLE_TEXTS = {
             zh: {
-                idle: ['待命中：耳朵竖起来了','我在这儿，随时可以开工','先把桌面收拾干净再说','呼——给大脑放个风','今天也要优雅地高效','等待，是为了更准确的一击','咖啡还热，灵感也还在','我在后台给你加 Buff','状态：静心 / 充电','小猫说：慢一点也没关系'],
+                idle: ['待命中：耳朵竖起来了','我在这儿，随时可以开工','先把桌面收拾干净再说','呼--给大脑放个风','今天也要优雅地高效','等待，是为了更准确的一击','咖啡还热，灵感也还在','我在后台给你加 Buff','状态：静心 / 充电','小猫说：慢一点也没关系'],
                 writing: ['进入专注模式：勿扰','先把关键路径跑通','我来把复杂变简单','把 bug 关进笼子里','写到一半，先保存','把每一步都做成可回滚','今天的进度，明天的底气','先收敛，再发散','让系统变得更可解释','稳住，我们能赢'],
                 researching: ['我在挖证据链','让我把信息熬成结论','找到了：关键在这里','先把变量控制住','我在查：它为什么会这样','把直觉写成验证','先定位，再优化','别急，先画因果图'],
                 executing: ['执行中：不要眨眼','把任务切成小块逐个击破','开始跑 pipeline','一键推进：走你','让结果自己说话','先做最小可行，再做最美版本'],
@@ -2063,13 +2063,13 @@
                 cat: ['喵~','咕噜咕噜…','尾巴摇一摇','晒太阳最开心','有人来看我啦','我是这个办公室的吉祥物','伸个懒腰','今天的罐罐准备好了吗','呼噜呼噜','这个位置视野最好']
             },
             en: {
-                idle: ['On standby: ears up.','I’m here, ready to roll.','Let’s tidy the desk first.','Taking a quick brain breeze.','Efficient and elegant, as always.','Waiting for a more precise strike.','Coffee is warm, ideas too.','Giving you a quiet backstage buff.','Status: calm / charging.','Cat says: no rush, we’re good.'],
-                writing: ['Focus mode on: do not disturb.','Let’s clear the critical path first.','I’ll make the complex simple.','Putting bugs in a cage.','Save first, then continue.','Every step should be rollback-safe.','Today’s progress is tomorrow’s confidence.','Converge first, then diverge.','Making the system more explainable.','Steady—this is winnable.'],
-                researching: ['Digging the evidence chain.','Let me boil info into conclusions.','Found it: key clue here.','Control variables first.','Checking why this happens.','Turn intuition into verification.','Locate first, optimize next.','No rush—draw the causality map first.'],
-                executing: ['Executing—don’t blink.','Split tasks, conquer one by one.','Pipeline is running.','One-click push: go go.','Let the results speak.','Build MVP first, then craft beauty.'],
-                syncing: ['Syncing: lock today into the cloud.','Backup is safety, not ceremony.','Writing… don’t cut power.','Handing changes to timestamps.','Cloud alignment: click.','Don’t shake it before sync finishes.','Saving future-us from disasters.','One more backup, one less regret.'],
-                error: ['Alarm on—stay calm.','I can smell a bug.','Reproduce first, then fix.','Give me logs; I’ll translate.','Errors are clues, not enemies.','Circle the impact area first.','Stop the bleeding, then surgery.','On it: tracing root cause now.','Don’t worry, seen this many times.','Alert mode: make the issue reveal itself.'],
-                cat: ['Meow~','Purr purr…','Tail wiggle activated.','Sunbathing is the best.','Someone came to see me!','I’m the office mascot.','Big stretch~','Is today’s snack ready yet?','Rrrrr purr…','Best view spot secured.']
+                idle: ['On standby: ears up.','I'm here, ready to roll.','Let's tidy the desk first.','Taking a quick brain breeze.','Efficient and elegant, as always.','Waiting for a more precise strike.','Coffee is warm, ideas too.','Giving you a quiet backstage buff.','Status: calm / charging.','Cat says: no rush, we're good.'],
+                writing: ['Focus mode on: do not disturb.','Let's clear the critical path first.','I'll make the complex simple.','Putting bugs in a cage.','Save first, then continue.','Every step should be rollback-safe.','Today's progress is tomorrow's confidence.','Converge first, then diverge.','Making the system more explainable.','Steady-this is winnable.'],
+                researching: ['Digging the evidence chain.','Let me boil info into conclusions.','Found it: key clue here.','Control variables first.','Checking why this happens.','Turn intuition into verification.','Locate first, optimize next.','No rush-draw the causality map first.'],
+                executing: ['Executing-don't blink.','Split tasks, conquer one by one.','Pipeline is running.','One-click push: go go.','Let the results speak.','Build MVP first, then craft beauty.'],
+                syncing: ['Syncing: lock today into the cloud.','Backup is safety, not ceremony.','Writing… don't cut power.','Handing changes to timestamps.','Cloud alignment: click.','Don't shake it before sync finishes.','Saving future-us from disasters.','One more backup, one less regret.'],
+                error: ['Alarm on-stay calm.','I can smell a bug.','Reproduce first, then fix.','Give me logs; I'll translate.','Errors are clues, not enemies.','Circle the impact area first.','Stop the bleeding, then surgery.','On it: tracing root cause now.','Don't worry, seen this many times.','Alert mode: make the issue reveal itself.'],
+                cat: ['Meow~','Purr purr…','Tail wiggle activated.','Sunbathing is the best.','Someone came to see me!','I'm the office mascot.','Big stretch~','Is today's snack ready yet?','Rrrrr purr…','Best view spot secured.']
             },
             ja: {
                 idle: ['待機中：耳はピン。','ここにいるよ、いつでも開始OK。','まず机を整えよう。','ふー、頭に風を通す。','今日も上品に高効率で。','待つのは、より正確な一撃のため。','コーヒーも発想もまだ温かい。','裏側でそっとバフ中。','状態：静心 / 充電。','猫より：ゆっくりでも大丈夫。'],
@@ -2154,7 +2154,7 @@
         let lastSeenGuestIds = new Set(); // 用于检测新加入的访客，触发欢迎气泡
         let guestWelcomeInitialized = false;
 
-        // OpenClaw live agents — subagents & cron jobs rendered as pixel characters
+        // OpenClaw live agents - subagents & cron jobs rendered as pixel characters
         const OC_AGENTS_FETCH_INTERVAL = 15000; // 15 seconds
         let lastOcAgentsFetch = 0;
         let ocAgentSprites = {}; // name -> {container, nameText, taskBubble, state, targetX, targetY}
@@ -2221,7 +2221,7 @@
             const msg = document.getElementById('asset-auth-msg');
             const val = (input?.value || '').trim();
             if (!val) {
-                if (msg) msg.textContent = '❌ 请输入验证码';
+                if (msg) msg.textContent = '❌ Please enter passcode';
                 return;
             }
             try {
@@ -2233,18 +2233,18 @@
                 const data = await res.json();
                 if (data && data.ok) {
                     assetDrawerAuthed = true;
-                    if (msg) msg.textContent = '✅ 验证通过';
+                    if (msg) msg.textContent = '✅ Verification passed';
                     updateAssetAuthUI();
                     await refreshAssetDrawerList();
                     await renderHomeFavorites(false);
                     bindDrawerFileMeta();
                 } else {
                     assetDrawerAuthed = false;
-                    if (msg) msg.textContent = '❌ 验证码错误';
+                    if (msg) msg.textContent = '❌ Incorrect passcode';
                 }
             } catch (e) {
                 assetDrawerAuthed = false;
-                if (msg) msg.textContent = `❌ 验证失败：${e}`;
+                if (msg) msg.textContent = `❌ Verification failed: ${e}`;
             }
         }
 
@@ -2264,28 +2264,28 @@
             const lang = (uiLang || 'zh');
             const nameMap = {
                 zh: {
-                    'star-idle-v5': '主角·待命状态',
-                    'star-working-spritesheet-grid': '主角·工作状态',
-                    'sync-animation': '主角·同步状态',
-                    'sync-animation-v3-grid': '主角·同步状态',
-                    'error-bug-spritesheet-grid': '主角·报错状态',
-                    'cats-spritesheet': '随机猫猫',
-                    'coffee-machine-v3-grid': '咖啡机',
-                    'coffee-machine-shadow-v1': '咖啡机阴影',
-                    'posters-spritesheet': '随机海报',
-                    'serverroom-spritesheet': '服务器房动画',
-                    'plants-spritesheet': '随机绿植',
-                    'flowers-bloom-v2': '随机花朵',
-                    'office_bg_small': '办公室背景',
-                    'memo-bg': '昨日小记底图',
-                    'desk-v3': '办公桌',
-                    'desk': '办公桌（旧）',
-                    'guest_anim_1': '访客动画 1',
-                    'guest_anim_2': '访客动画 2',
-                    'guest_anim_3': '访客动画 3',
-                    'guest_anim_4': '访客动画 4',
-                    'guest_anim_5': '访客动画 5',
-                    'guest_anim_6': '访客动画 6'
+                    'star-idle-v5': 'Star · Idle',
+                    'star-working-spritesheet-grid': 'Star · Working',
+                    'sync-animation': 'Star · Syncing',
+                    'sync-animation-v3-grid': 'Star · Syncing v3',
+                    'error-bug-spritesheet-grid': 'Star · Error',
+                    'cats-spritesheet': 'Random Cat',
+                    'coffee-machine-v3-grid': 'Coffee Machine',
+                    'coffee-machine-shadow-v1': 'Coffee Machine Shadow',
+                    'posters-spritesheet': 'Random Poster',
+                    'serverroom-spritesheet': 'Server Room',
+                    'plants-spritesheet': 'Random Plant',
+                    'flowers-bloom-v2': 'Random Flower',
+                    'office_bg_small': 'Office Background',
+                    'memo-bg': 'Memo Background',
+                    'desk-v3': 'Desk',
+                    'desk': 'Desk (old)',
+                    'guest_anim_1': 'Guest Anim 1',
+                    'guest_anim_2': 'Guest Anim 2',
+                    'guest_anim_3': 'Guest Anim 3',
+                    'guest_anim_4': 'Guest Anim 4',
+                    'guest_anim_5': 'Guest Anim 5',
+                    'guest_anim_6': 'Guest Anim 6'
                 },
                 en: {
                     'star-idle-v5': 'Main · Idle',
@@ -2342,37 +2342,37 @@
 
         const ASSET_HELP_TEXT_MAP = {
             zh: {
-                'office_bg_small': '主场景底图（当前生效）。建议 1280×720（16:9），保留房间结构与视角，避免角色站位错位。',
-                'office_bg': '历史背景备份。通常不直接生效，建议与 office_bg_small 保持同构图用于回退。',
-                'star-idle-v5': '主角待机动画表。请保持 256×256 分帧与网格布局一致，否则待机动作会错帧。',
-                'star-working-spritesheet-grid': '主角工作动画表（工位状态）。请保持 300×300 分帧，建议人物重心与原图一致。',
-                'sync-animation': '同步状态素材（当前引用）。建议按 256×256 帧规范制作，避免同步状态显示静止或抖动。',
-                'sync-animation-v3-grid': '同步动画表（兼容资源）。保持 256×256 网格可用于替换同步动作细节。',
-                'error-bug-spritesheet-grid': '报错状态动画表。请保持 220×220 分帧，建议高对比度以增强异常提示感。',
-                'desk-v3': '办公桌前景层。影响主角前后遮挡关系，建议保持当前比例与锚点视觉重心。',
-                'desk': '旧版办公桌素材（兼容用）。建议与 desk-v3 保持相近体积与锚点，避免遮挡异常。',
-                'sofa-idle-v3': '沙发静态素材。建议保持 256×256 与透明背景，避免替换后位置漂移。',
-                'sofa-shadow-v1': '沙发阴影层。建议与沙发主体同坐标叠放，增强贴地感。',
-                'memo-bg': '小记面板底图。建议留出文字阅读区域，降低高频纹理，避免信息难读。',
-                'plants-spritesheet': '绿植随机素材。保持 160×160 分帧，可一次替换多个绿植位的观感。',
-                'posters-spritesheet': '海报随机素材。保持 160×160 分帧，建议统一风格避免墙面杂乱。',
-                'cats-spritesheet': '猫咪随机素材。保持 160×160 分帧，建议轮廓清晰、识别度高。',
-                'coffee-machine-v3-grid': '咖啡机静态素材。建议保持 230×230 与当前锚点，避免位置偏移。',
-                'coffee-machine-shadow-v1': '咖啡机阴影层。建议与咖啡机本体同宽对齐，增强贴地感。',
-                'serverroom-spritesheet': '服务器房动画表。保持 180×251 分帧，灯效变化建议节奏均匀不过闪。',
-                'flowers-bloom-v2': '花朵随机素材。保持 128×128 分帧，建议色彩与整体办公室主色协调。',
-                'guest_anim_1': '访客动画序列 1（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_anim_2': '访客动画序列 2（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_anim_3': '访客动画序列 3（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_anim_4': '访客动画序列 4（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_anim_5': '访客动画序列 5（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_anim_6': '访客动画序列 6（32×32 分帧）。建议保持像素风、轮廓清晰，与主角风格统一。',
-                'guest_role_1': '访客静态形象备用图 1。建议与对应 guest_anim 角色设定一致，避免切换割裂。',
-                'guest_role_2': '访客静态形象备用图 2。建议与对应 guest_anim 角色设定一致，避免切换割裂。',
-                'guest_role_3': '访客静态形象备用图 3。建议与对应 guest_anim 角色设定一致，避免切换割裂。',
-                'guest_role_4': '访客静态形象备用图 4。建议与对应 guest_anim 角色设定一致，避免切换割裂。',
-                'guest_role_5': '访客静态形象备用图 5。建议与对应 guest_anim 角色设定一致，避免切换割裂。',
-                'guest_role_6': '访客静态形象备用图 6。建议与对应 guest_anim 角色设定一致，避免切换割裂。'
+                'office_bg_small': 'Main scene background (active). Recommended 1280×720 (16:9), keep room structure and perspective to avoid character misalignment.',
+                'office_bg': 'Historical background backup. Usually not directly active, keep same composition as office_bg_small for rollback.',
+                'star-idle-v5': 'Star idle animation sheet. Keep 256×256 frame size and grid layout, or idle animation will break.',
+                'star-working-spritesheet-grid': 'Star working animation sheet (desk state). Keep 300×300 frame size, align character center with original.',
+                'sync-animation': 'Sync state asset (currently referenced). Use 256×256 frame spec to avoid static or jittery sync display.',
+                'sync-animation-v3-grid': 'Sync animation sheet (compatible). Keep 256×256 grid to replace sync motion details.',
+                'error-bug-spritesheet-grid': 'Error state animation sheet. Keep 220×220 frame size, high contrast recommended for alert visibility.',
+                'desk-v3': 'Desk foreground layer. Affects character occlusion, keep current proportions and anchor visual center.',
+                'desk': 'Old desk asset (compatibility). Keep similar size and anchor as desk-v3 to avoid occlusion issues.',
+                'sofa-idle-v3': 'Sofa static asset. Keep 256×256 with transparent background to avoid position drift.',
+                'sofa-shadow-v1': 'Sofa shadow layer. Overlay at same coordinates as sofa for grounding effect.',
+                'memo-bg': 'Memo panel background. Leave readable text area, reduce high-frequency textures for legibility.',
+                'plants-spritesheet': 'Random plant assets. Keep 160×160 frame size to replace all plant slots at once.',
+                'posters-spritesheet': 'Random poster assets. Keep 160×160 frame size, unified style to avoid wall clutter.',
+                'cats-spritesheet': 'Random cat assets. Keep 160×160 frame size, clear silhouettes recommended.',
+                'coffee-machine-v3-grid': 'Coffee machine static asset. Keep 230×230 and current anchor to avoid offset.',
+                'coffee-machine-shadow-v1': 'Coffee machine shadow layer. Align width with machine body for grounding.',
+                'serverroom-spritesheet': 'Server room animation sheet. Keep 180×251 frame size, even light rhythm without excessive flashing.',
+                'flowers-bloom-v2': 'Random flower assets. Keep 128×128 frame size, coordinate colors with office palette.',
+                'guest_anim_1': 'Guest animation 1 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_anim_2': 'Guest animation 2 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_anim_3': 'Guest animation 3 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_anim_4': 'Guest animation 4 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_anim_5': 'Guest animation 5 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_anim_6': 'Guest animation 6 (32×32 frames). Keep pixel art style, clear outlines, consistent with main character.',
+                'guest_role_1': 'Guest static fallback 1. Keep consistent with corresponding guest_anim character.',
+                'guest_role_2': 'Guest static fallback 2. Keep consistent with corresponding guest_anim character.',
+                'guest_role_3': 'Guest static fallback 3. Keep consistent with corresponding guest_anim character.',
+                'guest_role_4': 'Guest static fallback 4. Keep consistent with corresponding guest_anim character.',
+                'guest_role_5': 'Guest static fallback 5. Keep consistent with corresponding guest_anim character.',
+                'guest_role_6': 'Guest static fallback 6. Keep consistent with corresponding guest_anim character.'
             },
             en: {
                 'office_bg_small': 'Primary room background (active). Use 1280×720 (16:9), keep room structure/perspective to avoid character misalignment.',
@@ -2749,7 +2749,7 @@
             // 先看命名是否属于精灵表
             const inferred = inferSpritesheetFrameMetaByPath(item?.path || '');
             if (!inferred) return null;
-            // 仅返回“是精灵表”的信号，单帧尺寸后续自动推断
+            // 仅返回"是精灵表"的信号，单帧尺寸后续自动推断
             return { w: null, h: null, isSheet: true };
         }
 
@@ -2866,7 +2866,7 @@
             setAssetVisible(p, nextVisible);
             renderAssetDrawerList();
             const out = document.getElementById('asset-upload-result');
-            if (out) out.textContent = nextVisible ? `✅ 已显示：${p}` : `🙈 已隐藏：${p}`;
+            if (out) out.textContent = nextVisible ? `✅ Shown: ${p}` : `🙈 Hidden: ${p}`;
             if (selectedAssetInfo && selectedAssetInfo.path === p) {
                 if (!nextVisible) clearAssetSelectionUI();
                 else applyScenePreview(p);
@@ -2909,7 +2909,7 @@
             clearAssetThumbTimers();
 
             if (rows.length === 0) {
-                list.innerHTML = '<div class="asset-sub" style="padding:8px">暂无资产（可点“刷新”重试）</div>';
+                list.innerHTML = '<div class="asset-sub" style="padding:8px">No assets (click Refresh to retry)</div>';
                 return;
             }
 
@@ -2924,7 +2924,7 @@
                     <canvas id="${thumbId}" class="asset-thumb" width="56" height="56"></canvas>
                     <div class="asset-meta">
                         <div class="asset-path">${it.path}</div>
-                        <div class="asset-sub">${displayName} ｜ ${reso}${hidden ? ' ｜ 已隐藏' : ''}</div>
+                        <div class="asset-sub">${displayName} ｜ ${reso}${hidden ? ' | Hidden' : ''}</div>
                     </div>
                     <button class="asset-vis-btn" onclick="toggleAssetVisibility('${(it.path || '').replace(/'/g, "\\'")}', event)">${visEmoji}</button>
                 </div>`;
@@ -2965,7 +2965,7 @@
                 }
 
                 renderAssetDrawerList();
-                if (out) out.textContent = `已加载资产：${assetListData.length} ｜ 场景抓取：${sceneAssetItems.length}`;
+                if (out) out.textContent = `Assets loaded: ${assetListData.length} | Scene captured: ${sceneAssetItems.length}`;
 
                 if (selectedPath) {
                     updateActiveAssetItem(selectedPath);
@@ -2973,7 +2973,7 @@
                 }
             } catch (e) {
                 console.error('加载资产列表失败', e);
-                if (out) out.textContent = '❌ 资产加载失败，请点“刷新”重试';
+                if (out) out.textContent = '❌ Asset loading failed, click Refresh to retry';
             }
         }
 
@@ -3093,7 +3093,7 @@
             const path = (selectedAssetInfo && selectedAssetInfo.path) ? selectedAssetInfo.path : '';
             const fi = document.getElementById('asset-upload-file');
             const out = document.getElementById('asset-upload-result');
-            if (!path) { out.textContent = '请先选中一个资产路径'; return false; }
+            if (!path) { out.textContent = 'Please select an asset path first'; return false; }
             if (!fi.files.length) { return true; } // 允许仅改坐标
             const file = fi.files[0];
             const fd = new FormData();
@@ -3119,19 +3119,19 @@
                 fd.append('pixel_art', '1');
             }
 
-            out.textContent = '⏳ 正在上传并替换，请稍候...';
+            out.textContent = '⏳ Uploading and replacing, please wait...';
             const res = await fetch('/assets/upload', { method: 'POST', body: fd });
             const data = await res.json();
             if (!data.ok) {
-                out.textContent = `❌ 更新失败：${data.msg || res.status}`;
+                out.textContent = `❌ Update failed: ${data.msg || res.status}`;
                 return false;
             }
 
             if (data.converted) {
                 const toType = data.converted.to || 'spritesheet';
-                out.textContent = `✅ 已上传（动图→${toType}）：${data.path} ｜ ${data.converted.frames}帧 ${data.converted.frame_w}x${data.converted.frame_h}`;
+                out.textContent = `✅ Uploaded (anim→${toType}): ${data.path} | ${data.converted.frames} frames ${data.converted.frame_w}x${data.converted.frame_h}`;
             } else {
-                out.textContent = `✅ 已上传：${data.path}`;
+                out.textContent = `✅ Uploaded: ${data.path}`;
             }
             return true;
         }
@@ -3145,8 +3145,8 @@
             if (!okUpload) return;
 
             if (out) {
-                if (hasFile) out.textContent += ' ｜ ✅ 已上传并刷新';
-                else out.textContent = '✅ 已确认并刷新';
+                if (hasFile) out.textContent += ' | ✅ Uploaded and refreshed';
+                else out.textContent = '✅ Confirmed and refreshed';
             }
 
             // 刷新前关闭侧边栏，行为与地图替换一致
@@ -3220,30 +3220,30 @@ function toggleBrokerPanel() {
             placeOverlayAndStatusAtCanvasBottomLeft();
             const loadingTexts = {
                 zh: [
-                    '正在打包今天的灵感行李……',
-                    '正在抽取下一站数字坐标……',
-                    '正在查看本次漂流目的地……',
-                    '正在把办公室折叠成随身模式……',
-                    '正在给钳子装上远行 Buff……',
-                    '正在匹配下一段创作气候……',
-                    '正在把时差调成冒险模式……',
-                    '正在接收陌生街区的 Wi‑Fi 心跳……',
-                    '正在试播下一站的海风 BGM……',
-                    '正在加载“也许会爱上”的新房间……',
-                    '正在为未知邻居准备自我介绍……',
-                    '正在解锁下一片数字海域……',
-                    '正在把好奇心调到满格……',
-                    '正在等待旅程投递下一张门牌号……'
+                    'Packing today\'s creative luggage...',
+                    'Extracting next destination coordinates...',
+                    'Checking this journey\'s destination...',
+                    'Folding office into portable mode...',
+                    'Equipping claws with travel buff...',
+                    'Matching next creative climate...',
+                    'Switching timezone to adventure mode...',
+                    'Receiving Wi-Fi heartbeat from unknown streets...',
+                    'Testing next destination\'s sea breeze BGM...',
+                    '正在加载"也许会爱上"的新房间……',
+                    'Preparing introductions for unknown neighbors...',
+                    'Unlocking the next digital ocean...',
+                    'Cranking curiosity to maximum...',
+                    'Waiting for the journey to deliver the next address...'
                 ],
                 en: [
-                    'Packing today’s luggage of inspiration…',
+                    'Packing today's luggage of inspiration…',
                     'Drawing the digital coordinates for the next stop…',
                     'Checking the destination of this drift…',
                     'Folding the office into portable mode…',
                     'Installing a travel buff on the claws…',
                     'Matching the creative climate for the next chapter…',
                     'Switching the time zone to adventure mode…',
-                    'Receiving Wi‑Fi heartbeats from an unfamiliar block…',
+                    'Receiving Wi-Fi heartbeats from an unfamiliar block…',
                     'Previewing the sea-breeze BGM of the next stop…',
                     'Loading a new room you might just fall in love with…',
                     'Preparing an intro for unknown neighbors…',
@@ -3259,7 +3259,7 @@ function toggleBrokerPanel() {
                     'ハサミに遠征 Buff を装着しています……',
                     '次の創作区間の気候をマッチングしています……',
                     '時差を冒険モードに切り替えています……',
-                    '見知らぬ街区の Wi‑Fi ハートビートを受信しています……',
+                    '見知らぬ街区の Wi-Fi ハートビートを受信しています……',
                     '次の目的地の潮風 BGM を試聴しています……',
                     '「好きになるかもしれない」新しい部屋を読み込んでいます……',
                     '未知のご近所さん向けに自己紹介を準備しています……',
@@ -3304,7 +3304,7 @@ function toggleBrokerPanel() {
             try { setState('idle', t('moveSuccess').replace('✅ ', '')); } catch (e) {}
         }
 
-        function setWorkingStatus(detail = '工作中') {
+        function setWorkingStatus(detail = 'Working') {
             try { setState('writing', detail); } catch (e) {}
         }
 
@@ -3340,7 +3340,7 @@ function toggleBrokerPanel() {
             const msg = document.getElementById('gemini-config-msg');
             const key = (input?.value || '').trim();
             if (!key) {
-                if (msg) msg.textContent = '请输入有效 API Key';
+                if (msg) msg.textContent = 'Please enter a valid API Key';
                 return;
             }
             try {
@@ -3351,15 +3351,15 @@ function toggleBrokerPanel() {
                 });
                 const data = await res.json();
                 if (!data.ok) {
-                    if (msg) msg.textContent = `保存失败：${data.msg || res.status}`;
+                    if (msg) msg.textContent = `Save failed: ${data.msg || res.status}`;
                     return;
                 }
-                if (msg) msg.textContent = '✅ 已保存，可重新点击搬家/中介';
+                if (msg) msg.textContent = '✅ Saved, you can now retry moving/broker';
                 const box = document.getElementById('asset-gemini-config');
                 if (box) box.style.display = 'none';
                 await ensureGeminiConfigLoaded();
             } catch (e) {
-                if (msg) msg.textContent = `保存失败：${e}`;
+                if (msg) msg.textContent = `Save failed: ${e}`;
             }
         }
 
@@ -3398,7 +3398,7 @@ function toggleBrokerPanel() {
                 await new Promise(r => setTimeout(r, pollInterval));
                 dots = (dots + 1) % 4;
                 const elapsed = Math.round((Date.now() - startTime) / 1000);
-                out.textContent = progressMsg + '（已等待 ' + elapsed + '秒）' + '.'.repeat(dots);
+                out.textContent = progressMsg + ' (waited ' + elapsed + 's)' + '.'.repeat(dots);
                 try {
                     const pollRes = await fetch('/assets/generate-rpg-background/poll?task_id=' + encodeURIComponent(taskId));
                     const pollData = await pollRes.json();
@@ -3409,7 +3409,7 @@ function toggleBrokerPanel() {
                     continue;
                 }
             }
-            return { ok: false, msg: '生图超时（超过5分钟），请重试' };
+            return { ok: false, msg: 'Image generation timed out (over 5 minutes), please retry' };
         }
 
         function _handleGenError(data, out) {
@@ -3418,20 +3418,20 @@ function toggleBrokerPanel() {
                 const box = document.getElementById('asset-gemini-config');
                 if (box) box.style.display = 'block';
             } else if (data.code === 'API_KEY_REVOKED_OR_LEAKED') {
-                out.textContent = '❌ 当前 API Key 已失效/疑似泄露，请更换新 Key 后重试';
+                out.textContent = '❌ Current API Key is invalid/possibly leaked, please replace and retry';
                 const box = document.getElementById('asset-gemini-config');
                 if (box) box.style.display = 'block';
             } else if (data.code === 'MODEL_NOT_AVAILABLE') {
-                out.textContent = '❌ 当前模型在此通道不可用，请切换可用模型后重试' + (data.detail ? ('\n\n详情：' + data.detail) : '');
+                out.textContent = '❌ Current model not available on this channel, please switch model and retry' + (data.detail ? ('\n\nDetails: ' + data.detail) : '');
             } else {
-                out.textContent = `❌ 生成失败：${data.msg || 'unknown error'}`;
+                out.textContent = `❌ Generation failed: ${data.msg || 'unknown error'}`;
             }
         }
 
         async function generateCustomRpgBackground() {
             const brokerBtn = document.querySelector('#asset-broker-row .btn-broker');
             flashButtonActive(brokerBtn);
-            setWorkingStatus('正在处理中介装修方案');
+            setWorkingStatus('Processing broker decoration plan');
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
             const prompt = (document.getElementById('asset-broker-prompt')?.value || '').trim();
             if (!prompt) {
@@ -3444,7 +3444,7 @@ function toggleBrokerPanel() {
                 const data = await _startAndPollGeneration(
                     { prompt, speed_mode: speedMode },
                     out,
-                    '🏘️ 正在按中介方案生成底图'
+                    '🏘️ Generating background from broker plan'
                 );
                 if (!data.ok) {
                     _handleGenError(data, out);
@@ -3455,10 +3455,10 @@ function toggleBrokerPanel() {
                 if (ok) {
                     markMoveSuccess(out, brokerBtn);
                 } else {
-                    out.textContent = '✅ 已生成并替换底图（局部刷新失败，可手动刷新页面）';
+                    out.textContent = '✅ Background generated and replaced (partial refresh failed, try manual page refresh)';
                 }
             } catch (e) {
-                out.textContent = `❌ 生成失败：${e}`;
+                out.textContent = `❌ Generation failed: ${e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
@@ -3467,29 +3467,29 @@ function toggleBrokerPanel() {
         async function generateRpgBackground() {
             const moveBtn = document.getElementById('btn-move-house');
             flashButtonActive(moveBtn);
-            setWorkingStatus('正在搬新家');
+            setWorkingStatus('Moving to new home');
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
             showRoomLoadingOverlay();
-            out.textContent = '🧳 正在打包行李，请稍后（约30~120秒）';
+            out.textContent = '🧳 Packing up, please wait (about 30-120 seconds)';
             try {
                 const data = await _startAndPollGeneration(
                     { speed_mode: speedMode },
                     out,
-                    '🧳 正在生成新房间'
+                    '🧳 Generating new room'
                 );
                 if (!data.ok) {
                     _handleGenError(data, out);
                     return;
                 }
-                out.textContent = '✅ 已生成并替换底图，正在刷新房间...';
+                out.textContent = '✅ Background generated and replaced, refreshing room...';
                 const ok = await refreshOfficeBackgroundOnly();
                 if (ok) {
                     markMoveSuccess(out, moveBtn);
                 } else {
-                    out.textContent = '✅ 已生成并替换底图（局部刷新失败，可手动刷新页面）';
+                    out.textContent = '✅ Background generated and replaced (partial refresh failed, try manual page refresh)';
                 }
             } catch (e) {
-                out.textContent = `❌ 生成失败：${e}`;
+                out.textContent = `❌ Generation failed: ${e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
@@ -3500,32 +3500,32 @@ function toggleBrokerPanel() {
             flashButtonActive(homeBtn);
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
 
-            const confirmMsg = '⚠️ 回老家会覆盖当前自定义房间背景（可从 bg-history 恢复历史图）。\n确定继续吗？';
+            const confirmMsg = '⚠️ Going home will overwrite the current custom room background (you can restore from bg-history).\nContinue?';
             if (!window.confirm(confirmMsg)) {
-                out.textContent = '已取消回老家';
+                out.textContent = 'Cancelled going home';
                 return;
             }
 
-            setWorkingStatus('正在回老家');
+            setWorkingStatus('Going home');
             // 点击即刻显示遮罩，先于任何网络调用
             showRoomLoadingOverlay();
-            out.textContent = '🏡 正在回老家（恢复初始底图）...';
+            out.textContent = '🏡 Going home (restoring original background)...';
             try {
                 const res = await fetch('/assets/restore-reference-background', { method: 'POST' });
                 const data = await res.json();
                 if (!data.ok) {
-                    out.textContent = `❌ 恢复失败：${data.msg || res.status}`;
+                    out.textContent = `❌ Restore failed: ${data.msg || res.status}`;
                     return;
                 }
-                out.textContent = '✅ 已恢复初始底图';
+                out.textContent = '✅ Original background restored';
                 const ok = await refreshOfficeBackgroundOnly();
                 if (ok) {
                     markMoveSuccess(out, homeBtn);
                 } else {
-                    out.textContent = '✅ 已恢复初始底图（局部刷新失败，可手动刷新页面）';
+                    out.textContent = '✅ Original background restored (partial refresh failed, try manual page refresh)';
                 }
             } catch (e) {
-                out.textContent = `❌ 恢复失败：${e}`;
+                out.textContent = `❌ Restore failed: ${e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
@@ -3536,31 +3536,31 @@ function toggleBrokerPanel() {
             flashButtonActive(btn);
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
 
-            const confirmMsg = '⚠️ 将回退到最近一次生成的房间背景，确定继续吗？';
+            const confirmMsg = '⚠️ Revert to last generated room background?';
             if (!window.confirm(confirmMsg)) {
-                out.textContent = '已取消回退';
+                out.textContent = 'Revert cancelled';
                 return;
             }
 
-            setWorkingStatus('正在回退到上一次背景');
+            setWorkingStatus('Reverting to previous background');
             showRoomLoadingOverlay();
-            out.textContent = '↩️ 正在回退到最近一次生成底图...';
+            out.textContent = '↩️ Reverting to last generated background...';
             try {
                 const res = await fetch('/assets/restore-last-generated-background', { method: 'POST' });
                 const data = await res.json();
                 if (!data.ok) {
-                    out.textContent = `❌ 回退失败：${data.msg || res.status}`;
+                    out.textContent = `❌ Revert failed: ${data.msg || res.status}`;
                     return;
                 }
                 const ok = await refreshOfficeBackgroundOnly();
                 if (ok) {
-                    out.textContent = '✅ 已回退到上一次背景';
+                    out.textContent = '✅ Reverted to previous background';
                 } else {
-                    out.textContent = '✅ 已回退到上一次背景（局部刷新失败，可手动刷新页面）';
+                    out.textContent = '✅ Reverted to previous background (partial refresh failed, try manual page refresh)';
                 }
-                try { setState('idle', '已回退到上一次背景'); } catch (e) {}
+                try { setState('idle', 'Reverted to previous background'); } catch (e) {}
             } catch (e) {
-                out.textContent = `❌ 回退失败：${e}`;
+                out.textContent = `❌ Revert failed: ${e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
@@ -3572,7 +3572,7 @@ function toggleBrokerPanel() {
             if (!ct.includes('application/json')) {
                 const txt = await res.text();
                 const brief = (txt || '').replace(/\s+/g, ' ').slice(0, 120);
-                throw new Error(`接口未返回 JSON（${res.status}）: ${brief || 'empty response'}`);
+                throw new Error(`API did not return JSON (${res.status}): ${brief || 'empty response'}`);
             }
             return await res.json();
         }
@@ -3592,7 +3592,7 @@ function toggleBrokerPanel() {
                     }
                 } catch (e) {
                     const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
-                    if (out) out.textContent = `❌ 收藏列表加载失败：${e.message || e}`;
+                    if (out) out.textContent = `❌ Failed to load bookmarks: ${e.message || e}`;
                 }
             }
 
@@ -3621,13 +3621,13 @@ function toggleBrokerPanel() {
             try {
                 const data = await fetchJsonSafe('/assets/home-favorites/save-current', { method: 'POST' });
                 if (!data.ok) {
-                    out.textContent = `❌ 收藏失败：${data.msg || 'unknown error'}`;
+                    out.textContent = `❌ Bookmark failed: ${data.msg || 'unknown error'}`;
                     return;
                 }
                 out.textContent = t('homeFavSaved');
                 await renderHomeFavorites(true);
             } catch (e) {
-                out.textContent = `❌ 收藏失败：${e.message || e}`;
+                out.textContent = `❌ Bookmark failed: ${e.message || e}`;
             }
         }
 
@@ -3635,7 +3635,7 @@ function toggleBrokerPanel() {
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
             if (!id) return;
             showRoomLoadingOverlay();
-            setWorkingStatus('正在替换收藏地图');
+            setWorkingStatus('Applying saved map');
             try {
                 const data = await fetchJsonSafe('/assets/home-favorites/apply', {
                     method: 'POST',
@@ -3643,14 +3643,14 @@ function toggleBrokerPanel() {
                     body: JSON.stringify({ id })
                 });
                 if (!data.ok) {
-                    out.textContent = `❌ 替换失败：${data.msg || 'unknown error'}`;
+                    out.textContent = `❌ Apply failed: ${data.msg || 'unknown error'}`;
                     return;
                 }
                 const ok = await refreshOfficeBackgroundOnly();
-                out.textContent = ok ? t('homeFavApplied') : `${t('homeFavApplied')}（局部刷新失败，可手动刷新页面）`;
-                try { setState('idle', '已应用收藏地图'); } catch (e) {}
+                out.textContent = ok ? t('homeFavApplied') : `${t('homeFavApplied')} (partial refresh failed, try manual page refresh)`;
+                try { setState('idle', 'Saved map applied'); } catch (e) {}
             } catch (e) {
-                out.textContent = `❌ 替换失败：${e.message || e}`;
+                out.textContent = `❌ Apply failed: ${e.message || e}`;
             } finally {
                 hideRoomLoadingOverlay();
             }
@@ -3659,7 +3659,7 @@ function toggleBrokerPanel() {
         async function deleteHomeFavorite(id) {
             const out = document.getElementById('asset-move-result') || document.getElementById('asset-upload-result');
             if (!id) return;
-            if (!window.confirm('确定删除这个收藏吗？删除后不可恢复。')) return;
+            if (!window.confirm('Delete this bookmark? This cannot be undone.')) return;
             try {
                 const data = await fetchJsonSafe('/assets/home-favorites/delete', {
                     method: 'POST',
@@ -3667,13 +3667,13 @@ function toggleBrokerPanel() {
                     body: JSON.stringify({ id })
                 });
                 if (!data.ok) {
-                    out.textContent = `❌ 删除失败：${data.msg || 'unknown error'}`;
+                    out.textContent = `❌ Delete failed: ${data.msg || 'unknown error'}`;
                     return;
                 }
                 out.textContent = t('homeFavDeleted');
                 await renderHomeFavorites(true);
             } catch (e) {
-                out.textContent = `❌ 删除失败：${e.message || e}`;
+                out.textContent = `❌ Delete failed: ${e.message || e}`;
             }
         }
 
@@ -3681,10 +3681,10 @@ function toggleBrokerPanel() {
             const out = document.getElementById('asset-upload-result');
             const path = selectedAssetInfo && selectedAssetInfo.path;
             if (!path) {
-                if (out) out.textContent = '请先选择一个资产';
+                if (out) out.textContent = 'Please select an asset first';
                 return;
             }
-            if (!window.confirm(`⚠️ 确定将 ${path} 重置为默认资产吗？`)) return;
+            if (!window.confirm(`⚠️ Reset ${path} to default asset?`)) return;
             try {
                 const res = await fetch('/assets/restore-default', {
                     method: 'POST',
@@ -3693,13 +3693,13 @@ function toggleBrokerPanel() {
                 });
                 const data = await res.json();
                 if (!data.ok) {
-                    if (out) out.textContent = `❌ 重置失败：${data.msg || res.status}`;
+                    if (out) out.textContent = `❌ Reset failed: ${data.msg || res.status}`;
                     return;
                 }
                 await refreshSceneObjectByAssetPath(path);
-                if (out) out.textContent = `✅ 已重置为默认资产：${path}`;
+                if (out) out.textContent = `✅ Reset to default: ${path}`;
             } catch (e) {
-                if (out) out.textContent = `❌ 重置失败：${e}`;
+                if (out) out.textContent = `❌ Reset failed: ${e}`;
             }
         }
 
@@ -3707,10 +3707,10 @@ function toggleBrokerPanel() {
             const out = document.getElementById('asset-upload-result');
             const path = selectedAssetInfo && selectedAssetInfo.path;
             if (!path) {
-                if (out) out.textContent = '请先选择一个资产';
+                if (out) out.textContent = 'Please select an asset first';
                 return;
             }
-            if (!window.confirm(`⚠️ 确定将 ${path} 回退到上一版吗？`)) return;
+            if (!window.confirm(`⚠️ Revert ${path} to previous version?`)) return;
             try {
                 const res = await fetch('/assets/restore-prev', {
                     method: 'POST',
@@ -3719,13 +3719,13 @@ function toggleBrokerPanel() {
                 });
                 const data = await res.json();
                 if (!data.ok) {
-                    if (out) out.textContent = `❌ 回退失败：${data.msg || res.status}`;
+                    if (out) out.textContent = `❌ Revert failed: ${data.msg || res.status}`;
                     return;
                 }
                 await refreshSceneObjectByAssetPath(path);
-                if (out) out.textContent = `✅ 已回退到上一版：${path}`;
+                if (out) out.textContent = `✅ Reverted to previous: ${path}`;
             } catch (e) {
-                if (out) out.textContent = `❌ 回退失败：${e}`;
+                if (out) out.textContent = `❌ Revert failed: ${e}`;
             }
         }
 
@@ -3810,20 +3810,20 @@ function toggleBrokerPanel() {
                         delete guestBubbles[agentId];
                     }
                     fetchGuestAgents();
-                    alert((name || agentId) + ' 已离开房间');
+                    alert((name || agentId) + ' has left the room');
                 } else {
                     // demo agent 没在后端也允许本地隐藏
-                    if (DEMO_MODE && (name === '尼卡' || name === '水星')) {
+                    if (DEMO_MODE && (name === 'Nika' || name === 'Mercury')) {
                         hiddenDemoNames.add(name);
                         removeGuestSpriteByName(name);
                         renderGuestAgentList();
-                        alert(name + ' 已离开房间（demo）');
+                        alert(name + ' has left the room (demo)');
                         return;
                     }
-                    alert('离开失败：' + (data.msg || '未知错误'));
+                    alert('Leave failed: ' + (data.msg || 'unknown error'));
                 }
             }).catch(error => {
-                alert('请求失败：' + error);
+                alert('Request failed: ' + error);
             });
         }
 
@@ -3835,12 +3835,12 @@ function toggleBrokerPanel() {
             }).then(response => response.json()).then(data => {
                 if (data.ok) {
                     fetchGuestAgents();
-                    alert('已批准该访客接入');
+                    alert('Guest access approved');
                 } else {
-                    alert('批准失败：' + (data.msg || '未知错误'));
+                    alert('Approval failed: ' + (data.msg || 'unknown error'));
                 }
             }).catch(error => {
-                alert('请求失败：' + error);
+                alert('Request failed: ' + error);
             });
         }
 
@@ -3852,12 +3852,12 @@ function toggleBrokerPanel() {
             }).then(response => response.json()).then(data => {
                 if (data.ok) {
                     fetchGuestAgents();
-                    alert('已拒绝该访客');
+                    alert('Guest rejected');
                 } else {
-                    alert('拒绝失败：' + (data.msg || '未知错误'));
+                    alert('Rejection failed: ' + (data.msg || 'unknown error'));
                 }
             }).catch(error => {
-                alert('请求失败：' + error);
+                alert('Request failed: ' + error);
             });
         }
 
@@ -3865,8 +3865,8 @@ function toggleBrokerPanel() {
             if (!DEMO_MODE) return;
             if (!Array.isArray(window.__demoVisitors) || window.__demoVisitors.length === 0) {
                 window.__demoVisitors = [
-                    { agentId: 'demo_nika', name: '尼卡', authStatus: 'approved', state: 'writing', bubbleText: '我在工作中', isDemo: true, updated_at: new Date().toISOString() },
-                    { agentId: 'demo_mercury', name: '水星', authStatus: 'approved', state: 'idle', bubbleText: '我去休息区躺一下', isDemo: true, updated_at: new Date().toISOString() }
+                    { agentId: 'demo_nika', name: 'Nika', authStatus: 'approved', state: 'writing', bubbleText: 'Working', isDemo: true, updated_at: new Date().toISOString() },
+                    { agentId: 'demo_mercury', name: 'Mercury', authStatus: 'approved', state: 'idle', bubbleText: 'Taking a break', isDemo: true, updated_at: new Date().toISOString() }
                 ];
             }
         }
@@ -3886,34 +3886,34 @@ function toggleBrokerPanel() {
 
             const visitors = getMergedVisitors();
             if (visitors.length === 0) {
-                list.innerHTML = '<div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">暂无访客</div>';
+                list.innerHTML = '<div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">No guests</div>';
                 return;
             }
 
             list.innerHTML = visitors.map(agent => {
-                const name = agent.name || '未命名访客';
+                const name = agent.name || 'Unnamed Guest';
                 const authStatus = agent.authStatus || 'pending';
                 const state = agent.state || 'idle';
                 const statusMap = {
-                    approved: '已授权',
-                    pending: '待授权',
-                    rejected: '已拒绝',
-                    offline: '离线'
+                    approved: 'Authorized',
+                    pending: 'Pending',
+                    rejected: 'Rejected',
+                    offline: 'Offline'
                 };
                 const stateMap = {
-                    idle: '待命',
-                    writing: '工作',
-                    researching: '调研',
-                    executing: '执行',
-                    syncing: '同步',
-                    error: '报警'
+                    idle: 'Idle',
+                    writing: 'Working',
+                    researching: 'Research',
+                    executing: 'Executing',
+                    syncing: 'Syncing',
+                    error: 'Alert'
                 };
 
                 const statusText = statusMap[authStatus] || authStatus;
                 const stateText = stateMap[state] || state;
                 const subtitle = `${statusText} · ${stateText}`;
 
-                const pendingActions = `<button onclick="alert('交换 skill 功能开发中')">交换skill</button><button class="leave-btn" onclick="leaveGuestAgent('${agent.agentId}','${name}')">离开房间</button>`;
+                const pendingActions = `<button onclick="alert('Skill exchange feature in development')">Swap Skill</button><button class="leave-btn" onclick="leaveGuestAgent('${agent.agentId}','${name}')">Leave Room</button>`;
 
                 return `
                   <div class="guest-agent-item" data-name="${name}">
@@ -3998,7 +3998,7 @@ function toggleBrokerPanel() {
                 const id = agent.agentId;
                 seenIds.add(id);
 
-                const isDemo = !!agent.isDemo || (DEMO_MODE && (id === 'demo_nika' || id === 'demo_mercury' || agent.name === '尼卡' || agent.name === '水星'));
+                const isDemo = !!agent.isDemo || (DEMO_MODE && (id === 'demo_nika' || id === 'demo_mercury' || agent.name === 'Nika' || agent.name === 'Mercury'));
                 const area = agent.area || (agent.state === 'error' ? 'error' : (agent.state === 'idle' ? 'breakroom' : 'writing'));
 
                 const idx = area === 'breakroom' ? idxBreak++ : area === 'error' ? idxError++ : idxWrite++;
@@ -4009,9 +4009,9 @@ function toggleBrokerPanel() {
                 if (!guestSprites[id]) {
                     // 优先用图标：demo visitor 有专门映射
                     let sprite;
-                    const isDemoNika = DEMO_MODE && (agent.agentId === 'demo_nika' || agent.name === '尼卡');
-                    const isDemoMercury = DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === '水星');
-                    
+                    const isDemoNika = DEMO_MODE && (agent.agentId === 'demo_nika' || agent.name === 'Nika');
+                    const isDemoMercury = DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury');
+
                     if (isDemoNika || isDemoMercury) {
                         // 统一使用动态像素角色，避免依赖已删除的 demo 静态图
                         const animKey = 'guest_anim_1';
@@ -4054,15 +4054,15 @@ function toggleBrokerPanel() {
                         }
                     }
                     sprite.setDepth(2600);
-                    if (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === '水星')) {
+                    if (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) {
                         sprite.y = sprite.y + 10;
                     }
 
                     // demo 水星下移 10px（仅 demo_mercury）
-                    const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === '水星')) ? 10 : 0;
+                    const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) ? 10 : 0;
 
                     const nameTextY = isDemo ? ((p.y + yOffset) - 80) : ((p.y + yOffset) - 120);
-                    const nameText = game.add.text(p.x, nameTextY, agent.name || '访客', {
+                    const nameText = game.add.text(p.x, nameTextY, agent.name || 'Guest', {
                         fontFamily: 'ArkPixel, monospace',
                         fontSize: isDemo ? '16px' : '15px',
                         fill: '#ffffff',
@@ -4074,7 +4074,7 @@ function toggleBrokerPanel() {
                     guestSprites[id] = { sprite, nameText };
                 } else {
                     const g = guestSprites[id];
-                    const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === '水星')) ? 10 : 0;
+                    const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) ? 10 : 0;
 
                     // demo：平滑移动（避免闪现）；非 demo：保持稳定位置（避免轮询抖动）
                     if (isDemo) {
@@ -4111,7 +4111,7 @@ function toggleBrokerPanel() {
                         g.nameText.y = (p.y + yOffset) - 120;
                     }
 
-                    g.nameText.setText(agent.name || '访客');
+                    g.nameText.setText(agent.name || 'Guest');
                 }
             });
 
@@ -4142,18 +4142,18 @@ function toggleBrokerPanel() {
             const id = ids[Math.floor(Math.random() * ids.length)];
             const g = guestSprites[id];
 
-            // demo 气泡：优先展示与状态对应的内容，便于验证“状态→区域→气泡”链路
+            // demo 气泡：优先展示与状态对应的内容，便于验证"状态→区域→气泡"链路
             const demoVisitor = (DEMO_MODE && window.__demoVisitors)
                 ? (window.__demoVisitors.find(v => v.agentId === id) || window.__demoVisitors.find(v => v.name === (g.nameText && g.nameText.text)))
                 : null;
 
             const statusThoughtsMap = {
-                idle: ['我在休息区待命', '先放松一下，等下一步任务', '我在休息充电中'],
-                writing: ['我在工作区处理任务', '正在整理文档与执行中', '工作区专注推进中'],
-                researching: ['我在调研模式，搜集信息', '正在查资料和验证线索', '研究中，稍后同步结论'],
-                executing: ['执行中，正在跑流程', '我在工作区推进任务', '正在把计划落地执行'],
-                syncing: ['同步中，马上更新状态', '正在同步进度到系统', '数据同步中请稍候'],
-                error: ['我在 bug 区排查问题', '检测到异常，正在修复', '报警中，先定位再处理']
+                idle: ['Standing by in break room', 'Relaxing, waiting for next task', 'Recharging in break room'],
+                writing: ['Working on tasks', 'Organizing docs and executing', 'Focused on progress'],
+                researching: ['In research mode, gathering info', 'Looking up data and verifying leads', 'Researching, will sync conclusions later'],
+                executing: ['Executing, running the pipeline', 'Pushing tasks forward', 'Turning plans into action'],
+                syncing: ['Syncing, updating status soon', 'Syncing progress to system', 'Data sync in progress, please wait'],
+                error: ['Investigating bugs', 'Anomaly detected, fixing', 'Alert: locating issue first']
             };
             const agentState = (guestAgents.find(a => a.agentId === id) || {}).state || 'idle';
             const thoughts = statusThoughtsMap[agentState] || statusThoughtsMap.idle;
@@ -4165,7 +4165,7 @@ function toggleBrokerPanel() {
             }
 
             const bx = g.sprite.x;
-            // 气泡位置：demo 维持原逻辑；真实访客放在“名字上方”，避免压角色也避免压名字
+            // 气泡位置：demo 维持原逻辑；真实访客放在"名字上方"，避免压角色也避免压名字
             const isDemoGuest = (demoVisitor && demoVisitor.isDemo) || (id === 'demo_nika' || id === 'demo_mercury');
             const nameH = (g.nameText && g.nameText.height) ? g.nameText.height : 16;
             const by = isDemoGuest ? (g.sprite.y - 90) : ((g.nameText ? g.nameText.y : (g.sprite.y - 150)) - (nameH / 2) - 22);
@@ -4201,12 +4201,12 @@ function toggleBrokerPanel() {
             const states = ['idle', 'writing', 'researching', 'executing', 'syncing', 'error'];
             const bubbleTextMapByLang = {
                 zh: {
-                idle: '我去休息区躺一下',
-                writing: '我在工作中',
-                researching: '我在调研中',
-                executing: '我在执行任务',
-                syncing: '我在同步状态',
-                error: '出错了！我去报警区'
+                idle: 'Taking a break',
+                writing: 'Working',
+                researching: 'Researching',
+                executing: 'Executing task',
+                syncing: 'Syncing status',
+                error: 'Error! Heading to alert zone'
                 },
                 en: {
                     idle: 'Taking a break in the lounge.',
@@ -4331,8 +4331,8 @@ function toggleBrokerPanel() {
                                     // 临时更换 bubble 文案
                                     const lang = uiLang;
                                     const welcomeTexts = {
-                                        zh: [`欢迎 ${newAgent.name} 来到办公室～`,`Hi ${newAgent.name}，一起开工吧`,`${newAgent.name} 已加入，欢迎！`],
-                                        en: [`Welcome ${newAgent.name} to the office!`,`Hi ${newAgent.name}, let’s build something.`,`${newAgent.name} just joined — welcome!`],
+                                        zh: [`Welcome ${newAgent.name} to the office~`,`Hi ${newAgent.name}, let's get to work`,`${newAgent.name} has joined, welcome!`],
+                                        en: [`Welcome ${newAgent.name} to the office!`,`Hi ${newAgent.name}, let's build something.`,`${newAgent.name} just joined - welcome!`],
                                         ja: [`${newAgent.name} さん、オフィスへようこそ！`,`Hi ${newAgent.name}、一緒に進めよう。`,`${newAgent.name} さんが参加しました、歓迎！`]
                                     };
                                     const langPack = BUBBLE_TEXTS[lang] || BUBBLE_TEXTS.zh;
@@ -4362,7 +4362,7 @@ function toggleBrokerPanel() {
                 });
         }
 
-        // ═══ OpenClaw Live Agents — fetch & render subagents as pixel characters ═══
+        // ═══ OpenClaw Live Agents - fetch & render subagents as pixel characters ═══
 
         function fetchOpenClawAgents() {
             fetch('/openclaw/agents?t=' + Date.now(), { cache: 'no-store' })
@@ -4373,7 +4373,7 @@ function toggleBrokerPanel() {
                     renderOcAgentsInScene();
                 })
                 .catch(function(e) {
-                    // Silently fail — keep current state
+                    // Silently fail - keep current state
                 });
         }
 
@@ -4400,7 +4400,7 @@ function toggleBrokerPanel() {
                 var target = getOcZonePosition(state, zoneIdx);
 
                 if (!ocAgentSprites[name]) {
-                    // Create new character — enter from door
+                    // Create new character - enter from door
                     var colorIdx = 0;
                     for (var ci = 0; ci < name.length; ci++) colorIdx = (colorIdx * 31 + name.charCodeAt(ci)) >>> 0;
                     var color = OC_AGENT_COLORS[colorIdx % OC_AGENT_COLORS.length];
@@ -4491,7 +4491,7 @@ function toggleBrokerPanel() {
                         game.tweens.add({ targets: [taskBubble.list[0], taskBubble.list[1]], x: target.x, y: target.y - 130, duration: 2500, ease: 'Sine.easeInOut' });
                     }
                 } else {
-                    // Update existing character — move to new zone if state changed
+                    // Update existing character - move to new zone if state changed
                     var existing = ocAgentSprites[name];
                     if (existing.state !== state || Math.abs(existing.targetX - target.x) > 10) {
                         existing.state = state;
@@ -4510,7 +4510,7 @@ function toggleBrokerPanel() {
                 }
             });
 
-            // Remove characters no longer present — walk to door then destroy
+            // Remove characters no longer present - walk to door then destroy
             Object.keys(ocAgentSprites).forEach(function(name) {
                 if (!seenNames.has(name)) {
                     var leaving = ocAgentSprites[name];
@@ -4551,7 +4551,7 @@ function toggleBrokerPanel() {
                 var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
                 var mappedState = stateMap[ocState] || 'idle';
 
-                // [REMOVED] Client-side /set_state POST — backend now writes state.json
+                // [REMOVED] Client-side /set_state POST - backend now writes state.json
                 // directly in GET /openclaw/agents (see openclaw_api.py).
                 // Old code removed to avoid redundant/unreliable client-side sync.
 
@@ -4630,16 +4630,16 @@ function toggleBrokerPanel() {
             loadingProgressBar = document.getElementById('loading-progress-bar');
             loadingText = document.getElementById('loading-text');
             loadingProgressContainer = document.getElementById('loading-progress-container');
-            
+
             // 设置资源总数（全部首屏加载：装饰也第一时间出现）
             totalAssets = 15;
             loadedAssets = 0;
-            
+
             // 加载进度监听
             this.load.on('filecomplete', () => {
                 updateLoadingProgress();
             });
-            
+
             this.load.on('complete', () => {
                 hideLoadingOverlay();
             });
@@ -4679,7 +4679,7 @@ function toggleBrokerPanel() {
             this.load.spritesheet('sync_anim', '/static/sync-animation-v3-grid.webp?v={{VERSION_TIMESTAMP}}', { frameWidth: 256, frameHeight: 256 });
 
             // Memo background image
-            // memo 底图固定走 png，避免某些端 webp 透明通道异常导致“底图丢失”
+            // memo 底图固定走 png，避免某些端 webp 透明通道异常导致"底图丢失"
             this.load.image('memo_bg', '/static/memo-bg.webp?v={{VERSION_TIMESTAMP}}');
             // Desk v2 (webp only)
             this.load.image('desk_v2', '/static/desk-v3.webp?v={{VERSION_TIMESTAMP}}');
@@ -4774,19 +4774,19 @@ function toggleBrokerPanel() {
                 wordWrap: { width: 400 },
                 align: 'center'
             }).setOrigin(0.5);
-            // 牌匾两边加个小装饰（跟随牌匾居中）— fire crabs for The Hearth
+            // 牌匾两边加个小装饰（跟随牌匾居中）- fire crabs for The Hearth
             game.add.text(plaqueX - 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
             game.add.text(plaqueX + 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
             window.officePlaqueText = plaqueText;
 
-            // ═══ The Hearth — Warm Atmospheric Effects ═══
+            // ═══ The Hearth - Warm Atmospheric Effects ═══
 
             // 1. Warm ambient overlay (subtle orange tint across the whole scene)
             const warmOverlay = game.add.rectangle(640, 360, 1280, 720, 0xff8c00, 0.04);
             warmOverlay.setDepth(3000);
             warmOverlay.setBlendMode(Phaser.BlendModes.ADD);
 
-            // 2. Ember particles — tiny warm dots floating upward
+            // 2. Ember particles - tiny warm dots floating upward
             const emberGfx = game.make.graphics({ add: false });
             emberGfx.fillStyle(0xffaa44, 1);
             emberGfx.fillCircle(3, 3, 3);
@@ -4861,7 +4861,7 @@ function toggleBrokerPanel() {
             // Expose to global for click handler
             window.plantSprite = plant;
             window.plantFrameCount = plantFrameCount;
-            
+
             plant.on('pointerdown', () => {
                 const next = Math.floor(Math.random() * window.plantFrameCount);
                 window.plantSprite.setFrame(next);
@@ -4874,7 +4874,7 @@ function toggleBrokerPanel() {
             plant2.setInteractive({ useHandCursor: true });
             // Expose to global for click handler
             window.plantSprite2 = plant2;
-            
+
             plant2.on('pointerdown', () => {
                 const next = Math.floor(Math.random() * window.plantFrameCount);
                 window.plantSprite2.setFrame(next);
@@ -4887,7 +4887,7 @@ function toggleBrokerPanel() {
             plant3.setInteractive({ useHandCursor: true });
             // Expose to global for click handler
             window.plantSprite3 = plant3;
-            
+
             plant3.on('pointerdown', () => {
                 const next = Math.floor(Math.random() * window.plantFrameCount);
                 window.plantSprite3.setFrame(next);
@@ -4904,7 +4904,7 @@ function toggleBrokerPanel() {
             window.posterSprite = poster;
             window.posterFrameCount = postersFrameCount;
             window.customPosterFrames = CUSTOM_POSTER_FRAMES;
-            
+
             poster.on('pointerdown', () => {
                 const pool = window.customPosterFrames || CUSTOM_POSTER_FRAMES;
                 const next = pool[Math.floor(Math.random() * pool.length)];
@@ -5053,7 +5053,7 @@ function toggleBrokerPanel() {
                 coordsToggle.style.background = showCoords ? '#d4883a' : '#333';
             });
 
-            // 允许手机端“拖动/滑动”来移动视野（本质：移动 Phaser Camera）
+            // 允许手机端"拖动/滑动"来移动视野（本质：移动 Phaser Camera）
             // iPhone 等触屏设备默认开启；桌面端默认关闭（可手动开）。
             const panToggle = document.getElementById('pan-toggle');
             const isTouchDevice = IS_TOUCH_DEVICE;
@@ -5078,7 +5078,7 @@ function toggleBrokerPanel() {
                 camera.scrollY = clamp(camera.scrollY, 0, maxScrollY());
             }
 
-            // 手机上：锁定“办公室画布高度 = 2/3 区域高度”，
+            // 手机上：锁定"办公室画布高度 = 2/3 区域高度"，
             // 让世界坐标在竖向恰好看满（不需要上下拖），只保留横向拖动浏览左右。
             // 记录初始是否已手动平移（避免 resize 时把用户拖好的位置重置）
             let hasManuallyPanned = false;
@@ -5129,8 +5129,8 @@ function toggleBrokerPanel() {
                 }
                 game.input.setDefaultCursor(on ? 'grab' : 'default');
                 if (isTouchDevice && statusText) {
-                    const info = on ? '视野拖动已开启（可左右拖动画布）' : '视野拖动已关闭（点击左上角“移动视野”可开启）';
-                    statusText.textContent = `状态：[${(STATES[currentState] && STATES[currentState].name) || '待命'}] ${info}`;
+                    const info = on ? 'Pan enabled (drag to scroll)' : 'Pan disabled (click "Pan View" to enable)';
+                    statusText.textContent = `Status: [${(STATES[currentState] && STATES[currentState].name) || 'Idle'}] ${info}`;
                 }
             }
 
@@ -5138,7 +5138,7 @@ function toggleBrokerPanel() {
                 panToggle.addEventListener('click', () => setPanEnabled(!panEnabled));
             }
 
-            // 手机端默认关闭拖动画面：由左上角“移动视野”开关显式开启
+            // 手机端默认关闭拖动画面：由左上角"移动视野"开关显式开启
             if (isTouchDevice) {
                 setPanEnabled(false);
             }
@@ -5150,7 +5150,7 @@ function toggleBrokerPanel() {
             const canvasEl = game.canvas;
             let touchPan = null; // {x,y,sx,sy,lock:'x'|'y'|null}
             if (canvasEl) {
-                // 手机端允许页面自然滚动，避免“不能滑动”
+                // 手机端允许页面自然滚动，避免"不能滑动"
                 canvasEl.style.touchAction = 'auto';
 
                 canvasEl.addEventListener('touchstart', (e) => {
@@ -5203,7 +5203,7 @@ function toggleBrokerPanel() {
                 const dx = pointer.x - panStart.x;
                 const dy = pointer.y - panStart.y;
 
-                // 手机端优先“横向拖动看办公室”，纵向手势留给页面滚动看下方面板。
+                // 手机端优先"横向拖动看办公室"，纵向手势留给页面滚动看下方面板。
                 if (isTouchDevice && Math.abs(dy) > Math.abs(dx)) {
                     return;
                 }
@@ -5459,13 +5459,13 @@ function toggleBrokerPanel() {
                         }
                     } catch (err) {
                         console.error('fetchStatus apply error', err);
-                        typewriterTarget = '状态更新异常，正在恢复...';
+                        typewriterTarget = 'Status update error, recovering...';
                         typewriterText = '';
                         typewriterIndex = 0;
                     }
                 })
                 .catch(error => {
-                    typewriterTarget = '连接失败，正在重试...';
+                    typewriterTarget = 'Connection failed, retrying...';
                     typewriterText = '';
                     typewriterIndex = 0;
                 });
@@ -5738,7 +5738,7 @@ function toggleBrokerPanel() {
                 }
             }
 
-            // Result summary (subagents — what they actually did)
+            // Result summary (subagents - what they actually did)
             if (data.result) {
                 html += '<hr class="adm-separator">';
                 html += '<div class="adm-row"><span class="adm-label">Result</span></div>';
@@ -5759,7 +5759,7 @@ function toggleBrokerPanel() {
                 html += '<div class="adm-row"><span class="adm-label">Recent Runs</span></div>';
                 data.recentRuns.slice(0, 5).forEach(function(run) {
                     var ts = run.ts ? new Date(run.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '?';
-                    var dur = run.durationMs ? (run.durationMs < 1000 ? run.durationMs + 'ms' : (run.durationMs / 1000).toFixed(1) + 's') : '—';
+                    var dur = run.durationMs ? (run.durationMs < 1000 ? run.durationMs + 'ms' : (run.durationMs / 1000).toFixed(1) + 's') : '-';
                     var tok = run.tokens ? fmtTokensSimple(run.tokens.total || 0) : '0';
                     var status = run.status || '?';
                     var statusColor = status === 'ok' ? '#3fb950' : (status === 'error' ? '#f85149' : '#d29922');
@@ -5791,7 +5791,42 @@ function toggleBrokerPanel() {
                 });
             }
 
+            // Dismiss button for completed subagents
+            if (data.type === 'subagent' && data.state === 'idle') {
+                html += '<hr class="adm-separator">';
+                html += '<div style="text-align:center;padding:8px 0 4px;">';
+                html += '<button id="adm-dismiss-btn" onclick="dismissAgent(\'' + escHtmlSimple(data.name).replace(/'/g, "\\'") + '\')" style="'
+                    + 'font-family:ArkPixel,monospace;font-size:13px;'
+                    + 'background:#2d2218;color:#e8a849;'
+                    + 'border:2px solid #5c3d1a;border-radius:6px;'
+                    + 'padding:8px 24px;cursor:pointer;'
+                    + 'transition:background 0.2s,border-color 0.2s;'
+                    + 'letter-spacing:1px;'
+                    + '">🚪 Dismiss</button>';
+                html += '</div>';
+            }
+
             bodyEl.innerHTML = html;
+        }
+
+        function dismissAgent(agentName) {
+            var btn = document.getElementById('adm-dismiss-btn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Dismissing...'; }
+            fetch('/openclaw/agent/' + encodeURIComponent(agentName) + '/dismiss', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    closeAgentDetailModal(null, true);
+                } else {
+                    if (btn) { btn.disabled = false; btn.textContent = '🚪 Dismiss'; }
+                }
+            })
+            .catch(function() {
+                if (btn) { btn.disabled = false; btn.textContent = '🚪 Dismiss'; }
+            });
         }
 
         function escHtmlSimple(s) {

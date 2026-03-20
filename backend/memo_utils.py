@@ -19,13 +19,13 @@ def get_yesterday_date_str() -> str:
 
 def sanitize_content(text: str) -> str:
     """Redact PII and sensitive patterns (OpenID, paths, IPs, email, phone) for safe display."""
-    text = re.sub(r'ou_[a-f0-9]+', '[用户]', text)
-    text = re.sub(r'user_id="[^"]+"', 'user_id="[隐藏]"', text)
-    text = re.sub(r'/root/[^"\s]+', '[路径]', text)
+    text = re.sub(r'ou_[a-f0-9]+', '[user]', text)
+    text = re.sub(r'user_id="[^"]+"', 'user_id="[hidden]"', text)
+    text = re.sub(r'/root/[^"\s]+', '[path]', text)
     text = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', '[IP]', text)
 
-    text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[邮箱]', text)
-    text = re.sub(r'1[3-9]\d{9}', '[手机号]', text)
+    text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[email]', text)
+    text = re.sub(r'1[3-9]\d{9}', '[phone]', text)
 
     return text
 
@@ -53,7 +53,7 @@ def extract_memo_from_file(file_path: str) -> str:
                 core_points.append(line)
 
         if not core_points:
-            return "「昨日无事记录」\n\n若有恒，何必三更眠五更起；最无益，莫过一日曝十日寒。"
+            return "No events recorded yesterday.\n\nConsistency beats intensity."
 
         # 从核心内容中提取 2-3 个关键点
         selected_points = core_points[:3]
@@ -113,4 +113,4 @@ def extract_memo_from_file(file_path: str) -> str:
 
     except Exception as e:
         print(f"extract_memo_from_file failed: {e}")
-        return "「昨日记录加载失败」\n\n「往者不可谏，来者犹可追。」"
+        return "Failed to load yesterday's record.\n\nWhat's past is past; what comes next is up to you."

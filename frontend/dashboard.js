@@ -392,6 +392,13 @@
       return;
     }
 
+    // Filter out dismissed subagents from display
+    subagents = subagents.filter(function(r) { return !r.dismissed; });
+    if (!subagents.length) {
+      el.innerHTML = '<div class="oc-empty">No subagent runs</div>';
+      return;
+    }
+
     // Show the most recent 10
     var shown = subagents.slice(0, 10);
 
@@ -401,7 +408,19 @@
       var model = (r.model || '').split('/').pop();
       var fullTask = r.task || '';
       var truncTask = fullTask.length > 300 ? fullTask.substring(0, 297) + '…' : fullTask;
-      return '<div class="oc-sa-card ' + statusCls + ' oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
+      var dismissBtn = '';
+      var isCompleted = r.status === 'ok' || r.status === 'completed';
+      var isDismissed = r.dismissed === true;
+      if (isCompleted && !isDismissed) {
+        dismissBtn = '<button class="oc-sa-dismiss" data-label="' + escHtml(r.label || r.runId || '') + '" title="Dismiss" style="' +
+          'position:absolute;top:4px;right:4px;background:none;border:1px solid #5c3d1a;' +
+          'color:#e8a849;font-size:12px;width:20px;height:20px;line-height:18px;' +
+          'cursor:pointer;border-radius:3px;padding:0;font-family:ArkPixel,monospace;' +
+          'opacity:0;transition:opacity 0.2s;' +
+        '">✕</button>';
+      }
+      return '<div class="oc-sa-card ' + statusCls + ' oc-expandable' + (isDismissed ? ' oc-sa-dismissed' : '') + '" onclick="this.classList.toggle(\'expanded\')" style="position:relative;">' +
+        dismissBtn +
         '<div class="oc-sa-header">' +
           '<span class="oc-sa-icon">' + statusIcon + '</span>' +
           '<span class="oc-sa-label">' + escHtml(r.label || r.runId || '?') + '</span>' +
@@ -579,8 +598,45 @@
       '.oc-activity-row.oc-clickable { flex-wrap: wrap; }' +
       '.oc-act-expanded { width: 100%; }' +
       '.oc-session-row.oc-clickable { flex-wrap: wrap; }' +
-      '.oc-session-expanded { width: 100%; }';
+      '.oc-session-expanded { width: 100%; }' +
+      /* Dismiss button hover reveal */
+      '.oc-sa-card:hover .oc-sa-dismiss { opacity: 1 !important; }' +
+      '.oc-sa-dismiss:hover { background: #5c3d1a !important; color: #fff !important; }' +
+      /* Fade-out animation for dismissed cards */
+      '.oc-sa-fade-out { transition: opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease; opacity: 0; max-height: 0; padding: 0 !important; margin: 0 !important; overflow: hidden; }';
     document.head.appendChild(expandStyle);
+
+    // Dismiss button handler (delegated)
+    panel.addEventListener('click', function (e) {
+      var btn = e.target.closest('.oc-sa-dismiss');
+      if (!btn) return;
+      e.stopPropagation(); // Don't trigger expand
+      var label = btn.getAttribute('data-label');
+      if (!label) return;
+      btn.disabled = true;
+      btn.textContent = '…';
+      fetch('/openclaw/agent/' + encodeURIComponent(label) + '/dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          var card = btn.closest('.oc-sa-card');
+          if (card) {
+            card.classList.add('oc-sa-fade-out');
+            setTimeout(function () { card.remove(); }, 450);
+          }
+        } else {
+          btn.disabled = false;
+          btn.textContent = '✕';
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = '✕';
+      });
+    });
 
     // Listen for manual refresh
     document.addEventListener('oc-refresh', function () { refreshAll(); });

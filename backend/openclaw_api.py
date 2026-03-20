@@ -47,6 +47,10 @@ SESSIONS_DIR = os.path.join(OPENCLAW_DIR, "agents", "main", "sessions")
 SUBAGENT_RUNS_FILE = os.path.join(OPENCLAW_DIR, "subagents", "runs.json")
 GATEWAY_HEALTH_URL = "http://127.0.0.1:18789/health"
 
+# Dismissed agents persistence
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DISMISSED_FILE = os.path.join(PROJECT_ROOT, "dismissed_agents.json")
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -116,6 +120,27 @@ def _relative_time_label(ts_ms):
     else:
         label = f"{abs_s / 86400:.1f}d"
     return f"in {label}" if diff_s > 0 else f"{label} ago"
+
+
+def _read_dismissed():
+    """Read dismissed_agents.json and return the dismissed dict."""
+    if not os.path.isfile(DISMISSED_FILE):
+        return {}
+    try:
+        with open(DISMISSED_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("dismissed", {}) if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _write_dismissed(dismissed):
+    """Write the dismissed dict back to dismissed_agents.json."""
+    try:
+        with open(DISMISSED_FILE, "w", encoding="utf-8") as f:
+            json.dump({"dismissed": dismissed}, f, indent=2)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -375,6 +400,7 @@ def openclaw_sessions():
 def openclaw_subagents():
     """Subagent run history."""
     runs = _read_subagent_runs()
+    dismissed = _read_dismissed()
     result = []
 
     for run_id, r in runs.items():
@@ -383,9 +409,10 @@ def openclaw_subagents():
         result_text = r.get("frozenResultText", "")
         ended_at = r.get("endedAt", 0)
         duration_ms = (ended_at - created_at) if ended_at and created_at else None
+        agent_label = r.get("label", "")
         result.append({
             "runId": run_id,
-            "label": r.get("label", ""),
+            "label": agent_label,
             "model": r.get("model", ""),
             "createdAt": created_at,
             "createdAtRelative": _relative_time_label(created_at),
@@ -396,6 +423,7 @@ def openclaw_subagents():
             "endedReason": r.get("endedReason", ""),
             "result": result_text[:500] if result_text else "",
             "durationMs": duration_ms,
+            "dismissed": agent_label in dismissed,
         })
 
     # Sort by createdAt descending
@@ -408,6 +436,7 @@ def openclaw_agents_combined():
     """Combined agent view for the pixel office — who's in the office right now."""
     now_ms = time.time() * 1000
     agents = []
+    dismissed = _read_dismissed()
 
     # 1. Main agent "Cali" — derive state from the most recent active session
     sessions = _read_sessions()
@@ -449,6 +478,11 @@ def openclaw_agents_combined():
 
         # Only show subagents from the last 2 hours
         if age_ms > 2 * 3600 * 1000:
+            continue
+
+        # Skip dismissed agents
+        label = r.get("label", run_id[:8])
+        if label in dismissed:
             continue
 
         # Determine state
@@ -540,6 +574,19 @@ def openclaw_agents_combined():
             pass  # non-fatal; don't break the API response
 
     return jsonify(agents)
+
+
+# ---------------------------------------------------------------------------
+# Dismiss endpoint
+# ---------------------------------------------------------------------------
+
+@openclaw_bp.route("/openclaw/agent/<name>/dismiss", methods=["POST"])
+def openclaw_dismiss_agent(name):
+    """Mark a subagent as dismissed so it no longer appears in the office."""
+    dismissed = _read_dismissed()
+    dismissed[name] = int(time.time() * 1000)
+    _write_dismissed(dismissed)
+    return jsonify({"ok": True, "dismissed": name})
 
 
 # ---------------------------------------------------------------------------
