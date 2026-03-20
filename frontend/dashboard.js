@@ -747,6 +747,12 @@
     return detail;
   }
 
+  // Helper: strip emoji prefixes from agent names for dashboard display
+  function stripAgentEmojiPrefix(name) {
+    if (!name) return name;
+    return name.replace(/^[\u{1F4AC}\u{26A1}\u{23F0}\u{1F525}\s]+/gu, '').trim() || name;
+  }
+
   function renderAgentsRoster(agents) {
     var el = document.getElementById('oc-agents-roster');
     if (!el) return;
@@ -755,8 +761,12 @@
       return;
     }
 
-    el.innerHTML = agents.map(function (a) {
-      var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : (a.type === 'thread' ? '💬' : '⏰'));
+    // Filter out thread-type agents from the roster (they show as sub-items under Cali)
+    var filteredAgents = agents.filter(function(a) { return a.type !== 'thread'; });
+
+    el.innerHTML = filteredAgents.map(function (a) {
+      var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : '⏰');
+      var displayName = a.type === 'main' ? a.name : stripAgentEmojiPrefix(a.name);
       var model = (a.model || '').split('/').pop();
       var fullDetail = a.detail || '';
       var truncDetail = fullDetail.length > 200 ? fullDetail.substring(0, 197) + '…' : fullDetail;
@@ -770,13 +780,32 @@
         }
       }
 
+      // For main agent, render active threads as sub-items
+      var activeThreadsHtml = '';
+      if (a.type === 'main' && a.activeThreads && a.activeThreads.length > 0) {
+        var threadItems = a.activeThreads.map(function(th) {
+          var threadStateBadge = agentStateBadge(th.state);
+          var threadName = th.name || '?';
+          return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0 2px 20px;font-size:11px;">' +
+            '<span style="color:#8b949e;">📍</span>' +
+            '<span style="color:#c9d1d9;">' + escHtml(threadName) + '</span>' +
+            threadStateBadge +
+          '</div>';
+        }).join('');
+        activeThreadsHtml = '<div style="width:100%;border-top:1px dashed #2d2218;margin-top:4px;padding-top:4px;">' +
+          '<div style="font-size:10px;color:#484f58;letter-spacing:1px;margin-bottom:2px;padding-left:20px;">ACTIVE THREADS</div>' +
+          threadItems +
+        '</div>';
+      }
+
       return '<div class="oc-agent-row oc-expandable" onclick="this.classList.toggle(\'expanded\')" style="' + (a.type === 'main' ? 'flex-wrap:wrap;' : '') + '">' +
         '<span class="oc-agent-icon">' + icon + '</span>' +
-        '<span class="oc-agent-name">' + escHtml(a.name) + '</span>' +
+        '<span class="oc-agent-name">' + escHtml(displayName) + '</span>' +
         agentStateBadge(a.state) +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '<span class="oc-agent-detail oc-truncatable" data-full="' + escHtml(fullDetail) + '" data-short="' + escHtml(truncDetail) + '">' + escHtml(truncDetail) + '</span>' +
         threadLine +
+        activeThreadsHtml +
       '</div>';
     }).join('');
   }

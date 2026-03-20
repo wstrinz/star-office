@@ -1430,8 +1430,11 @@ def openclaw_agents_combined():
         "tokens": most_recent.get("totalTokens", 0) if most_recent else 0,
     })
 
-    # 2. Active subagent runs
+    # 2. Active subagent runs (only REAL subagents with meaningful labels)
     runs = _read_subagent_runs()
+    # UUID/hash detection regex
+    _uuid_like_re = re.compile(r'^[0-9a-f]{8,}(?:-[0-9a-f]{4,}){0,4}$', re.IGNORECASE)
+
     for run_id, r in runs.items():
         created_at = r.get("createdAt", 0)
         ended_at = r.get("endedAt", 0)
@@ -1444,6 +1447,10 @@ def openclaw_agents_combined():
         # Skip dismissed agents
         label = r.get("label", run_id[:8])
         if label in dismissed:
+            continue
+
+        # Skip agents with UUID-like or hash-like names (not meaningful labels)
+        if _uuid_like_re.match(label.strip()):
             continue
 
         # Determine state
@@ -1486,7 +1493,9 @@ def openclaw_agents_combined():
         })
 
     # 2b. Active sessions not covered by runs.json
-    #     Surfaces thread work, orphaned subagents, and cron sessions
+    #     Surfaces orphaned subagents and cron sessions.
+    #     Thread sessions are NOT included as separate agents — they are
+    #     folded into the main Cali entry as activeThreads.
     thirty_min_ms = 30 * 60 * 1000
     five_min_ms = 5 * 60 * 1000
 
@@ -1496,6 +1505,12 @@ def openclaw_agents_combined():
         child_key = r.get("childSessionKey", "")
         if child_key:
             covered_session_keys.add(child_key)
+
+    # Collect active threads for the main Cali entry
+    active_threads = []
+
+    # UUID/hash detection regex — names that look like raw IDs, not labels
+    _uuid_like_re = re.compile(r'^[0-9a-f]{8,}(?:-[0-9a-f]{4,}){0,4}$', re.IGNORECASE)
 
     for session_key, s in sessions.items():
         updated_at = s.get("updatedAt", 0)
@@ -1533,19 +1548,15 @@ def openclaw_agents_combined():
         display_name = s.get("displayName", "") or ""
         clean_name = ""
         if display_name:
-            # Try to extract channel name like "#the-assembly-line" from
-            # "discord:782757298497126451#the-assembly-line"
             channel_match = re.search(r"#([\w-]+)", display_name)
             if channel_match:
                 clean_name = "#" + channel_match.group(1)
             else:
                 clean_name = display_name
         if not clean_name:
-            # Fallback: derive from session key
             if "discord:channel:" in session_key:
                 clean_name = "Discord thread"
             elif "subagent:" in session_key:
-                # Try to get label from the key itself
                 parts = session_key.split("subagent:")
                 clean_name = parts[-1][:30] if len(parts) > 1 else "Subagent"
             elif "cron:" in session_key:
@@ -1554,13 +1565,34 @@ def openclaw_agents_combined():
             else:
                 clean_name = session_key[:30]
 
-        # Prefix based on type
+        # --- Thread sessions go into activeThreads, NOT as separate agents ---
         if sess_type == "thread":
-            agent_name = "💬 " + clean_name
-        elif sess_type == "subagent":
-            agent_name = "⚡ " + clean_name
+            if age_ms < five_min_ms:
+                thread_state = "executing"
+            else:
+                thread_state = "writing"
+            active_threads.append({
+                "name": clean_name,
+                "state": thread_state,
+                "displayName": display_name or session_key,
+                "updatedAt": updated_at,
+                "sessionKey": session_key,
+            })
+            continue
+
+        # For subagent sessions from sessions.json (not runs.json),
+        # skip if the name looks like a UUID/hash
+        if sess_type == "subagent":
+            # Extract the actual label portion
+            label_part = clean_name.strip()
+            if _uuid_like_re.match(label_part):
+                continue
+
+        # Only subagent and cron types reach here
+        if sess_type == "subagent":
+            agent_name = clean_name
         elif sess_type == "cron":
-            agent_name = "⏰ " + clean_name
+            agent_name = clean_name
         else:
             agent_name = clean_name
 
@@ -1585,6 +1617,11 @@ def openclaw_agents_combined():
             "sessionKey": session_key,
             "updatedAt": updated_at,
         })
+
+    # Attach activeThreads to the main Cali agent entry
+    main_entry = next((a for a in agents if a.get("type") == "main"), None)
+    if main_entry is not None:
+        main_entry["activeThreads"] = active_threads
 
     # 3. Currently-running cron jobs
     jobs = _read_jobs()

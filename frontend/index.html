@@ -4744,15 +4744,35 @@ function toggleBrokerPanel() {
             return detail;
         }
 
+        // Helper: check if a string looks like a UUID or hex hash
+        function looksLikeUuidOrHash(s) {
+            if (!s) return true;
+            return /^[0-9a-f]{8,}(?:-[0-9a-f]{4,}){0,4}$/i.test(s.trim());
+        }
+
+        // Helper: strip emoji prefixes from agent names (💬, ⚡, ⏰, 🔥)
+        function stripEmojiPrefix(name) {
+            if (!name) return name;
+            return name.replace(/^[\u{1F4AC}\u{26A1}\u{23F0}\u{1F525}\s]+/u, '').trim();
+        }
+
         function renderOcAgentsInScene() {
             if (!game) return;
             // Filter to non-main agents only (subagents + cron)
-            var subagents = ocAgentsData.filter(function(a) { return a.type !== 'main'; });
+            // SKIP type="thread" — threads are Cali in different channels, not separate characters
+            // SKIP agents with UUID/hash-like names
+            var subagents = ocAgentsData.filter(function(a) {
+                if (a.type === 'main') return false;
+                if (a.type === 'thread') return false;
+                var cleanName = stripEmojiPrefix(a.name || '');
+                if (looksLikeUuidOrHash(cleanName)) return false;
+                return true;
+            });
             var seenNames = new Set();
             var zoneCounters = {};
 
             subagents.forEach(function(agent, i) {
-                var name = agent.name || ('agent-' + i);
+                var name = stripEmojiPrefix(agent.name) || ('agent-' + i);
                 seenNames.add(name);
                 var state = agent.state || 'idle';
 
@@ -4800,7 +4820,9 @@ function toggleBrokerPanel() {
                     })(name, agent.type || 'subagent');
 
                     // Name label - responsive sizing
+                    // On mobile: hide labels for idle agents (just show state dot)
                     var mobile = isMobile();
+                    var hideLabel = mobile && (state === 'idle');
                     var maxNameLen = mobile ? 12 : 24;
                     var nameFontSize = mobile ? '16px' : '11px';
                     var namePadding = mobile ? { x: 6, y: 3 } : { x: 3, y: 1 };
@@ -4815,6 +4837,7 @@ function toggleBrokerPanel() {
                         backgroundColor: 'rgba(0,0,0,0.6)',
                         padding: namePadding
                     }).setOrigin(0.5).setDepth(2501);
+                    if (hideLabel) nameText.setVisible(false);
 
                     // Task bubble - hidden on mobile (tap agent for details instead)
                     var taskText = (agent.detail || '').substring(0, 80);
@@ -4844,7 +4867,7 @@ function toggleBrokerPanel() {
                     // State indicator dot
                     var stateColors = { executing: 0x3fb950, writing: 0xd29922, researching: 0xe8a849, idle: 0x484f58, error: 0xf85149 };
                     var dotColor = stateColors[state] || 0x484f58;
-                    var dotRadius = mobile ? 6 : 4;
+                    var dotRadius = mobile ? 8 : 4;
                     var stateDot = game.add.circle(OC_DOOR_POS.x + 16, OC_DOOR_POS.y - 100, dotRadius, dotColor);
                     stateDot.setDepth(2502);
 
@@ -4880,6 +4903,11 @@ function toggleBrokerPanel() {
                         // Smooth transition to new zone
                         game.tweens.add({ targets: existing.sprite, x: target.x, y: target.y, duration: 2000, ease: 'Sine.easeInOut' });
                         game.tweens.add({ targets: existing.nameText, x: target.x, y: target.y - 110, duration: 2000, ease: 'Sine.easeInOut' });
+
+                        // Mobile: show/hide label based on state
+                        if (isMobile()) {
+                            existing.nameText.setVisible(state !== 'idle');
+                        }
 
                         // Update state dot color and position
                         var stateColors2 = { executing: 0x3fb950, writing: 0xd29922, researching: 0xe8a849, idle: 0x484f58, error: 0xf85149 };
