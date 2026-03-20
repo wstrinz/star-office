@@ -1,14 +1,14 @@
 {
   "anthropic": {
-    "fiveHourTokenLimit": 80000000,
-    "weeklyTokenLimit": 500000000,
-    "tier": "tier-4",
-    "label": "Anthropic (Claude)"
+    "fiveHourTokenLimit": 120000000,
+    "weeklyTokenLimit": 600000000,
+    "tier": "sonnet-plan",
+    "notes": "Anthropic has ~2h session rolling + weekly limits. 5h is approximate. Tune based on console.anthropic.com usage page."
   },
   "openai": {
-    "fiveHourTokenLimit": 30000000,
-    "weeklyTokenLimit": 200000000,
-    "tier": "plus",
-    "label": "OpenAI (Codex)"
+    "fiveHourTokenLimit": 80000000,
+    "weeklyTokenLimit": 400000000,
+    "tier": "pro",
+    "notes": "Codex Pro tier. Per-model limits (5.4 vs Spark) not yet broken out. Tune based on chatgpt.com/codex/settings/usage."
   }
 }

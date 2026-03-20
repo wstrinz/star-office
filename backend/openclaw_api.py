@@ -1468,10 +1468,12 @@ def openclaw_agent_detail(name):
 
     # Check active sessions (thread/subagent/cron sessions not in runs.json)
     sessions = _read_sessions()
+    # Strip emoji prefixes for matching (💬, ⚡, ⏰ etc.)
+    clean_name = re.sub(r'^[\U0001f4ac\u26a1\u23f0\U0001f525\s]+', '', name).strip()
     for session_key, s in sessions.items():
         display_name = s.get("displayName", "") or ""
         # Match by session key or by cleaned display name containing the search name
-        if name in session_key or name in display_name or session_key == name:
+        if clean_name in session_key or clean_name in display_name or session_key == name or clean_name == name:
             updated_at = s.get("updatedAt", 0)
             age_ms = now_ms - updated_at
 
