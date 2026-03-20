@@ -1065,8 +1065,10 @@
                 bottom: 8px;
                 left: 8px;
                 max-width: 64vw;
-                font-size: 12px;
-                padding: 8px 12px;
+                font-size: 14px;
+                padding: 10px 14px;
+                min-height: 36px;
+                line-height: 1.4;
             }
 
             #coords-toggle,
@@ -1074,8 +1076,10 @@
             #lang-btn-en,
             #lang-btn-jp,
             #lang-btn-cn {
-                font-size: 12px !important;
-                padding: 6px 8px !important;
+                font-size: 13px !important;
+                padding: 8px 10px !important;
+                min-height: 40px;
+                min-width: 40px;
             }
 
             body.drawer-open {
@@ -1126,6 +1130,82 @@
             }
             #asset-upload-panel button {
                 min-height: 36px;
+            }
+        }
+
+        /* ═══ Mobile: Dashboard & Badge Improvements ═══ */
+        @media (max-width: 768px) {
+            /* Dashboard text bigger on mobile */
+            #oc-dashboard {
+                font-size: 14px;
+            }
+            .oc-panel-title {
+                font-size: 16px;
+            }
+            .oc-cron-grid {
+                grid-template-columns: 1fr;
+            }
+            .oc-job-name {
+                font-size: 14px;
+            }
+            .oc-job-detail {
+                font-size: 13px;
+            }
+            .oc-activity-row {
+                font-size: 13px;
+                padding: 6px 8px;
+                min-height: 36px;
+            }
+            .oc-session-row {
+                font-size: 13px;
+                padding: 6px 8px;
+                min-height: 36px;
+            }
+            .oc-agent-row {
+                min-width: unset;
+                min-height: 44px;
+                padding: 8px 12px;
+            }
+            .oc-agent-name {
+                font-size: 14px;
+            }
+            /* Cost & rate badges bigger on mobile */
+            .oc-badge {
+                font-size: 12px;
+                padding: 2px 8px;
+                min-width: 36px;
+            }
+            .oc-usage-bar-pct {
+                font-size: 11px;
+            }
+            .oc-usage-provider-name {
+                font-size: 13px;
+            }
+            .oc-usage-provider-cost {
+                font-size: 18px;
+            }
+            /* Toggle button bigger touch target */
+            .oc-toggle-btn {
+                font-size: 16px;
+                padding: 12px 0;
+                min-height: 48px;
+            }
+            /* Two column layout stacks on mobile */
+            .oc-two-col {
+                flex-direction: column;
+            }
+            .oc-agents-roster {
+                flex-direction: column;
+            }
+            /* Rate limit bars bigger */
+            .oc-rl-bar-track {
+                height: 16px;
+            }
+            .oc-rl-window-label {
+                font-size: 12px;
+            }
+            .oc-rl-provider-name {
+                font-size: 13px;
             }
         }
 
@@ -2206,6 +2286,11 @@
         }
 
         const IS_TOUCH_DEVICE = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+
+        // Mobile detection helper for responsive rendering
+        function isMobile() {
+            return window.innerWidth < 768 || (IS_TOUCH_DEVICE && window.innerWidth < 1024);
+        }
 
         const config = {
             type: Phaser.AUTO,
@@ -4312,13 +4397,19 @@ function toggleBrokerPanel() {
                     // demo 水星下移 10px（仅 demo_mercury）
                     const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) ? 10 : 0;
 
+                    const mobileGuest = isMobile();
+                    const guestNameFontSize = mobileGuest ? '16px' : (isDemo ? '16px' : '15px');
+                    const guestNameStroke = mobileGuest ? 4 : 3;
+                    const guestDisplayName = mobileGuest
+                        ? (agent.name || 'Guest').substring(0, 12)
+                        : (agent.name || 'Guest');
                     const nameTextY = isDemo ? ((p.y + yOffset) - 80) : ((p.y + yOffset) - 120);
-                    const nameText = game.add.text(p.x, nameTextY, agent.name || 'Guest', {
+                    const nameText = game.add.text(p.x, nameTextY, guestDisplayName, {
                         fontFamily: 'ArkPixel, monospace',
-                        fontSize: isDemo ? '16px' : '15px',
+                        fontSize: guestNameFontSize,
                         fill: '#ffffff',
                         stroke: '#000',
-                        strokeThickness: 3
+                        strokeThickness: guestNameStroke
                     }).setOrigin(0.5);
                     nameText.setDepth(2601);
 
@@ -4692,30 +4783,43 @@ function toggleBrokerPanel() {
                     }
                     sprite.setDepth(2500);
 
-                    // Make clickable for detail modal
-                    sprite.setInteractive({ useHandCursor: true });
+                    // Make clickable for detail modal - larger hit area on mobile
+                    if (mobile) {
+                        sprite.setInteractive({
+                            useHandCursor: true,
+                            hitArea: new Phaser.Geom.Rectangle(-20, -20, (sprite.width || 32) + 40, (sprite.height || 32) + 40),
+                            hitAreaCallback: Phaser.Geom.Rectangle.Contains
+                        });
+                    } else {
+                        sprite.setInteractive({ useHandCursor: true });
+                    }
                     (function(agentName, agentType) {
                         sprite.on('pointerdown', function() {
                             openAgentDetailModal(agentName, agentType);
                         });
                     })(name, agent.type || 'subagent');
 
-                    // Name label
-                    var shortName = name.length > 24 ? name.substring(0, 22) + '…' : name;
+                    // Name label - responsive sizing
+                    var mobile = isMobile();
+                    var maxNameLen = mobile ? 12 : 24;
+                    var nameFontSize = mobile ? '16px' : '11px';
+                    var namePadding = mobile ? { x: 6, y: 3 } : { x: 3, y: 1 };
+                    var nameStroke = mobile ? 4 : 3;
+                    var shortName = name.length > maxNameLen ? name.substring(0, maxNameLen - 2) + '…' : name;
                     var nameText = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 110, shortName, {
                         fontFamily: 'ArkPixel, monospace',
-                        fontSize: '11px',
+                        fontSize: nameFontSize,
                         fill: '#' + color.toString(16).padStart(6, '0'),
                         stroke: '#000',
-                        strokeThickness: 3,
+                        strokeThickness: nameStroke,
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        padding: { x: 3, y: 1 }
+                        padding: namePadding
                     }).setOrigin(0.5).setDepth(2501);
 
-                    // Task bubble (persistent while active, fades when idle)
+                    // Task bubble - hidden on mobile (tap agent for details instead)
                     var taskText = (agent.detail || '').substring(0, 80);
                     var taskBubble = null;
-                    if (taskText) {
+                    if (taskText && !mobile) {
                         var bubbleW = Math.min(300, taskText.length * 5.5 + 20);
                         var bubbleH = Math.max(22, Math.ceil(taskText.length / 45) * 14 + 10);
                         var tbBg = game.add.rectangle(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, bubbleW, bubbleH, 0x161b22, 0.9);
@@ -4740,7 +4844,8 @@ function toggleBrokerPanel() {
                     // State indicator dot
                     var stateColors = { executing: 0x3fb950, writing: 0xd29922, researching: 0xe8a849, idle: 0x484f58, error: 0xf85149 };
                     var dotColor = stateColors[state] || 0x484f58;
-                    var stateDot = game.add.circle(OC_DOOR_POS.x + 16, OC_DOOR_POS.y - 100, 4, dotColor);
+                    var dotRadius = mobile ? 6 : 4;
+                    var stateDot = game.add.circle(OC_DOOR_POS.x + 16, OC_DOOR_POS.y - 100, dotRadius, dotColor);
                     stateDot.setDepth(2502);
 
                     ocAgentSprites[name] = {
@@ -4833,12 +4938,22 @@ function toggleBrokerPanel() {
                     window._lastOcMainState = mappedState;
                     window._lastOcMainDetail = ocDetail;
 
-                    // Update status text with formatted detail
+                    // Update status text with formatted detail - simplified on mobile
                     if (statusText) {
                         var stateInfo = STATES[mappedState] || STATES.idle;
                         var shortDetail = formatDetailShort(ocDetail);
                         var newLine;
-                        if (shortDetail && mappedState !== 'idle') {
+                        if (isMobile()) {
+                            // Mobile: just show state + short channel name
+                            if (shortDetail && mappedState !== 'idle') {
+                                // Extract just the channel/thread name
+                                var channelMatch = shortDetail.match(/#[\w-]+/);
+                                var channelName = channelMatch ? channelMatch[0] : shortDetail.substring(0, 20);
+                                newLine = '[' + stateInfo.name + '] ' + channelName;
+                            } else {
+                                newLine = '[' + stateInfo.name + ']';
+                            }
+                        } else if (shortDetail && mappedState !== 'idle') {
                             newLine = '[' + stateInfo.name + '] ' + shortDetail;
                         } else if (ocDetail) {
                             var truncDetail = ocDetail.length > 100 ? ocDetail.substring(0, 97) + '…' : ocDetail;
@@ -4876,6 +4991,15 @@ function toggleBrokerPanel() {
 
             var shortLabel = formatDetailShort(detail);
             if (!shortLabel) {
+                if (_mainDetailBubble) {
+                    _mainDetailBubble.destroy();
+                    _mainDetailBubble = null;
+                }
+                return;
+            }
+
+            // On mobile, hide the persistent detail bubble entirely (viewable via tap modal)
+            if (isMobile()) {
                 if (_mainDetailBubble) {
                     _mainDetailBubble.destroy();
                     _mainDetailBubble = null;
@@ -5124,8 +5248,16 @@ function toggleBrokerPanel() {
             star.setVisible(true);
             star.anims.play('star_idle', true);
 
-            // Make main character clickable for detail modal
-            star.setInteractive({ useHandCursor: true });
+            // Make main character clickable for detail modal - larger hit area on mobile
+            if (isMobile()) {
+                star.setInteractive({
+                    useHandCursor: true,
+                    hitArea: new Phaser.Geom.Rectangle(-30, -30, 316, 316),
+                    hitAreaCallback: Phaser.Geom.Rectangle.Contains
+                });
+            } else {
+                star.setInteractive({ useHandCursor: true });
+            }
             star.on('pointerdown', function() {
                 openAgentDetailModal('Cali', 'main');
             });
@@ -5379,8 +5511,16 @@ function toggleBrokerPanel() {
             starWorking.setVisible(false);
             starWorking.setScale(0.9);
             starWorking.setDepth(900);  // starWorking under desk so desk partially covers it
-            // Make starWorking also clickable for detail modal
-            starWorking.setInteractive({ useHandCursor: true });
+            // Make starWorking also clickable for detail modal - larger hit area on mobile
+            if (isMobile()) {
+                starWorking.setInteractive({
+                    useHandCursor: true,
+                    hitArea: new Phaser.Geom.Rectangle(-30, -30, 360, 360),
+                    hitAreaCallback: Phaser.Geom.Rectangle.Contains
+                });
+            } else {
+                starWorking.setInteractive({ useHandCursor: true });
+            }
             starWorking.on('pointerdown', function() {
                 openAgentDetailModal('Cali', 'main');
             });
@@ -5505,8 +5645,13 @@ function toggleBrokerPanel() {
                 }
                 game.input.setDefaultCursor(on ? 'grab' : 'default');
                 if (isTouchDevice && statusText) {
-                    const info = on ? 'Pan enabled (drag to scroll)' : 'Pan disabled (click "Pan View" to enable)';
-                    statusText.textContent = `Status: [${(STATES[currentState] && STATES[currentState].name) || 'Idle'}] ${info}`;
+                    // On mobile, keep status bar text short
+                    if (isMobile()) {
+                        statusText.textContent = `[${(STATES[currentState] && STATES[currentState].name) || 'Idle'}]`;
+                    } else {
+                        const info = on ? 'Pan enabled (drag to scroll)' : 'Pan disabled (click "Pan View" to enable)';
+                        statusText.textContent = `Status: [${(STATES[currentState] && STATES[currentState].name) || 'Idle'}] ${info}`;
+                    }
                 }
             }
 
@@ -5610,6 +5755,24 @@ function toggleBrokerPanel() {
 
             // 加载昨日 memo
             loadMemo();
+
+            // Mobile: show "tap for details" hint on first visit
+            if (isMobile() && !localStorage.getItem('mobileTapHintShown')) {
+                var tapHintBg = game.add.rectangle(640, 360, 260, 40, 0x1a1210, 0.9);
+                tapHintBg.setStrokeStyle(2, 0xe8a849);
+                tapHintBg.setDepth(5000);
+                var tapHintText = game.add.text(640, 360, '👆 Tap characters for details', {
+                    fontFamily: 'ArkPixel, monospace',
+                    fontSize: '14px',
+                    fill: '#e8a849',
+                    align: 'center'
+                }).setOrigin(0.5).setDepth(5001);
+                setTimeout(function() {
+                    if (tapHintBg) game.tweens.add({ targets: tapHintBg, alpha: 0, duration: 1500, onComplete: function() { tapHintBg.destroy(); }});
+                    if (tapHintText) game.tweens.add({ targets: tapHintText, alpha: 0, duration: 1500, onComplete: function() { tapHintText.destroy(); }});
+                }, 4000);
+                localStorage.setItem('mobileTapHintShown', '1');
+            }
 
             fetchStatus();
             fetchGuestAgents();
