@@ -444,6 +444,135 @@
       fmtCost(today.estimatedCost) + '/day';
   }
 
+  // ── Rate Limits ───────────────────────────────────────────
+
+  function rateLimitBarColor(pct) {
+    if (pct >= 80) return '#f85149';  // red
+    if (pct >= 60) return '#d29922';  // yellow
+    return '#3fb950';                  // green
+  }
+
+  function rateLimitBarBg(pct) {
+    if (pct >= 80) return 'rgba(248,81,73,0.15)';
+    if (pct >= 60) return 'rgba(210,153,34,0.15)';
+    return 'rgba(63,185,80,0.1)';
+  }
+
+  function renderRateLimitsPanel(data) {
+    var el = document.getElementById('oc-rate-limits-panel');
+    if (!el) return;
+    if (!data || data.error) {
+      el.innerHTML = '<div class="oc-empty">Rate limit data unavailable</div>';
+      return;
+    }
+
+    var meta = data._meta || {};
+    var warnings = meta.warnings || [];
+    var html = '';
+
+    // Warnings
+    if (warnings.length) {
+      html += '<div class="oc-rl-warnings">';
+      warnings.forEach(function (w) {
+        var isRed = w.indexOf('🔴') > -1;
+        html += '<div class="oc-rl-warning' + (isRed ? ' oc-rl-warning-red' : '') + '">' + escHtml(w) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Provider sections
+    ['anthropic', 'openai'].forEach(function (providerKey) {
+      var p = data[providerKey];
+      if (!p) return;
+      var label = p.label || providerKey;
+      var tier = p.tier || '';
+      var r5h = p.rolling5h || {};
+      var r7d = p.rollingWeek || {};
+
+      html += '<div class="oc-rl-provider">';
+      html += '<div class="oc-rl-provider-header">';
+      html += '<span class="oc-rl-provider-name">' + escHtml(label) + '</span>';
+      if (tier) html += '<span class="oc-rl-tier">' + escHtml(tier) + '</span>';
+      html += '</div>';
+
+      // 5-hour rolling window bar
+      var pct5h = r5h.percentUsed || 0;
+      var barPct5h = Math.min(pct5h, 100);
+      var barColor5h = rateLimitBarColor(pct5h);
+      var remaining5h = r5h.remainingTokens;
+
+      html += '<div class="oc-rl-window">';
+      html += '<div class="oc-rl-window-label">';
+      html += '<span>5h rolling</span>';
+      html += '<span class="oc-rl-window-stat">' + fmtTokens(r5h.totalTokens || 0) + ' / ' + fmtTokens(r5h.estimatedLimit || 0) + '</span>';
+      html += '</div>';
+      html += '<div class="oc-rl-bar-track" style="background:' + rateLimitBarBg(pct5h) + '">';
+      html += '<div class="oc-rl-bar-fill" style="width:' + barPct5h + '%;background:' + barColor5h + '"></div>';
+      html += '</div>';
+      html += '<div class="oc-rl-window-meta">';
+      html += '<span style="color:' + barColor5h + '">' + pct5h.toFixed(1) + '%</span>';
+      if (remaining5h != null) html += '<span>' + fmtTokens(remaining5h) + ' remaining</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // Weekly rolling window bar
+      var pct7d = r7d.percentUsed || 0;
+      var barPct7d = Math.min(pct7d, 100);
+      var barColor7d = rateLimitBarColor(pct7d);
+      var remaining7d = r7d.remainingTokens;
+
+      html += '<div class="oc-rl-window">';
+      html += '<div class="oc-rl-window-label">';
+      html += '<span>7d rolling</span>';
+      html += '<span class="oc-rl-window-stat">' + fmtTokens(r7d.totalTokens || 0) + ' / ' + fmtTokens(r7d.estimatedLimit || 0) + '</span>';
+      html += '</div>';
+      html += '<div class="oc-rl-bar-track" style="background:' + rateLimitBarBg(pct7d) + '">';
+      html += '<div class="oc-rl-bar-fill" style="width:' + barPct7d + '%;background:' + barColor7d + '"></div>';
+      html += '</div>';
+      html += '<div class="oc-rl-window-meta">';
+      html += '<span style="color:' + barColor7d + '">' + pct7d.toFixed(1) + '%</span>';
+      if (remaining7d != null) html += '<span>' + fmtTokens(remaining7d) + ' remaining</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // Token breakdown (collapsed detail)
+      html += '<div class="oc-rl-breakdown">';
+      html += '<span>In: ' + fmtTokens(r5h.inputTokens || 0) + '</span>';
+      html += '<span>Out: ' + fmtTokens(r5h.outputTokens || 0) + '</span>';
+      html += '</div>';
+
+      html += '</div>';  // oc-rl-provider
+    });
+
+    el.innerHTML = html;
+
+    // Update traffic light indicator
+    updateRateLimitIndicator(data);
+  }
+
+  function updateRateLimitIndicator(data) {
+    var badge = document.getElementById('oc-ratelimit-indicator');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'oc-ratelimit-indicator';
+      badge.style.cssText = 'position:fixed;top:8px;right:100px;z-index:9999;padding:3px 8px;font-family:ArkPixel,monospace;font-size:10px;border:1px solid #2d2218;background:#1e1710;cursor:pointer;opacity:0.85;transition:opacity 0.2s;';
+      badge.addEventListener('mouseenter', function () { badge.style.opacity = '1'; });
+      badge.addEventListener('mouseleave', function () { badge.style.opacity = '0.85'; });
+      badge.addEventListener('click', function () { toggleDashboard(true); });
+      document.body.appendChild(badge);
+    }
+
+    var meta = data && data._meta;
+    if (!meta) { badge.style.display = 'none'; return; }
+
+    badge.style.display = 'block';
+    var light = meta.trafficLight || 'green';
+    var emoji = light === 'red' ? '🔴' : (light === 'yellow' ? '🟡' : '🟢');
+    var pct = meta.worstPercent || 0;
+    badge.innerHTML = emoji + ' <span style="color:#8b949e;">' + pct.toFixed(0) + '%</span>';
+    badge.title = 'Rate limit utilization — click for details';
+  }
+
   // ── Sessions & Agents ────────────────────────────────────
 
   function sessionStatusDot(status) {
@@ -604,6 +733,20 @@
     }).join('');
   }
 
+  // Format detail string for dashboard display
+  function formatAgentDetail(detail) {
+    if (!detail) return '';
+    // "Discord thread #channel-name > Thread Title"
+    var m = detail.match(/Discord thread\s+#([\w-]+)\s*>\s*(.+)/i);
+    if (m) return '📍 #' + m[1] + ' > ' + m[2].trim();
+    // "Discord #channel-name"
+    m = detail.match(/Discord\s+#([\w-]+)/i);
+    if (m) return '📍 #' + m[1];
+    // DM
+    if (/direct\s*message|^DM\b/i.test(detail)) return '📍 Direct message';
+    return detail;
+  }
+
   function renderAgentsRoster(agents) {
     var el = document.getElementById('oc-agents-roster');
     if (!el) return;
@@ -617,12 +760,23 @@
       var model = (a.model || '').split('/').pop();
       var fullDetail = a.detail || '';
       var truncDetail = fullDetail.length > 200 ? fullDetail.substring(0, 197) + '…' : fullDetail;
-      return '<div class="oc-agent-row oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
+
+      // For main agent, show formatted thread/channel prominently
+      var threadLine = '';
+      if (a.type === 'main' && fullDetail && a.state !== 'idle') {
+        var formatted = formatAgentDetail(fullDetail);
+        if (formatted) {
+          threadLine = '<div style="color:#e8a849;font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">' + escHtml(formatted) + '</div>';
+        }
+      }
+
+      return '<div class="oc-agent-row oc-expandable" onclick="this.classList.toggle(\'expanded\')" style="' + (a.type === 'main' ? 'flex-wrap:wrap;' : '') + '">' +
         '<span class="oc-agent-icon">' + icon + '</span>' +
         '<span class="oc-agent-name">' + escHtml(a.name) + '</span>' +
         agentStateBadge(a.state) +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '<span class="oc-agent-detail oc-truncatable" data-full="' + escHtml(fullDetail) + '" data-short="' + escHtml(truncDetail) + '">' + escHtml(truncDetail) + '</span>' +
+        threadLine +
       '</div>';
     }).join('');
   }
@@ -630,7 +784,7 @@
   // ── Data refresh ────────────────────────────────────────
 
   async function refreshAll() {
-    const [status, cron, activity, costs, sessions, subagents, agentsCombined, usage] = await Promise.all([
+    const [status, cron, activity, costs, sessions, subagents, agentsCombined, usage, rateLimits] = await Promise.all([
       fetchJSON('/openclaw/status'),
       fetchJSON('/openclaw/cron'),
       fetchJSON('/openclaw/activity?limit=' + ACTIVITY_LIMIT),
@@ -639,9 +793,11 @@
       fetchJSON('/openclaw/subagents'),
       fetchJSON('/openclaw/agents'),
       fetchJSON('/openclaw/usage?period=current_month'),
+      fetchJSON('/openclaw/rate-limits'),
     ]);
     renderStatusBar(status);
     renderUsagePanel(usage);
+    renderRateLimitsPanel(rateLimits);
     renderCronGrid(cron);
     renderActivity(activity);
     renderCosts(costs);
@@ -696,6 +852,8 @@
       '<div id="oc-status-bar" class="oc-status-bar">Loading…</div>' +
       '<div class="oc-section-label">USAGE &amp; LIMITS</div>' +
       '<div id="oc-usage-panel" class="oc-usage-panel">Loading…</div>' +
+      '<div class="oc-section-label">RATE LIMITS</div>' +
+      '<div id="oc-rate-limits-panel" class="oc-rate-limits-panel">Loading…</div>' +
       '<div class="oc-section-label">WHO\'S IN THE OFFICE</div>' +
       '<div id="oc-agents-roster" class="oc-agents-roster"></div>' +
       '<div class="oc-two-col">' +

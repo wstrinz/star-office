@@ -1646,6 +1646,85 @@
         .oc-today-yellow { background: #d29922; }
         .oc-today-red { background: #f85149; }
 
+        /* Rate Limits panel */
+        .oc-rate-limits-panel { padding: 4px 0; }
+        .oc-rl-warnings { margin-bottom: 8px; }
+        .oc-rl-warning {
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            background: #2d1a0a;
+            border-left: 3px solid #d29922;
+            color: #d29922;
+        }
+        .oc-rl-warning-red {
+            border-left-color: #f85149;
+            color: #f85149;
+            background: #2d0a0a;
+        }
+        .oc-rl-provider {
+            background: #1e1710;
+            border: 2px solid #2d2218;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+        .oc-rl-provider-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .oc-rl-provider-name {
+            font-size: 11px;
+            color: #e8a849;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        .oc-rl-tier {
+            font-size: 9px;
+            color: #8b949e;
+            border: 1px solid #2d2218;
+            padding: 1px 5px;
+            letter-spacing: 0.5px;
+        }
+        .oc-rl-window { margin-bottom: 8px; }
+        .oc-rl-window-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #8b949e;
+            margin-bottom: 3px;
+        }
+        .oc-rl-window-stat { color: #c9d1d9; }
+        .oc-rl-bar-track {
+            height: 12px;
+            border: 1px solid #2d2218;
+            position: relative;
+            overflow: hidden;
+        }
+        .oc-rl-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            image-rendering: pixelated;
+        }
+        .oc-rl-window-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+        .oc-rl-breakdown {
+            display: flex;
+            gap: 12px;
+            font-size: 9px;
+            color: #484f58;
+            padding-top: 4px;
+            border-top: 1px dashed #2d2218;
+        }
+
         /* Agents roster - "who\'s in the office" */
         .oc-agents-roster {
             display: flex;
@@ -4554,6 +4633,26 @@ function toggleBrokerPanel() {
             return positions[idx % positions.length];
         }
 
+        // Helper: extract a short thread/channel label from a detail string
+        function formatDetailShort(detail) {
+            if (!detail) return '';
+            // "Discord thread #channel-name > Thread Title"
+            var m = detail.match(/Discord thread\s+#([\w-]+)\s*>\s*(.+)/i);
+            if (m) {
+                var thread = m[2].trim();
+                if (thread.length > 40) thread = thread.substring(0, 37) + '…';
+                return '#' + m[1] + ' > ' + thread;
+            }
+            // "Discord #channel-name"
+            m = detail.match(/Discord\s+#([\w-]+)/i);
+            if (m) return '#' + m[1];
+            // "Direct message" or "DM"
+            if (/direct\s*message|^DM\b/i.test(detail)) return 'Direct message';
+            // Fallback: just truncate
+            if (detail.length > 50) return detail.substring(0, 47) + '…';
+            return detail;
+        }
+
         function renderOcAgentsInScene() {
             if (!game) return;
             // Filter to non-main agents only (subagents + cron)
@@ -4663,9 +4762,12 @@ function toggleBrokerPanel() {
                         game.tweens.add({ targets: [taskBubble.list[0], taskBubble.list[1]], x: target.x, y: target.y - 130, duration: 2500, ease: 'Sine.easeInOut' });
                     }
                 } else {
-                    // Update existing character - move to new zone if state changed
+                    // Update existing character - only move if state or target actually changed
                     var existing = ocAgentSprites[name];
-                    if (existing.state !== state || Math.abs(existing.targetX - target.x) > 10) {
+                    var stateChanged = existing.state !== state;
+                    var posChanged = Math.abs(existing.targetX - target.x) > 10 || Math.abs(existing.targetY - target.y) > 10;
+
+                    if (stateChanged || posChanged) {
                         existing.state = state;
                         existing.targetX = target.x;
                         existing.targetY = target.y;
@@ -4679,6 +4781,7 @@ function toggleBrokerPanel() {
                         existing.stateDot.fillColor = stateColors2[state] || 0x484f58;
                         game.tweens.add({ targets: existing.stateDot, x: target.x + 16, y: target.y - 100, duration: 2000, ease: 'Sine.easeInOut' });
                     }
+                    // else: no change, skip update entirely to prevent flickering
                 }
             });
 
@@ -4717,28 +4820,129 @@ function toggleBrokerPanel() {
             // Update main agent (Cali) state based on /openclaw/agents main entry
             var mainAgent = ocAgentsData.find(function(a) { return a.type === 'main'; });
             if (mainAgent && mainAgent.state) {
-                // Only update if the state is different from current and there\'s no manual override
                 var ocState = mainAgent.state;
-                // Map openclaw states to Star Office states
+                var ocDetail = mainAgent.detail || '';
                 var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
                 var mappedState = stateMap[ocState] || 'idle';
 
-                // [REMOVED] Client-side /set_state POST - backend now writes state.json
-                // directly in GET /openclaw/agents (see openclaw_api.py).
-                // Old code removed to avoid redundant/unreliable client-side sync.
+                // Check if state or detail actually changed from last poll
+                var mainStateChanged = (window._lastOcMainState !== mappedState);
+                var mainDetailChanged = (window._lastOcMainDetail !== ocDetail);
 
-                // Update status text detail with what Cali is actually doing
-                if (statusText) {
-                    var stateInfo = STATES[mappedState] || STATES.idle;
-                    var ocDetail = mainAgent.detail || '';
-                    if (ocDetail.length > 120) ocDetail = ocDetail.substring(0, 117) + '…';
-                    var newLine = '[' + stateInfo.name + '] ' + (ocDetail ? 'Working on: ' + ocDetail : (stateInfo.name || 'Cali is here, office is open.'));
-                    if (typewriterTarget !== newLine) {
-                        typewriterTarget = newLine;
-                        typewriterText = '';
-                        typewriterIndex = 0;
+                if (mainStateChanged || mainDetailChanged) {
+                    window._lastOcMainState = mappedState;
+                    window._lastOcMainDetail = ocDetail;
+
+                    // Update status text with formatted detail
+                    if (statusText) {
+                        var stateInfo = STATES[mappedState] || STATES.idle;
+                        var shortDetail = formatDetailShort(ocDetail);
+                        var newLine;
+                        if (shortDetail && mappedState !== 'idle') {
+                            newLine = '[' + stateInfo.name + '] ' + shortDetail;
+                        } else if (ocDetail) {
+                            var truncDetail = ocDetail.length > 100 ? ocDetail.substring(0, 97) + '…' : ocDetail;
+                            newLine = '[' + stateInfo.name + '] ' + truncDetail;
+                        } else {
+                            newLine = '[' + stateInfo.name + '] ' + (stateInfo.name || 'Cali is here, office is open.');
+                        }
+                        if (typewriterTarget !== newLine) {
+                            typewriterTarget = newLine;
+                            typewriterText = '';
+                            typewriterIndex = 0;
+                        }
                     }
+
+                    // Create/update persistent detail bubble above main character (when not idle)
+                    _updateMainDetailBubble(mappedState, ocDetail);
                 }
+            }
+        }
+
+        // Persistent detail bubble for main character showing current thread/channel
+        var _mainDetailBubble = null;
+
+        function _updateMainDetailBubble(state, detail) {
+            if (!game) return;
+
+            // Remove bubble when idle or no detail
+            if (state === 'idle' || !detail) {
+                if (_mainDetailBubble) {
+                    _mainDetailBubble.destroy();
+                    _mainDetailBubble = null;
+                }
+                return;
+            }
+
+            var shortLabel = formatDetailShort(detail);
+            if (!shortLabel) {
+                if (_mainDetailBubble) {
+                    _mainDetailBubble.destroy();
+                    _mainDetailBubble = null;
+                }
+                return;
+            }
+
+            // Truncate for bubble display
+            if (shortLabel.length > 35) shortLabel = shortLabel.substring(0, 32) + '…';
+
+            // Determine anchor position (same logic as showBubble)
+            var anchorX, anchorY;
+            if (state === 'syncing' && syncAnimSprite && syncAnimSprite.visible) {
+                anchorX = syncAnimSprite.x;
+                anchorY = syncAnimSprite.y;
+            } else if (state === 'error' && window.errorBug && window.errorBug.visible) {
+                anchorX = window.errorBug.x;
+                anchorY = window.errorBug.y;
+            } else if (window.starWorking && window.starWorking.visible) {
+                anchorX = window.starWorking.x;
+                anchorY = window.starWorking.y;
+            } else if (star && star.visible) {
+                anchorX = star.x;
+                anchorY = star.y;
+            } else {
+                // Fallback to desk area
+                anchorX = 217;
+                anchorY = 343;
+            }
+
+            var bubbleX = anchorX;
+            var bubbleY = anchorY - 105;
+
+            if (_mainDetailBubble) {
+                // Update existing bubble text and position
+                try {
+                    var children = _mainDetailBubble.list;
+                    if (children && children.length >= 2) {
+                        var bgRect = children[0];
+                        var txtObj = children[1];
+                        txtObj.setText('📍 ' + shortLabel);
+                        var newW = Math.min(320, shortLabel.length * 6 + 40);
+                        bgRect.width = newW;
+                        bgRect.x = bubbleX;
+                        bgRect.y = bubbleY;
+                        txtObj.x = bubbleX;
+                        txtObj.y = bubbleY;
+                    }
+                } catch (e) {
+                    // Recreate if update fails
+                    _mainDetailBubble.destroy();
+                    _mainDetailBubble = null;
+                }
+            }
+
+            if (!_mainDetailBubble) {
+                var bW = Math.min(320, shortLabel.length * 6 + 40);
+                var bg = game.add.rectangle(bubbleX, bubbleY, bW, 20, 0x1e1710, 0.85);
+                bg.setStrokeStyle(1, 0xe8a849, 0.6);
+                var txt = game.add.text(bubbleX, bubbleY, '📍 ' + shortLabel, {
+                    fontFamily: 'ArkPixel, monospace',
+                    fontSize: '10px',
+                    fill: '#e8a849',
+                    align: 'center'
+                }).setOrigin(0.5);
+                _mainDetailBubble = game.add.container(0, 0, [bg, txt]);
+                _mainDetailBubble.setDepth(1150);
             }
         }
 
@@ -5608,22 +5812,25 @@ function toggleBrokerPanel() {
                         }
                         const nextState = normalizeState(data.state);
                         const stateInfo = STATES[nextState] || STATES.idle;
-                        // If we\'re mid-transition, don\'t restart the path every poll
-                        const changed = (pendingDesiredState === null) && (nextState !== currentState);
-                        const nextLine = '[' + stateInfo.name + '] ' + (data.detail || '...');
-                        // 不论 changed 与否，都按服务端最新状态强制一次视觉同步，避免动画卡旧状态
-                        pendingDesiredState = null;
-                        if (currentState !== nextState) {
-                            currentState = nextState;
-                        }
-                        applyVisualState(nextState);
+                        const nextDetail = data.detail || '...';
+                        const nextLine = '[' + stateInfo.name + '] ' + nextDetail;
+                        const stateChanged = (nextState !== currentState);
 
-                        if (changed) {
+                        // Skip all visual updates if nothing changed (prevents flickering)
+                        if (!stateChanged && typewriterTarget === nextLine) {
+                            return;
+                        }
+
+                        if (stateChanged) {
+                            pendingDesiredState = null;
+                            currentState = nextState;
+                            applyVisualState(nextState);
                             typewriterTarget = nextLine;
                             typewriterText = '';
                             typewriterIndex = 0;
                         } else {
-                            if (!typewriterTarget || typewriterTarget !== nextLine) {
+                            // State same but detail text changed — update typewriter only
+                            if (typewriterTarget !== nextLine) {
                                 typewriterTarget = nextLine;
                                 typewriterText = '';
                                 typewriterIndex = 0;

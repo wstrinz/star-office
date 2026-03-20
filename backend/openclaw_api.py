@@ -52,6 +52,7 @@ GATEWAY_HEALTH_URL = "http://127.0.0.1:18789/health"
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DISMISSED_FILE = os.path.join(PROJECT_ROOT, "dismissed_agents.json")
 USAGE_CONFIG_FILE = os.path.join(PROJECT_ROOT, "usage_config.json")
+RATE_LIMITS_CONFIG_FILE = os.path.join(PROJECT_ROOT, "rate_limits_config.json")
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -360,6 +361,22 @@ def _provider_from_model(model):
     return "other"
 
 
+def _normalize_provider(provider):
+    """Normalize provider string to canonical keys (anthropic, openai, etc.)."""
+    p = (provider or "").lower().strip()
+    if p in ("anthropic",):
+        return "anthropic"
+    if p in ("openai", "openai-codex", "openai-responses"):
+        return "openai"
+    if "openrouter" in p:
+        return "openrouter"
+    if "anthropic" in p:
+        return "anthropic"
+    if "openai" in p or "codex" in p:
+        return "openai"
+    return provider
+
+
 def _get_month_start_ms():
     """Return epoch ms for the start of the current month."""
     now = datetime.now()
@@ -584,6 +601,295 @@ def openclaw_usage_config_set():
             else:
                 config[k] = v
         with open(USAGE_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+        return jsonify({"ok": True, "config": config})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+
+# ---------------------------------------------------------------------------
+# Rate Limits — rolling token window tracking
+# ---------------------------------------------------------------------------
+
+def _read_rate_limits_config():
+    """Read rate_limits_config.json with defaults."""
+    defaults = {
+        "anthropic": {
+            "fiveHourTokenLimit": 300000,
+            "weeklyTokenLimit": 5000000,
+            "tier": "tier-2",
+            "label": "Anthropic (Claude)",
+        },
+        "openai": {
+            "fiveHourTokenLimit": 500000,
+            "weeklyTokenLimit": 10000000,
+            "tier": "plus",
+            "label": "OpenAI (Codex)",
+        },
+    }
+    if not os.path.isfile(RATE_LIMITS_CONFIG_FILE):
+        return defaults
+    try:
+        with open(RATE_LIMITS_CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        # Merge with defaults for any missing providers
+        for provider, pdefaults in defaults.items():
+            if provider not in data:
+                data[provider] = pdefaults
+            else:
+                for k, v in pdefaults.items():
+                    if k not in data[provider]:
+                        data[provider][k] = v
+        return data
+    except Exception:
+        return defaults
+
+
+def _parse_session_jsonl_usage(session_path, cutoff_ms):
+    """Parse a session JSONL file and extract per-message token usage entries after cutoff.
+
+    Returns list of {ts_ms, provider, model, input_tokens, output_tokens, total_tokens}.
+    """
+    entries = []
+    if not os.path.isfile(session_path):
+        return entries
+    try:
+        with open(session_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if obj.get("type") != "message":
+                    continue
+                msg = obj.get("message", {})
+                usage = msg.get("usage", {})
+                total = usage.get("totalTokens", 0) or 0
+                if total <= 0:
+                    continue
+
+                # Get timestamp — prefer message.timestamp (epoch ms) then obj.timestamp (ISO)
+                ts_ms = msg.get("timestamp", 0)
+                if not ts_ms and obj.get("timestamp"):
+                    try:
+                        ts_ms = int(datetime.fromisoformat(
+                            obj["timestamp"].replace("Z", "+00:00")
+                        ).timestamp() * 1000)
+                    except Exception:
+                        continue
+                if ts_ms < cutoff_ms:
+                    continue
+
+                model = msg.get("model", "") or ""
+                provider_raw = msg.get("provider", "") or ""
+                provider = provider_raw if provider_raw and provider_raw not in ("", "openclaw") else _provider_from_model(model)
+                provider = _normalize_provider(provider)
+
+                entries.append({
+                    "ts_ms": ts_ms,
+                    "provider": provider,
+                    "model": model,
+                    "input_tokens": usage.get("input", 0) or 0,
+                    "output_tokens": usage.get("output", 0) or 0,
+                    "total_tokens": total,
+                })
+    except Exception:
+        pass
+    return entries
+
+
+def _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms):
+    """Collect all token usage entries from cron runs and session JSONL files
+    within the rolling windows.
+
+    Returns {provider: {5h: {input, output, total}, 7d: {input, output, total}}}.
+    """
+    # Use the wider cutoff to collect everything, then filter per window
+    min_cutoff = min(five_hour_cutoff_ms, week_cutoff_ms)
+
+    # Structure: provider -> {"5h": {input, output, total}, "7d": {input, output, total}}
+    result = {}
+
+    def _init_provider(p):
+        if p not in result:
+            result[p] = {
+                "5h": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+                "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            }
+
+    def _add_entry(provider, ts_ms, input_t, output_t, total_t):
+        _init_provider(provider)
+        if ts_ms >= week_cutoff_ms:
+            result[provider]["7d"]["input_tokens"] += input_t
+            result[provider]["7d"]["output_tokens"] += output_t
+            result[provider]["7d"]["total_tokens"] += total_t
+        if ts_ms >= five_hour_cutoff_ms:
+            result[provider]["5h"]["input_tokens"] += input_t
+            result[provider]["5h"]["output_tokens"] += output_t
+            result[provider]["5h"]["total_tokens"] += total_t
+
+    # 1. Cron runs — each JSONL line is a completed run
+    if os.path.isdir(RUNS_DIR):
+        for path in glob.glob(os.path.join(RUNS_DIR, "*.jsonl")):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            r = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        ts = r.get("ts", 0)
+                        if ts < min_cutoff:
+                            continue
+                        usage = r.get("usage") or {}
+                        input_t = usage.get("input_tokens", 0) or 0
+                        output_t = usage.get("output_tokens", 0) or 0
+                        total_t = usage.get("total_tokens", 0) or 0
+                        if total_t <= 0:
+                            continue
+                        provider_raw = r.get("provider", "") or ""
+                        model = r.get("model", "") or ""
+                        provider = provider_raw if provider_raw and provider_raw != "unknown" else _provider_from_model(model)
+                        provider = _normalize_provider(provider)
+                        _add_entry(provider, ts, input_t, output_t, total_t)
+            except Exception:
+                continue
+
+    # 2. Session JSONL files — per-message granularity
+    if os.path.isdir(SESSIONS_DIR):
+        for path in glob.glob(os.path.join(SESSIONS_DIR, "*.jsonl")):
+            # Quick check: skip files not modified since the wider cutoff
+            try:
+                mtime_ms = os.path.getmtime(path) * 1000
+                if mtime_ms < min_cutoff:
+                    continue
+            except Exception:
+                continue
+
+            entries = _parse_session_jsonl_usage(path, min_cutoff)
+            for e in entries:
+                _add_entry(e["provider"], e["ts_ms"], e["input_tokens"], e["output_tokens"], e["total_tokens"])
+
+    return result
+
+
+@openclaw_bp.route("/openclaw/rate-limits", methods=["GET"])
+def openclaw_rate_limits():
+    """Rolling token usage windows for rate limit tracking."""
+    now_ms = time.time() * 1000
+    five_hour_cutoff_ms = now_ms - 5 * 3600 * 1000
+    week_cutoff_ms = now_ms - 7 * 86400 * 1000
+
+    config = _read_rate_limits_config()
+    usage_by_provider = _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms)
+
+    response = {}
+    warnings = []
+    worst_percent = 0  # Track the highest utilization across all windows
+
+    for provider_key in ("anthropic", "openai"):
+        pconfig = config.get(provider_key, {})
+        five_h_limit = pconfig.get("fiveHourTokenLimit", 0)
+        weekly_limit = pconfig.get("weeklyTokenLimit", 0)
+        label = pconfig.get("label", provider_key.title())
+
+        usage = usage_by_provider.get(provider_key, {
+            "5h": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+        })
+
+        five_h = usage["5h"]
+        seven_d = usage["7d"]
+
+        five_h_pct = round(five_h["total_tokens"] / five_h_limit * 100, 1) if five_h_limit > 0 else 0
+        weekly_pct = round(seven_d["total_tokens"] / weekly_limit * 100, 1) if weekly_limit > 0 else 0
+
+        worst_percent = max(worst_percent, five_h_pct, weekly_pct)
+
+        # Calculate time until window resets
+        five_h_reset_ms = five_hour_cutoff_ms + 5 * 3600 * 1000  # when the oldest entry in window rolls off
+        week_reset_ms = week_cutoff_ms + 7 * 86400 * 1000
+
+        response[provider_key] = {
+            "label": label,
+            "tier": pconfig.get("tier", ""),
+            "rolling5h": {
+                "inputTokens": five_h["input_tokens"],
+                "outputTokens": five_h["output_tokens"],
+                "totalTokens": five_h["total_tokens"],
+                "windowStart": datetime.fromtimestamp(five_hour_cutoff_ms / 1000).isoformat(),
+                "estimatedLimit": five_h_limit,
+                "percentUsed": five_h_pct,
+                "remainingTokens": max(0, five_h_limit - five_h["total_tokens"]) if five_h_limit > 0 else None,
+            },
+            "rollingWeek": {
+                "inputTokens": seven_d["input_tokens"],
+                "outputTokens": seven_d["output_tokens"],
+                "totalTokens": seven_d["total_tokens"],
+                "windowStart": datetime.fromtimestamp(week_cutoff_ms / 1000).isoformat(),
+                "estimatedLimit": weekly_limit,
+                "percentUsed": weekly_pct,
+                "remainingTokens": max(0, weekly_limit - seven_d["total_tokens"]) if weekly_limit > 0 else None,
+            },
+        }
+
+        # Warnings
+        if five_h_pct >= 90:
+            warnings.append(f"🔴 {label} 5h window at {five_h_pct}% — STOP or slow down!")
+        elif five_h_pct >= 80:
+            warnings.append(f"🟡 {label} 5h window at {five_h_pct}% — approaching limit")
+        elif five_h_pct >= 60:
+            warnings.append(f"🟡 {label} 5h window at {five_h_pct}%")
+
+        if weekly_pct >= 90:
+            warnings.append(f"🔴 {label} weekly at {weekly_pct}% — budget critically low!")
+        elif weekly_pct >= 80:
+            warnings.append(f"🟡 {label} weekly at {weekly_pct}% — approaching limit")
+        elif weekly_pct >= 60:
+            warnings.append(f"🟡 {label} weekly at {weekly_pct}%")
+
+    # Overall traffic light: worst across all windows
+    if worst_percent >= 80:
+        traffic_light = "red"
+    elif worst_percent >= 60:
+        traffic_light = "yellow"
+    else:
+        traffic_light = "green"
+
+    response["_meta"] = {
+        "warnings": warnings,
+        "trafficLight": traffic_light,
+        "worstPercent": worst_percent,
+        "calculatedAt": datetime.now().isoformat(),
+    }
+
+    return jsonify(response)
+
+
+@openclaw_bp.route("/openclaw/rate-limits/config", methods=["GET"])
+def openclaw_rate_limits_config_get():
+    """Get the current rate limits config."""
+    return jsonify(_read_rate_limits_config())
+
+
+@openclaw_bp.route("/openclaw/rate-limits/config", methods=["POST"])
+def openclaw_rate_limits_config_set():
+    """Update rate limits config (partial merge)."""
+    try:
+        updates = request.get_json(force=True)
+        config = _read_rate_limits_config()
+        for provider_key, pval in updates.items():
+            if isinstance(pval, dict):
+                if provider_key not in config:
+                    config[provider_key] = {}
+                config[provider_key].update(pval)
+        with open(RATE_LIMITS_CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
         return jsonify({"ok": True, "config": config})
     except Exception as e:
@@ -837,6 +1143,7 @@ def openclaw_agents_combined():
                 })
 
     # --- Write main agent state to state.json (server-side sync) ---
+    # Only write if state or detail actually changed to prevent flickering
     main_entry = next((a for a in agents if a.get("type") == "main"), None)
     if main_entry:
         state_map = {
@@ -848,16 +1155,31 @@ def openclaw_agents_combined():
             "syncing": "syncing",
         }
         mapped = state_map.get(main_entry.get("state", "idle"), "idle")
+        new_detail = main_entry.get("detail", "")
         state_json_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state.json")
         try:
-            state_payload = {
-                "state": mapped,
-                "detail": main_entry.get("detail", ""),
-                "progress": 0,
-                "updated_at": datetime.now().isoformat(),
-            }
-            with open(state_json_path, "w", encoding="utf-8") as sf:
-                json.dump(state_payload, sf)
+            # Read current state.json and compare before writing
+            current_state = None
+            current_detail = None
+            if os.path.isfile(state_json_path):
+                try:
+                    with open(state_json_path, "r", encoding="utf-8") as sf:
+                        existing = json.load(sf)
+                    current_state = existing.get("state")
+                    current_detail = existing.get("detail")
+                except Exception:
+                    pass  # file corrupt or missing, write fresh
+
+            # Only write if state or detail actually changed
+            if current_state != mapped or current_detail != new_detail:
+                state_payload = {
+                    "state": mapped,
+                    "detail": new_detail,
+                    "progress": 0,
+                    "updated_at": datetime.now().isoformat(),
+                }
+                with open(state_json_path, "w", encoding="utf-8") as sf:
+                    json.dump(state_payload, sf)
         except Exception:
             pass  # non-fatal; don't break the API response
 

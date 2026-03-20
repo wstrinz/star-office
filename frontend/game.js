@@ -709,8 +709,15 @@ function fetchStatus() {
     .then(data => {
       const nextState = normalizeState(data.state);
       const stateInfo = STATES[nextState] || STATES.idle;
+      const nextDetail = data.detail || '...';
       const changed = (pendingDesiredState === null) && (nextState !== currentState);
-      const nextLine = '[' + stateInfo.name + '] ' + (data.detail || '...');
+      const nextLine = '[' + stateInfo.name + '] ' + nextDetail;
+
+      // Skip all updates if state and detail haven't changed (prevents flickering)
+      if (!changed && typewriterTarget === nextLine) {
+        return;
+      }
+
       if (changed) {
         typewriterTarget = nextLine;
         typewriterText = '';
@@ -779,7 +786,8 @@ function fetchStatus() {
           }
         }
       } else {
-        if (!typewriterTarget || typewriterTarget !== nextLine) {
+        // State same but detail changed — only update typewriter text
+        if (typewriterTarget !== nextLine) {
           typewriterTarget = nextLine;
           typewriterText = '';
           typewriterIndex = 0;
