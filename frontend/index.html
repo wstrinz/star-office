@@ -1128,6 +1128,300 @@
                 min-height: 36px;
             }
         }
+
+        /* ═══ OpenClaw Dashboard ═══ */
+        .oc-toggle-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px 0;
+            font-family: 'ArkPixel', 'Courier New', monospace;
+            font-size: 14px;
+            background: #16213e;
+            color: #7fdbca;
+            border: 2px solid #0f3460;
+            cursor: pointer;
+            text-align: center;
+            image-rendering: pixelated;
+            letter-spacing: 2px;
+        }
+        .oc-toggle-btn:hover { background: #1a1a4e; border-color: #7fdbca; }
+
+        #oc-dashboard {
+            margin-top: 4px;
+            padding: 12px 16px 16px;
+            background: #0d1117;
+            border: 2px solid #0f3460;
+            font-family: 'ArkPixel', 'Courier New', monospace;
+            color: #c9d1d9;
+            font-size: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        /* scanline overlay */
+        #oc-dashboard::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 100, 0.015) 2px,
+                rgba(0, 255, 100, 0.015) 4px
+            );
+        }
+
+        .oc-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #21262d;
+        }
+        .oc-panel-title {
+            font-size: 14px;
+            color: #7fdbca;
+            letter-spacing: 3px;
+            flex: 1;
+        }
+        .oc-refresh-ts { color: #484f58; font-size: 11px; }
+        .oc-refresh-btn {
+            background: none;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            padding: 2px 8px;
+        }
+        .oc-refresh-btn:hover { color: #7fdbca; border-color: #7fdbca; }
+
+        /* Status bar */
+        .oc-status-bar {
+            display: flex;
+            gap: 20px;
+            padding: 6px 10px;
+            background: #161b22;
+            border: 1px solid #21262d;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .oc-status-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .oc-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 0;  /* pixel square */
+        }
+        .oc-dot-green { background: #3fb950; box-shadow: 0 0 4px #3fb950; }
+        .oc-dot-red { background: #f85149; box-shadow: 0 0 4px #f85149; }
+        .oc-text-red { color: #f85149; }
+        .oc-text-green { color: #3fb950; }
+
+        .oc-section-label {
+            font-size: 11px;
+            color: #484f58;
+            letter-spacing: 2px;
+            margin: 10px 0 6px;
+            border-bottom: 1px dashed #21262d;
+            padding-bottom: 2px;
+        }
+
+        /* Cron grid */
+        .oc-cron-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 8px;
+        }
+        .oc-job-card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            padding: 8px 10px;
+            position: relative;
+        }
+        .oc-job-card.oc-job-ok { border-left: 3px solid #3fb950; }
+        .oc-job-card.oc-job-error { border-left: 3px solid #f85149; }
+        .oc-job-card.oc-job-disabled { border-left: 3px solid #484f58; opacity: 0.6; }
+        .oc-job-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .oc-job-indicator { font-size: 10px; }
+        .oc-job-ok .oc-job-indicator { color: #3fb950; }
+        .oc-job-error .oc-job-indicator { color: #f85149; }
+        .oc-job-disabled .oc-job-indicator { color: #484f58; }
+        .oc-job-name { color: #e6edf3; font-size: 13px; font-weight: normal; }
+        .oc-job-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #8b949e;
+            margin-bottom: 2px;
+        }
+        .oc-job-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 10px;
+            color: #484f58;
+            flex-wrap: wrap;
+        }
+        .oc-model-tag {
+            background: #1c2333;
+            padding: 0 4px;
+            border: 1px solid #30363d;
+            color: #7ee787;
+        }
+        .oc-err-count { color: #f85149; }
+
+        /* Two-column layout */
+        .oc-two-col { display: flex; gap: 16px; margin-top: 4px; }
+        .oc-col { flex: 1; min-width: 0; }
+
+        /* Activity feed */
+        .oc-activity-feed { max-height: 260px; overflow-y: auto; }
+        .oc-activity-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 6px;
+            border-bottom: 1px solid #161b22;
+            cursor: default;
+            font-size: 11px;
+        }
+        .oc-activity-row:hover { background: #161b22; }
+        .oc-act-time { color: #484f58; min-width: 90px; white-space: nowrap; }
+        .oc-act-name { flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .oc-act-dur { color: #8b949e; min-width: 48px; text-align: right; }
+        .oc-act-tok { color: #7ee787; min-width: 64px; text-align: right; }
+
+        /* Badges */
+        .oc-badge {
+            display: inline-block;
+            padding: 0 5px;
+            font-size: 10px;
+            border: 1px solid;
+            min-width: 28px;
+            text-align: center;
+        }
+        .oc-badge-ok { color: #3fb950; border-color: #238636; background: #0d1117; }
+        .oc-badge-err { color: #f85149; border-color: #da3633; background: #0d1117; }
+        .oc-badge-warn { color: #d29922; border-color: #9e6a03; background: #0d1117; }
+
+        /* Costs panel */
+        .oc-costs-panel { padding: 4px 0; }
+        .oc-costs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #8b949e;
+            font-size: 11px;
+        }
+        .oc-costs-total { color: #7ee787; }
+        .oc-costs-models { display: flex; flex-direction: column; gap: 6px; }
+        .oc-cost-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .oc-cost-model {
+            min-width: 100px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #8b949e;
+            font-size: 11px;
+        }
+        .oc-cost-bar-wrap {
+            flex: 1;
+            height: 10px;
+            background: #161b22;
+            border: 1px solid #21262d;
+        }
+        .oc-cost-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #238636, #3fb950);
+            transition: width 0.3s;
+        }
+        .oc-cost-val {
+            min-width: 80px;
+            text-align: right;
+            font-size: 10px;
+            color: #7ee787;
+            white-space: nowrap;
+        }
+
+        .oc-empty { color: #484f58; text-align: center; padding: 20px 0; font-style: italic; }
+
+        /* Agents roster — "who's in the office" */
+        .oc-agents-roster {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px 0;
+        }
+        .oc-agent-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #161b22;
+            border: 1px solid #21262d;
+            padding: 6px 10px;
+            flex: 1 1 auto;
+            min-width: 200px;
+        }
+        .oc-agent-icon { font-size: 14px; }
+        .oc-agent-name { color: #e6edf3; font-size: 12px; font-weight: normal; white-space: nowrap; }
+        .oc-agent-detail { color: #484f58; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+
+        /* Sessions list */
+        .oc-sessions-list { max-height: 220px; overflow-y: auto; }
+        .oc-session-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            border-bottom: 1px solid #161b22;
+            font-size: 11px;
+        }
+        .oc-session-row:hover { background: #161b22; }
+        .oc-session-name { flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .oc-session-time { color: #484f58; min-width: 50px; text-align: right; white-space: nowrap; }
+        .oc-session-tok { color: #7ee787; min-width: 50px; text-align: right; white-space: nowrap; }
+        .oc-session-more { color: #484f58; font-size: 10px; text-align: center; padding: 4px 0; }
+        .oc-dot-yellow { background: #d29922; box-shadow: 0 0 4px #d29922; }
+        .oc-dot-dim { background: #484f58; }
+
+        /* Subagents list */
+        .oc-subagents-list { max-height: 220px; overflow-y: auto; }
+        .oc-sa-card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+        }
+        .oc-sa-card.oc-sa-ok { border-left: 3px solid #3fb950; }
+        .oc-sa-card.oc-sa-err { border-left: 3px solid #f85149; }
+        .oc-sa-card.oc-sa-running { border-left: 3px solid #d29922; }
+        .oc-sa-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+        .oc-sa-icon { font-size: 10px; }
+        .oc-sa-ok .oc-sa-icon { color: #3fb950; }
+        .oc-sa-err .oc-sa-icon { color: #f85149; }
+        .oc-sa-running .oc-sa-icon { color: #d29922; }
+        .oc-sa-label { color: #e6edf3; font-size: 12px; }
+        .oc-sa-time { color: #484f58; font-size: 10px; }
+        .oc-sa-task { color: #8b949e; font-size: 10px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Badge variants */
+        .oc-badge-info { color: #58a6ff; border-color: #1f6feb; background: #0d1117; }
+        .oc-badge-dim { color: #484f58; border-color: #30363d; background: #0d1117; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .oc-two-col { flex-direction: column; }
+            .oc-cron-grid { grid-template-columns: 1fr; }
+            .oc-agents-roster { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -1722,6 +2016,37 @@
         const TYPEWRITER_DELAY = 50;
         let lastSeenGuestIds = new Set(); // 用于检测新加入的访客，触发欢迎气泡
         let guestWelcomeInitialized = false;
+
+        // OpenClaw live agents — subagents & cron jobs rendered as pixel characters
+        const OC_AGENTS_FETCH_INTERVAL = 15000; // 15 seconds
+        let lastOcAgentsFetch = 0;
+        let ocAgentSprites = {}; // name -> {container, nameText, taskBubble, state, targetX, targetY}
+        let ocAgentsData = []; // latest data from /openclaw/agents
+        const OC_DOOR_POS = { x: 640, y: 620 }; // entrance point
+        // Zone targets for subagent characters
+        const OC_ZONES = {
+            executing: [
+                { x: 260, y: 560 }, { x: 310, y: 590 }, { x: 350, y: 560 },
+                { x: 220, y: 610 }, { x: 380, y: 620 }, { x: 170, y: 580 },
+            ],
+            writing: [
+                { x: 280, y: 530 }, { x: 330, y: 570 }, { x: 240, y: 600 },
+                { x: 370, y: 540 }, { x: 200, y: 560 },
+            ],
+            researching: [
+                { x: 300, y: 550 }, { x: 350, y: 580 }, { x: 250, y: 570 },
+                { x: 380, y: 600 }, { x: 210, y: 540 },
+            ],
+            idle: [
+                { x: 620, y: 380 }, { x: 700, y: 420 }, { x: 580, y: 440 },
+                { x: 750, y: 370 }, { x: 660, y: 460 }, { x: 540, y: 400 },
+            ],
+            error: [
+                { x: 980, y: 240 }, { x: 1040, y: 260 }, { x: 1060, y: 220 },
+                { x: 950, y: 280 }, { x: 1100, y: 250 },
+            ],
+        };
+        const OC_AGENT_COLORS = [0x58a6ff, 0xbc8cff, 0xff7b72, 0x79c0ff, 0xd2a8ff, 0xffa657, 0x7ee787, 0xf778ba];
 
         // 状态控制栏函数（用于测试）
         function setState(state, detail) {
@@ -3900,6 +4225,197 @@ function toggleBrokerPanel() {
                 });
         }
 
+        // ═══ OpenClaw Live Agents — fetch & render subagents as pixel characters ═══
+
+        function fetchOpenClawAgents() {
+            fetch('/openclaw/agents?t=' + Date.now(), { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!Array.isArray(data)) return;
+                    ocAgentsData = data;
+                    renderOcAgentsInScene();
+                })
+                .catch(function(e) {
+                    // Silently fail — keep current state
+                });
+        }
+
+        function getOcZonePosition(state, idx) {
+            var positions = OC_ZONES[state] || OC_ZONES.idle;
+            return positions[idx % positions.length];
+        }
+
+        function renderOcAgentsInScene() {
+            if (!game) return;
+            // Filter to non-main agents only (subagents + cron)
+            var subagents = ocAgentsData.filter(function(a) { return a.type !== 'main'; });
+            var seenNames = new Set();
+            var zoneCounters = {};
+
+            subagents.forEach(function(agent, i) {
+                var name = agent.name || ('agent-' + i);
+                seenNames.add(name);
+                var state = agent.state || 'idle';
+
+                // Count per zone for positioning
+                if (!zoneCounters[state]) zoneCounters[state] = 0;
+                var zoneIdx = zoneCounters[state]++;
+                var target = getOcZonePosition(state, zoneIdx);
+
+                if (!ocAgentSprites[name]) {
+                    // Create new character — enter from door
+                    var colorIdx = 0;
+                    for (var ci = 0; ci < name.length; ci++) colorIdx = (colorIdx * 31 + name.charCodeAt(ci)) >>> 0;
+                    var color = OC_AGENT_COLORS[colorIdx % OC_AGENT_COLORS.length];
+
+                    // Use guest animation sprite if available, otherwise simple emoji
+                    var animIdx = (colorIdx % 6) + 1;
+                    var animKey = 'guest_anim_' + animIdx;
+                    var animIdleKey = animKey + '_idle';
+                    var sprite;
+
+                    if (game.textures.exists(animKey) && game.anims.exists(animIdleKey)) {
+                        sprite = game.add.sprite(OC_DOOR_POS.x, OC_DOOR_POS.y, animKey).setOrigin(0.5, 1).setScale(3.5);
+                        sprite.anims.play(animIdleKey, true);
+                    } else {
+                        sprite = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y, '⚡', {
+                            fontFamily: 'ArkPixel, monospace', fontSize: '28px'
+                        }).setOrigin(0.5, 1);
+                    }
+                    sprite.setDepth(2500);
+
+                    // Name label
+                    var shortName = name.length > 16 ? name.substring(0, 14) + '…' : name;
+                    var nameText = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 110, shortName, {
+                        fontFamily: 'ArkPixel, monospace',
+                        fontSize: '11px',
+                        fill: '#' + color.toString(16).padStart(6, '0'),
+                        stroke: '#000',
+                        strokeThickness: 3,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        padding: { x: 3, y: 1 }
+                    }).setOrigin(0.5).setDepth(2501);
+
+                    // Task bubble (shows briefly, then fades)
+                    var taskText = (agent.detail || '').substring(0, 40);
+                    var taskBubble = null;
+                    if (taskText) {
+                        var tbBg = game.add.rectangle(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, taskText.length * 6 + 16, 20, 0x161b22, 0.9);
+                        tbBg.setStrokeStyle(1, color, 0.6);
+                        var tbTxt = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, taskText, {
+                            fontFamily: 'ArkPixel, monospace', fontSize: '9px', fill: '#c9d1d9'
+                        }).setOrigin(0.5);
+                        taskBubble = game.add.container(0, 0, [tbBg, tbTxt]).setDepth(2502);
+                        // Fade out task bubble after 5 seconds
+                        setTimeout(function() {
+                            if (taskBubble) {
+                                game.tweens.add({ targets: taskBubble, alpha: 0, duration: 1000, onComplete: function() {
+                                    if (taskBubble) { taskBubble.destroy(); }
+                                }});
+                            }
+                        }, 5000);
+                    }
+
+                    // State indicator dot
+                    var stateColors = { executing: 0x3fb950, writing: 0xd29922, researching: 0x58a6ff, idle: 0x484f58, error: 0xf85149 };
+                    var dotColor = stateColors[state] || 0x484f58;
+                    var stateDot = game.add.circle(OC_DOOR_POS.x + 16, OC_DOOR_POS.y - 100, 4, dotColor);
+                    stateDot.setDepth(2502);
+
+                    ocAgentSprites[name] = {
+                        sprite: sprite,
+                        nameText: nameText,
+                        taskBubble: taskBubble,
+                        stateDot: stateDot,
+                        state: state,
+                        targetX: target.x,
+                        targetY: target.y,
+                        color: color,
+                    };
+
+                    // Tween to target position (walk in from door)
+                    game.tweens.add({ targets: sprite, x: target.x, y: target.y, duration: 2500, ease: 'Sine.easeInOut' });
+                    game.tweens.add({ targets: nameText, x: target.x, y: target.y - 110, duration: 2500, ease: 'Sine.easeInOut' });
+                    game.tweens.add({ targets: stateDot, x: target.x + 16, y: target.y - 100, duration: 2500, ease: 'Sine.easeInOut' });
+                    if (taskBubble) {
+                        game.tweens.add({ targets: [taskBubble.list[0], taskBubble.list[1]], x: target.x, y: target.y - 130, duration: 2500, ease: 'Sine.easeInOut' });
+                    }
+                } else {
+                    // Update existing character — move to new zone if state changed
+                    var existing = ocAgentSprites[name];
+                    if (existing.state !== state || Math.abs(existing.targetX - target.x) > 10) {
+                        existing.state = state;
+                        existing.targetX = target.x;
+                        existing.targetY = target.y;
+
+                        // Smooth transition to new zone
+                        game.tweens.add({ targets: existing.sprite, x: target.x, y: target.y, duration: 2000, ease: 'Sine.easeInOut' });
+                        game.tweens.add({ targets: existing.nameText, x: target.x, y: target.y - 110, duration: 2000, ease: 'Sine.easeInOut' });
+
+                        // Update state dot color and position
+                        var stateColors2 = { executing: 0x3fb950, writing: 0xd29922, researching: 0x58a6ff, idle: 0x484f58, error: 0xf85149 };
+                        existing.stateDot.fillColor = stateColors2[state] || 0x484f58;
+                        game.tweens.add({ targets: existing.stateDot, x: target.x + 16, y: target.y - 100, duration: 2000, ease: 'Sine.easeInOut' });
+                    }
+                }
+            });
+
+            // Remove characters no longer present — walk to door then destroy
+            Object.keys(ocAgentSprites).forEach(function(name) {
+                if (!seenNames.has(name)) {
+                    var leaving = ocAgentSprites[name];
+                    delete ocAgentSprites[name];
+
+                    // Walk to door, then destroy
+                    game.tweens.add({
+                        targets: leaving.sprite,
+                        x: OC_DOOR_POS.x, y: OC_DOOR_POS.y,
+                        duration: 1500, ease: 'Sine.easeInOut',
+                        onComplete: function() { leaving.sprite.destroy(); }
+                    });
+                    game.tweens.add({
+                        targets: leaving.nameText,
+                        x: OC_DOOR_POS.x, y: OC_DOOR_POS.y - 110,
+                        alpha: 0, duration: 1500, ease: 'Sine.easeInOut',
+                        onComplete: function() { leaving.nameText.destroy(); }
+                    });
+                    if (leaving.stateDot) {
+                        game.tweens.add({
+                            targets: leaving.stateDot,
+                            alpha: 0, duration: 1000,
+                            onComplete: function() { leaving.stateDot.destroy(); }
+                        });
+                    }
+                    if (leaving.taskBubble) {
+                        try { leaving.taskBubble.destroy(); } catch(e) {}
+                    }
+                }
+            });
+
+            // Update main agent (Cali) state based on /openclaw/agents main entry
+            var mainAgent = ocAgentsData.find(function(a) { return a.type === 'main'; });
+            if (mainAgent && mainAgent.state) {
+                // Only update if the state is different from current and there's no manual override
+                var ocState = mainAgent.state;
+                // Map openclaw states to Star Office states
+                var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
+                var mappedState = stateMap[ocState] || 'idle';
+
+                // Update status text detail with what Cali is actually doing
+                if (mainAgent.detail && statusText) {
+                    var stateInfo = STATES[mappedState] || STATES.idle;
+                    var ocDetail = mainAgent.detail;
+                    if (ocDetail.length > 60) ocDetail = ocDetail.substring(0, 57) + '…';
+                    var newLine = '[' + stateInfo.name + '] ' + ocDetail;
+                    if (typewriterTarget !== newLine) {
+                        typewriterTarget = newLine;
+                        typewriterText = '';
+                        typewriterIndex = 0;
+                    }
+                }
+            }
+        }
+
         // 初始化：先检测 WebP 支持，再启动游戏
         async function initGame() {
             // 检测 WebP 支持
@@ -4144,16 +4660,19 @@ function toggleBrokerPanel() {
 
             // Random poster at (252,66) (random frame from spritesheet)
             const postersFrameCount = (this.textures.get('posters')?.frameTotal || 1) - 1;
-            const randomPosterFrame = Math.floor(Math.random() * Math.max(1, postersFrameCount));
+            const CUSTOM_POSTER_FRAMES = [0, 1, 2]; // harbor chart, blueprint, maritime oddity
+            const randomPosterFrame = CUSTOM_POSTER_FRAMES[Math.floor(Math.random() * CUSTOM_POSTER_FRAMES.length)];
             const poster = game.add.sprite(252, 66, 'posters', randomPosterFrame).setOrigin(0.5);
             poster.setDepth(4);
             poster.setInteractive({ useHandCursor: true });
             // Expose to global for click handler
             window.posterSprite = poster;
             window.posterFrameCount = postersFrameCount;
+            window.customPosterFrames = CUSTOM_POSTER_FRAMES;
             
             poster.on('pointerdown', () => {
-                const next = Math.floor(Math.random() * window.posterFrameCount);
+                const pool = window.customPosterFrames || CUSTOM_POSTER_FRAMES;
+                const next = pool[Math.floor(Math.random() * pool.length)];
                 window.posterSprite.setFrame(next);
             });
 
@@ -4478,11 +4997,13 @@ function toggleBrokerPanel() {
 
             fetchStatus();
             fetchGuestAgents();
+            fetchOpenClawAgents();
         }
 
         function update(time) {
             if (time - lastFetch > FETCH_INTERVAL) { fetchStatus(); lastFetch = time; }
             if (time - lastGuestAgentsFetch > GUEST_AGENTS_FETCH_INTERVAL) { fetchGuestAgents(); lastGuestAgentsFetch = time; }
+            if (time - lastOcAgentsFetch > OC_AGENTS_FETCH_INTERVAL) { fetchOpenClawAgents(); lastOcAgentsFetch = time; }
 
             // 兜底：非 idle 时确保机房动画在播，idle 时静止
             const effectiveStateForServer = pendingDesiredState || currentState;
@@ -4885,5 +5406,6 @@ function toggleBrokerPanel() {
         // 启动游戏
         initGame();
     </script>
+    <script src="/static/dashboard.js?v={{VERSION_TIMESTAMP}}"></script>
 </body>
 </html>

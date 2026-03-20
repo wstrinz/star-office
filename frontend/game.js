@@ -402,14 +402,17 @@ function create() {
 
   // === 海报（来自 LAYOUT）===
   const postersFrameCount = 32;
-  const randomPosterFrame = Math.floor(Math.random() * postersFrameCount);
+  const CUSTOM_POSTER_FRAMES = [0, 1, 2]; // harbor chart, blueprint, maritime oddity
+  const randomPosterFrame = CUSTOM_POSTER_FRAMES[Math.floor(Math.random() * CUSTOM_POSTER_FRAMES.length)];
   const poster = game.add.sprite(LAYOUT.furniture.poster.x, LAYOUT.furniture.poster.y, 'posters', randomPosterFrame).setOrigin(0.5);
   poster.setDepth(LAYOUT.furniture.poster.depth);
   poster.setInteractive({ useHandCursor: true });
   window.posterSprite = poster;
   window.posterFrameCount = postersFrameCount;
+  window.customPosterFrames = CUSTOM_POSTER_FRAMES;
   poster.on('pointerdown', () => {
-    const next = Math.floor(Math.random() * window.posterFrameCount);
+    const pool = window.customPosterFrames || CUSTOM_POSTER_FRAMES;
+    const next = pool[Math.floor(Math.random() * pool.length)];
     window.posterSprite.setFrame(next);
   });
 

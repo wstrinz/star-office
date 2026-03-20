@@ -49,7 +49,9 @@ WORKSPACE_DIR = os.path.dirname(ROOT_DIR)
 OPENCLAW_WORKSPACE = os.environ.get("OPENCLAW_WORKSPACE") or os.path.join(os.path.expanduser("~"), ".openclaw", "workspace")
 IDENTITY_FILE = os.path.join(OPENCLAW_WORKSPACE, "IDENTITY.md")
 GEMINI_SCRIPT = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", "scripts", "gemini_image_generate.py")
-GEMINI_PYTHON = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", ".venv", "bin", "python")
+GEMINI_PYTHON_UNIX = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", ".venv", "bin", "python")
+GEMINI_PYTHON_WIN = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", ".venv", "Scripts", "python.exe")
+GEMINI_PYTHON = GEMINI_PYTHON_WIN if os.name == "nt" and os.path.exists(GEMINI_PYTHON_WIN) else GEMINI_PYTHON_UNIX
 ROOM_REFERENCE_IMAGE = (
     os.path.join(ROOT_DIR, "assets", "room-reference.webp")
     if os.path.exists(os.path.join(ROOT_DIR, "assets", "room-reference.webp"))
@@ -82,6 +84,10 @@ STATE_TO_AREA_MAP = {
 
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="/static")
+
+# Register OpenClaw dashboard API blueprint
+from openclaw_api import openclaw_bp
+app.register_blueprint(openclaw_bp)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.getenv("STAR_OFFICE_SECRET") or "star-office-dev-secret-change-me"
 
 # Session hardening
