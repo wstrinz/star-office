@@ -5722,6 +5722,13 @@ function toggleBrokerPanel() {
                 html += '<div class="adm-detail-text">' + escHtmlSimple(data.detail) + '</div>';
             }
 
+            // Duration (subagents)
+            if (data.durationMs) {
+                var durSec = Math.round(data.durationMs / 1000);
+                var durStr = durSec < 60 ? durSec + 's' : Math.floor(durSec / 60) + 'm ' + (durSec % 60) + 's';
+                html += '<div class="adm-row"><span class="adm-label">Duration</span><span class="adm-value">' + durStr + '</span></div>';
+            }
+
             // Outcome (subagents)
             if (data.outcome && Object.keys(data.outcome).length > 0) {
                 html += '<hr class="adm-separator">';
@@ -5729,6 +5736,13 @@ function toggleBrokerPanel() {
                 if (data.endedReason) {
                     html += '<div class="adm-row"><span class="adm-label">Reason</span><span class="adm-value">' + escHtmlSimple(data.endedReason) + '</span></div>';
                 }
+            }
+
+            // Result summary (subagents — what they actually did)
+            if (data.result) {
+                html += '<hr class="adm-separator">';
+                html += '<div class="adm-row"><span class="adm-label">Result</span></div>';
+                html += '<div class="adm-detail-text" style="max-height:400px;white-space:pre-wrap;">' + escHtmlSimple(data.result) + '</div>';
             }
 
             // Schedule (cron)
