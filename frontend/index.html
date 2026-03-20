@@ -1459,8 +1459,9 @@
             if (memoTitle) memoTitle.textContent = t('memoTitle');
             const guestTitle = document.getElementById('guest-agent-panel-title');
             if (guestTitle) guestTitle.textContent = t('guestTitle');
+            const plaqueTitle = (typeof window.officeNameFromServer !== 'undefined' && window.officeNameFromServer) || t('officeTitle');
             if (window.officePlaqueText && window.officePlaqueText.setText) {
-                window.officePlaqueText.setText(t('officeTitle'));
+                window.officePlaqueText.setText(plaqueTitle);
             }
 
             const coordsBtn = document.getElementById('coords-toggle');
@@ -4091,7 +4092,9 @@ function toggleBrokerPanel() {
                 fontWeight: '900',
                 fontStyle: 'bold',
                 stroke: '#000',
-                strokeThickness: 3
+                strokeThickness: 3,
+                wordWrap: { width: 400 },
+                align: 'center'
             }).setOrigin(0.5);
             // 牌匾两边加个小装饰（跟随牌匾居中）
             game.add.text(plaqueX - 190, plaqueY, '⭐', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
@@ -4664,7 +4667,12 @@ function toggleBrokerPanel() {
                 .then(response => response.json())
                 .then(data => {
                     try {
-
+                        if (data.officeName) {
+                            window.officeNameFromServer = data.officeName;
+                            if (window.officePlaqueText && window.officePlaqueText.setText) {
+                                window.officePlaqueText.setText(data.officeName);
+                            }
+                        }
                         const nextState = normalizeState(data.state);
                         const stateInfo = STATES[nextState] || STATES.idle;
                         // If we're mid-transition, don't restart the path every poll

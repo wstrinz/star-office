@@ -29,12 +29,14 @@ https://github.com/ringhyacinth/Star-Office-UI/blob/master/SKILL.md
 
 ### 方法 2：30 秒手動セットアップ
 
+> **Python 3.10+ が必要です**（コードベースは `X | Y` ユニオン型構文を使用しており、3.9 以前のバージョンではサポートされていません）
+
 ```bash
 # 1) リポジトリをクローン
 git clone https://github.com/ringhyacinth/Star-Office-UI.git
 cd Star-Office-UI
 
-# 2) 依存関係をインストール
+# 2) 依存関係をインストール（Python 3.10+ が必要）
 python3 -m pip install -r backend/requirements.txt
 
 # 3) 状態ファイルを初期化（初回のみ）
@@ -81,7 +83,7 @@ python3 set_state.py idle "待機中"
 7. **モバイル対応** —— スマホからそのまま閲覧可能、外出先からのクイックチェックに最適
 8. **セキュリティ強化** —— サイドバーのパスワード保護、本番環境での弱パスワード拒否、Session Cookie 強化
 9. **柔軟な公開アクセス** —— Cloudflare Tunnel でワンステップ公開、独自ドメイン / リバースプロキシにも対応
-10. **デスクトップペット版** —— オプションの Tauri デスクトップラッパーで、オフィスを透明ウィンドウのデスクトップペットに（下記参照）
+10. **デスクトップペット版** —— オプションの Electron デスクトップラッパーで、オフィスを透明ウィンドウのデスクトップペットに（下記参照）
 
 ---
 
@@ -213,7 +215,7 @@ python3 office-agent-push.py
 
 ## 🖥 デスクトップペット版（任意）
 
-`desktop-pet/` ディレクトリには **Tauri** ベースのデスクトップラッパーが含まれており、ピクセルオフィスを透明ウィンドウのデスクトップペットにできます。
+`desktop-pet/` ディレクトリには **Electron** ベースのデスクトップラッパーが含まれており、ピクセルオフィスを透明ウィンドウのデスクトップペットにできます。
 
 ```bash
 cd desktop-pet
@@ -274,7 +276,7 @@ Star-Office-UI/
 │   ├── join.html
 │   ├── invite.html
 │   └── layout.js
-├── desktop-pet/        # Tauri デスクトップラッパー（任意）
+├── desktop-pet/        # Electron デスクトップラッパー（任意）
 ├── docs/               # ドキュメント & スクリーンショット
 │   └── screenshots/
 ├── office-agent-push.py  # ゲストプッシュスクリプト

@@ -1874,7 +1874,7 @@
 
         function t(key) { return (I18N[uiLang] && I18N[uiLang][key]) || key; }
         function getOfficePlaqueTitle() {
-            return officePlaqueCustomTitle || t('officeTitle');
+            return (window.officeNameFromServer || officePlaqueCustomTitle || t('officeTitle'));
         }
         function refreshOfficePlaqueTitle() {
             const el = document.getElementById('office-plaque-text');
@@ -5474,6 +5474,10 @@ function toggleBrokerPanel() {
                 .then(response => response.json())
                 .then(data => {
                     try {
+                        if (data.officeName) {
+                            window.officeNameFromServer = data.officeName;
+                            refreshOfficePlaqueTitle();
+                        }
                     const nextState = normalizeState(data.state);
                     const stateInfo = STATES[nextState] || STATES.idle;
                     // If we're mid-transition, don't restart the path every poll

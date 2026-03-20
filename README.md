@@ -29,12 +29,14 @@ https://github.com/ringhyacinth/Star-Office-UI/blob/master/SKILL.md
 
 ### 方式二：30 秒手动部署
 
+> **环境要求：Python 3.10+**（代码使用了 `X | Y` union type 语法，不支持 3.9 及更低版本）
+
 ```bash
 # 1) 下载仓库
 git clone https://github.com/ringhyacinth/Star-Office-UI.git
 cd Star-Office-UI
 
-# 2) 安装依赖
+# 2) 安装依赖（需要 Python 3.10+）
 python3 -m pip install -r backend/requirements.txt
 
 # 3) 准备状态文件（首次）
@@ -45,7 +47,7 @@ cd backend
 python3 app.py
 ```
 
-打开 **http://127.0.0.1:19000**，然后试试切状态：
+打开 **http://127.0.0.1:19000** 然后试试切状态：
 
 ```bash
 python3 set_state.py writing "正在整理文档"
@@ -82,7 +84,7 @@ python3 set_state.py idle "待命中"
 7. **移动端适配** —— 手机直接打开即可查看，适合外出时快速瞄一眼
 8. **安全加固** —— 侧边栏密码保护、生产环境弱密码拦截、Session Cookie 加固
 9. **灵活公网访问** —— 推荐 Cloudflare Tunnel 一键公网化，也可用自有域名 / 反向代理
-10. **桌面宠物版** —— 可选的 Tauri 桌面封装，把办公室变成透明窗口的桌面宠物（见下方说明）
+10. **桌面宠物版** —— 可选的 Electron 桌面封装，把办公室变成透明窗口的桌面宠物（见下方说明）
 
 ---
 
@@ -214,7 +216,7 @@ python3 office-agent-push.py
 
 ## 🖥 桌面宠物版（可选）
 
-`desktop-pet/` 目录提供了一个基于 **Tauri** 的桌面封装版本，可以把像素办公室变成一个透明窗口的桌面宠物。
+`desktop-pet/` 目录提供了一个基于 **Electron** 的桌面封装版本，可以把像素办公室变成一个透明窗口的桌面宠物。
 
 ```bash
 cd desktop-pet
@@ -275,7 +277,7 @@ Star-Office-UI/
 │   ├── join.html
 │   ├── invite.html
 │   └── layout.js
-├── desktop-pet/        # Tauri 桌面宠物版（可选）
+├── desktop-pet/        # Electron 桌面宠物版（可选）
 ├── docs/               # 文档与截图
 │   └── screenshots/
 ├── office-agent-push.py  # 访客推送脚本

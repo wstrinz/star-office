@@ -46,6 +46,8 @@ FRONTEND_PATH = Path(FRONTEND_DIR)
 ASSET_ALLOWED_EXTS = {".png", ".webp", ".jpg", ".jpeg", ".gif", ".svg", ".avif"}
 ASSET_TEMPLATE_ZIP = os.path.join(ROOT_DIR, "assets-replace-template.zip")
 WORKSPACE_DIR = os.path.dirname(ROOT_DIR)
+OPENCLAW_WORKSPACE = os.environ.get("OPENCLAW_WORKSPACE") or os.path.join(os.path.expanduser("~"), ".openclaw", "workspace")
+IDENTITY_FILE = os.path.join(OPENCLAW_WORKSPACE, "IDENTITY.md")
 GEMINI_SCRIPT = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", "scripts", "gemini_image_generate.py")
 GEMINI_PYTHON = os.path.join(WORKSPACE_DIR, "skills", "gemini-image-generate", ".venv", "bin", "python")
 ROOM_REFERENCE_IMAGE = (
@@ -197,6 +199,22 @@ def load_state():
         pass
 
     return state
+
+
+def get_office_name_from_identity():
+    """Read office display name from OpenClaw workspace IDENTITY.md (Name field) -> 'XXX的办公室'."""
+    if not os.path.isfile(IDENTITY_FILE):
+        return None
+    try:
+        with open(IDENTITY_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+        m = re.search(r"-\s*\*\*Name:\*\*\s*(.+)", content)
+        if m:
+            name = m.group(1).strip().replace("\r", "").split("\n")[0].strip()
+            return f"{name}的办公室" if name else None
+    except Exception:
+        pass
+    return None
 
 
 def save_state(state: dict):
@@ -1127,8 +1145,11 @@ def leave_agent():
 
 @app.route("/status", methods=["GET"])
 def get_status():
-    """Get current main state (backward compatibility)"""
+    """Get current main state (backward compatibility). Optionally include officeName from IDENTITY.md."""
     state = load_state()
+    office_name = get_office_name_from_identity()
+    if office_name:
+        state["officeName"] = office_name
     return jsonify(state)
 
 
