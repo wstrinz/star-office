@@ -4285,7 +4285,7 @@ function toggleBrokerPanel() {
                     sprite.setDepth(2500);
 
                     // Name label
-                    var shortName = name.length > 16 ? name.substring(0, 14) + '…' : name;
+                    var shortName = name.length > 24 ? name.substring(0, 22) + '…' : name;
                     var nameText = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 110, shortName, {
                         fontFamily: 'ArkPixel, monospace',
                         fontSize: '11px',
@@ -4296,24 +4296,29 @@ function toggleBrokerPanel() {
                         padding: { x: 3, y: 1 }
                     }).setOrigin(0.5).setDepth(2501);
 
-                    // Task bubble (shows briefly, then fades)
-                    var taskText = (agent.detail || '').substring(0, 40);
+                    // Task bubble (persistent while active, fades when idle)
+                    var taskText = (agent.detail || '').substring(0, 80);
                     var taskBubble = null;
                     if (taskText) {
-                        var tbBg = game.add.rectangle(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, taskText.length * 6 + 16, 20, 0x161b22, 0.9);
+                        var bubbleW = Math.min(300, taskText.length * 5.5 + 20);
+                        var bubbleH = Math.max(22, Math.ceil(taskText.length / 45) * 14 + 10);
+                        var tbBg = game.add.rectangle(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, bubbleW, bubbleH, 0x161b22, 0.9);
                         tbBg.setStrokeStyle(1, color, 0.6);
                         var tbTxt = game.add.text(OC_DOOR_POS.x, OC_DOOR_POS.y - 130, taskText, {
-                            fontFamily: 'ArkPixel, monospace', fontSize: '9px', fill: '#c9d1d9'
+                            fontFamily: 'ArkPixel, monospace', fontSize: '9px', fill: '#c9d1d9',
+                            wordWrap: { width: 280 }, align: 'center'
                         }).setOrigin(0.5);
                         taskBubble = game.add.container(0, 0, [tbBg, tbTxt]).setDepth(2502);
-                        // Fade out task bubble after 5 seconds
-                        setTimeout(function() {
-                            if (taskBubble) {
-                                game.tweens.add({ targets: taskBubble, alpha: 0, duration: 1000, onComplete: function() {
-                                    if (taskBubble) { taskBubble.destroy(); }
-                                }});
-                            }
-                        }, 5000);
+                        // Only fade out when agent is idle
+                        if (state === 'idle') {
+                            setTimeout(function() {
+                                if (taskBubble) {
+                                    game.tweens.add({ targets: taskBubble, alpha: 0, duration: 1000, onComplete: function() {
+                                        if (taskBubble) { taskBubble.destroy(); }
+                                    }});
+                                }
+                            }, 5000);
+                        }
                     }
 
                     // State indicator dot
@@ -4401,12 +4406,23 @@ function toggleBrokerPanel() {
                 var stateMap = { executing: 'writing', writing: 'writing', researching: 'writing', idle: 'idle', error: 'error', syncing: 'syncing' };
                 var mappedState = stateMap[ocState] || 'idle';
 
+                // POST to /set_state to actually move the main character (only if state changed)
+                if (typeof window._lastPostedOcState === 'undefined') window._lastPostedOcState = null;
+                if (mappedState !== window._lastPostedOcState) {
+                    window._lastPostedOcState = mappedState;
+                    fetch('/set_state', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ state: mappedState, detail: mainAgent.detail || '' })
+                    }).catch(function(e) { console.warn('set_state POST failed:', e); });
+                }
+
                 // Update status text detail with what Cali is actually doing
-                if (mainAgent.detail && statusText) {
+                if (statusText) {
                     var stateInfo = STATES[mappedState] || STATES.idle;
-                    var ocDetail = mainAgent.detail;
-                    if (ocDetail.length > 60) ocDetail = ocDetail.substring(0, 57) + '…';
-                    var newLine = '[' + stateInfo.name + '] ' + ocDetail;
+                    var ocDetail = mainAgent.detail || '';
+                    if (ocDetail.length > 120) ocDetail = ocDetail.substring(0, 117) + '…';
+                    var newLine = '[' + stateInfo.name + '] ' + (ocDetail ? 'Working on: ' + ocDetail : (stateInfo.name || 'Cali is here, office is open.'));
                     if (typewriterTarget !== newLine) {
                         typewriterTarget = newLine;
                         typewriterText = '';

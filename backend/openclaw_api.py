@@ -447,7 +447,7 @@ def openclaw_agents_combined():
                 sa_state = "error"
             else:
                 # Recently finished — show briefly then they'll age out
-                if now_ms - ended_at < 5 * 60 * 1000:
+                if now_ms - ended_at < 30 * 60 * 1000:
                     sa_state = "idle"
                 else:
                     continue  # Don't show old finished agents

@@ -187,6 +187,16 @@
     return '<span class="oc-badge ' + cls + '">' + escHtml(state || 'idle') + '</span>';
   }
 
+  function cleanSessionKey(key) {
+    // Clean up raw session keys like "agent:main:subagent:3e73235b-..." to something readable
+    if (!key) return '?';
+    // Remove common prefixes
+    var cleaned = key.replace(/^agent:main:/, '').replace(/^agent:/, '');
+    // Shorten UUIDs
+    cleaned = cleaned.replace(/([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '$1…');
+    return cleaned;
+  }
+
   function renderSessions(sessions) {
     var el = document.getElementById('oc-sessions-list');
     if (!el) return;
@@ -200,13 +210,13 @@
     if (!shown.length) shown = sessions.slice(0, 5);
 
     el.innerHTML = shown.map(function (s) {
-      var name = s.displayName || s.sessionKey || '?';
-      // Clean up display name
-      if (name.length > 50) name = name.substring(0, 47) + '…';
+      var name = s.displayName || cleanSessionKey(s.sessionKey);
+      var truncName = name.length > 50 ? name.substring(0, 47) + '…' : name;
+      var fullName = name;
       var model = (s.model || '').split('/').pop();
-      return '<div class="oc-session-row">' +
+      return '<div class="oc-session-row oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
         sessionStatusDot(s.status) +
-        '<span class="oc-session-name" title="' + escHtml(s.sessionKey) + '">' + escHtml(name) + '</span>' +
+        '<span class="oc-session-name oc-truncatable" title="' + escHtml(s.sessionKey) + '" data-full="' + escHtml(fullName) + '" data-short="' + escHtml(truncName) + '">' + escHtml(truncName) + '</span>' +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '<span class="oc-session-time">' + escHtml(s.updatedAtRelative || '—') + '</span>' +
         '<span class="oc-session-tok">' + fmtTokens(s.totalTokens) + '</span>' +
@@ -233,16 +243,16 @@
       var statusCls = r.status === 'ok' ? 'oc-sa-ok' : (r.status === 'error' ? 'oc-sa-err' : 'oc-sa-running');
       var statusIcon = r.status === 'ok' ? '✓' : (r.status === 'error' ? '✗' : '◉');
       var model = (r.model || '').split('/').pop();
-      var task = r.task || '';
-      if (task.length > 100) task = task.substring(0, 97) + '…';
-      return '<div class="oc-sa-card ' + statusCls + '">' +
+      var fullTask = r.task || '';
+      var truncTask = fullTask.length > 300 ? fullTask.substring(0, 297) + '…' : fullTask;
+      return '<div class="oc-sa-card ' + statusCls + ' oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
         '<div class="oc-sa-header">' +
           '<span class="oc-sa-icon">' + statusIcon + '</span>' +
           '<span class="oc-sa-label">' + escHtml(r.label || r.runId || '?') + '</span>' +
           (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
         '</div>' +
         '<div class="oc-sa-time">' + escHtml(r.createdAtRelative || '—') + '</div>' +
-        (task ? '<div class="oc-sa-task" title="' + escHtml(r.task || '') + '">' + escHtml(task) + '</div>' : '') +
+        (fullTask ? '<div class="oc-sa-task oc-truncatable" data-full="' + escHtml(fullTask) + '" data-short="' + escHtml(truncTask) + '">' + escHtml(truncTask) + '</div>' : '') +
       '</div>';
     }).join('');
   }
@@ -258,14 +268,14 @@
     el.innerHTML = agents.map(function (a) {
       var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : '⏰');
       var model = (a.model || '').split('/').pop();
-      var detail = a.detail || '';
-      if (detail.length > 60) detail = detail.substring(0, 57) + '…';
-      return '<div class="oc-agent-row">' +
+      var fullDetail = a.detail || '';
+      var truncDetail = fullDetail.length > 200 ? fullDetail.substring(0, 197) + '…' : fullDetail;
+      return '<div class="oc-agent-row oc-expandable" onclick="this.classList.toggle(\'expanded\')">' +
         '<span class="oc-agent-icon">' + icon + '</span>' +
         '<span class="oc-agent-name">' + escHtml(a.name) + '</span>' +
         agentStateBadge(a.state) +
         (model ? '<span class="oc-model-tag">' + escHtml(model) + '</span>' : '') +
-        '<span class="oc-agent-detail" title="' + escHtml(a.detail || '') + '">' + escHtml(detail) + '</span>' +
+        '<span class="oc-agent-detail oc-truncatable" data-full="' + escHtml(fullDetail) + '" data-short="' + escHtml(truncDetail) + '">' + escHtml(truncDetail) + '</span>' +
       '</div>';
     }).join('');
   }
@@ -375,6 +385,32 @@
       document.body.appendChild(toggle);
       document.body.appendChild(panel);
     }
+
+    // Click-to-expand: toggle truncated text in expandable rows
+    panel.addEventListener('click', function (e) {
+      var expandable = e.target.closest('.oc-expandable');
+      if (!expandable) return;
+      var truncatables = expandable.querySelectorAll('.oc-truncatable');
+      var isExpanded = expandable.classList.contains('expanded');
+      truncatables.forEach(function (el) {
+        if (isExpanded) {
+          el.textContent = el.getAttribute('data-full') || el.textContent;
+        } else {
+          el.textContent = el.getAttribute('data-short') || el.textContent;
+        }
+      });
+    });
+
+    // Add expand/collapse styles
+    var expandStyle = document.createElement('style');
+    expandStyle.textContent =
+      '.oc-expandable { cursor: pointer; transition: background 0.2s; }' +
+      '.oc-expandable:hover { background: rgba(88,166,255,0.08); }' +
+      '.oc-agent-detail, .oc-sa-task { word-wrap: break-word; white-space: normal; }' +
+      '.oc-expandable.expanded .oc-agent-detail,' +
+      '.oc-expandable.expanded .oc-sa-task,' +
+      '.oc-expandable.expanded .oc-session-name { white-space: normal !important; word-break: break-all; overflow: visible !important; text-overflow: unset !important; max-height: none !important; }';
+    document.head.appendChild(expandStyle);
 
     // Listen for manual refresh
     document.addEventListener('oc-refresh', function () { refreshAll(); });
