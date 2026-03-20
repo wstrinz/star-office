@@ -82,7 +82,7 @@ function updateLoadingProgress() {
     loadingProgressBar.style.width = percent + '%';
   }
   if (loadingText) {
-    loadingText.textContent = `Loading Star's Pixel Office... ${percent}%`;
+    loadingText.textContent = `Loading Star\'s Pixel Office... ${percent}%`;
   }
 }
 
