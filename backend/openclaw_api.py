@@ -380,6 +380,9 @@ def openclaw_subagents():
     for run_id, r in runs.items():
         created_at = r.get("createdAt", 0)
         task = r.get("task", "")
+        result_text = r.get("frozenResultText", "")
+        ended_at = r.get("endedAt", 0)
+        duration_ms = (ended_at - created_at) if ended_at and created_at else None
         result.append({
             "runId": run_id,
             "label": r.get("label", ""),
@@ -389,8 +392,10 @@ def openclaw_subagents():
             "task": task[:200] if task else "",
             "status": r.get("outcome", {}).get("status", "") if r.get("outcome") else (r.get("status", "running")),
             "runtime": r.get("runtime", ""),
-            "endedAt": r.get("endedAt", 0),
+            "endedAt": ended_at,
             "endedReason": r.get("endedReason", ""),
+            "result": result_text[:500] if result_text else "",
+            "durationMs": duration_ms,
         })
 
     # Sort by createdAt descending
@@ -470,6 +475,7 @@ def openclaw_agents_combined():
                 sa_state = "writing"
 
         task = r.get("task", "")
+        result_text = r.get("frozenResultText", "")
         agents.append({
             "name": r.get("label", run_id[:8]),
             "type": "subagent",
@@ -480,6 +486,8 @@ def openclaw_agents_combined():
             "tokens": 0,
             "runId": run_id,
             "endedAt": ended_at,
+            "result": result_text[:300] if result_text else "",
+            "endedReason": r.get("endedReason", ""),
         })
 
     # 3. Currently-running cron jobs
@@ -622,6 +630,11 @@ def openclaw_agent_detail(name):
                 else:
                     sa_state = "writing"
 
+            # Duration
+            duration_ms = None
+            if ended_at and created_at:
+                duration_ms = ended_at - created_at
+
             return jsonify({
                 "name": label,
                 "type": "subagent",
@@ -633,9 +646,13 @@ def openclaw_agent_detail(name):
                 "startedAtRelative": _relative_time_label(created_at),
                 "endedAt": ended_at,
                 "endedAtRelative": _relative_time_label(ended_at) if ended_at else None,
+                "durationMs": duration_ms,
                 "endedReason": r.get("endedReason", ""),
                 "outcome": outcome,
                 "runId": run_id,
+                "result": r.get("frozenResultText", ""),
+                "controllerSession": r.get("controllerSessionKey", ""),
+                "requesterDisplay": r.get("requesterDisplayKey", ""),
             })
 
     # Check cron jobs
