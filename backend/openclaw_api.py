@@ -616,12 +616,14 @@ def _read_rate_limits_config():
     """Read rate_limits_config.json with defaults."""
     defaults = {
         "anthropic": {
+            "sessionWindowHours": 5,
             "fiveHourTokenLimit": 300000,
             "weeklyTokenLimit": 5000000,
             "tier": "tier-2",
             "label": "Anthropic (Claude)",
         },
         "openai": {
+            "sessionWindowHours": 5,
             "fiveHourTokenLimit": 500000,
             "weeklyTokenLimit": 10000000,
             "tier": "plus",
@@ -646,8 +648,236 @@ def _read_rate_limits_config():
         return defaults
 
 
-def _parse_session_jsonl_usage(session_path, cutoff_ms):
-    """Parse a session JSONL file and extract per-message token usage entries after cutoff.
+# ---------------------------------------------------------------------------
+# Data source: Codex SQLite (OpenAI)
+# ---------------------------------------------------------------------------
+
+import sqlite3
+
+def _codex_sqlite_path():
+    """Return path to Codex state SQLite database."""
+    return os.path.join(os.path.expanduser("~"), ".codex", "state_5.sqlite")
+
+
+def _read_codex_usage(session_cutoff_s, week_cutoff_s):
+    """Read token usage from Codex SQLite for rolling windows.
+
+    Returns {
+        "session": {"total_tokens": N, "by_model": {model: tokens}},
+        "weekly":  {"total_tokens": N, "by_model": {model: tokens}},
+        "available": bool,
+        "error": str or None,
+        "thread_count_session": int,
+        "thread_count_weekly": int,
+    }
+    """
+    db_path = _codex_sqlite_path()
+    result = {
+        "session": {"total_tokens": 0, "by_model": {}},
+        "weekly": {"total_tokens": 0, "by_model": {}},
+        "available": False,
+        "error": None,
+        "thread_count_session": 0,
+        "thread_count_weekly": 0,
+    }
+    if not os.path.isfile(db_path):
+        result["error"] = "Codex SQLite not found"
+        return result
+    try:
+        db = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        db.execute("PRAGMA query_only = ON")
+
+        # Session window
+        row = db.execute(
+            "SELECT COALESCE(SUM(tokens_used), 0), COUNT(*) FROM threads WHERE updated_at > ?",
+            (int(session_cutoff_s),),
+        ).fetchone()
+        result["session"]["total_tokens"] = row[0] or 0
+        result["thread_count_session"] = row[1] or 0
+
+        # Weekly window
+        row = db.execute(
+            "SELECT COALESCE(SUM(tokens_used), 0), COUNT(*) FROM threads WHERE updated_at > ?",
+            (int(week_cutoff_s),),
+        ).fetchone()
+        result["weekly"]["total_tokens"] = row[0] or 0
+        result["thread_count_weekly"] = row[1] or 0
+
+        # Per-model breakdown (use source field as proxy; Codex tracks model_provider not model name)
+        # Group by source for session window
+        for row in db.execute(
+            "SELECT source, COALESCE(SUM(tokens_used), 0) FROM threads WHERE updated_at > ? GROUP BY source",
+            (int(session_cutoff_s),),
+        ).fetchall():
+            src = row[0] or "unknown"
+            result["session"]["by_model"][src] = row[1] or 0
+
+        for row in db.execute(
+            "SELECT source, COALESCE(SUM(tokens_used), 0) FROM threads WHERE updated_at > ? GROUP BY source",
+            (int(week_cutoff_s),),
+        ).fetchall():
+            src = row[0] or "unknown"
+            result["weekly"]["by_model"][src] = row[1] or 0
+
+        db.close()
+        result["available"] = True
+    except Exception as e:
+        result["error"] = str(e)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Data source: Claude Code session JSONLs (Anthropic)
+# ---------------------------------------------------------------------------
+
+def _claude_code_sessions_dir():
+    """Return path to Claude Code project sessions directory."""
+    return os.path.join(os.path.expanduser("~"), ".claude", "projects")
+
+
+def _parse_claude_code_jsonl(file_path, cutoff_s):
+    """Parse a Claude Code session JSONL file for assistant message usage after cutoff.
+
+    Returns list of {ts_s, model, input_tokens, output_tokens, cache_read, cache_write, total_tokens}.
+    """
+    entries = []
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                # Only care about assistant messages with usage
+                if obj.get("type") != "assistant":
+                    continue
+
+                msg = obj.get("message", {})
+                if not msg:
+                    continue
+                usage = msg.get("usage", {})
+                if not usage:
+                    continue
+
+                # Parse timestamp from obj.timestamp (ISO format)
+                ts_str = obj.get("timestamp", "")
+                if not ts_str:
+                    continue
+                try:
+                    ts_s = datetime.fromisoformat(
+                        ts_str.replace("Z", "+00:00")
+                    ).timestamp()
+                except Exception:
+                    continue
+
+                if ts_s < cutoff_s:
+                    continue
+
+                input_t = usage.get("input_tokens", 0) or 0
+                output_t = usage.get("output_tokens", 0) or 0
+                cache_read = usage.get("cache_read_input_tokens", 0) or 0
+                cache_write = usage.get("cache_creation_input_tokens", 0) or 0
+
+                model = msg.get("model", "") or ""
+
+                entries.append({
+                    "ts_s": ts_s,
+                    "model": model,
+                    "input_tokens": input_t,
+                    "output_tokens": output_t,
+                    "cache_read": cache_read,
+                    "cache_write": cache_write,
+                    "total_tokens": input_t + output_t + cache_read + cache_write,
+                })
+    except Exception:
+        pass
+    return entries
+
+
+def _read_claude_code_usage(session_cutoff_s, week_cutoff_s):
+    """Read token usage from Claude Code session files for rolling windows.
+
+    Returns {
+        "session": {"input_tokens": N, "output_tokens": N, "cache_read": N, "cache_write": N, "total_tokens": N, "by_model": {}},
+        "weekly":  {"input_tokens": N, "output_tokens": N, "cache_read": N, "cache_write": N, "total_tokens": N, "by_model": {}},
+        "available": bool,
+        "error": str or None,
+        "files_scanned": int,
+        "entries_found": int,
+    }
+    """
+    projects_dir = _claude_code_sessions_dir()
+    result = {
+        "session": {"input_tokens": 0, "output_tokens": 0, "cache_read": 0, "cache_write": 0, "total_tokens": 0, "by_model": {}},
+        "weekly": {"input_tokens": 0, "output_tokens": 0, "cache_read": 0, "cache_write": 0, "total_tokens": 0, "by_model": {}},
+        "available": False,
+        "error": None,
+        "files_scanned": 0,
+        "entries_found": 0,
+    }
+    if not os.path.isdir(projects_dir):
+        result["error"] = "Claude Code projects dir not found"
+        return result
+
+    min_cutoff_s = min(session_cutoff_s, week_cutoff_s)
+    files_scanned = 0
+    total_entries = 0
+
+    try:
+        for jsonl_path in glob.glob(os.path.join(projects_dir, "**", "*.jsonl"), recursive=True):
+            # Skip files not modified since the wider cutoff window
+            try:
+                mtime_s = os.path.getmtime(jsonl_path)
+                if mtime_s < min_cutoff_s:
+                    continue
+            except Exception:
+                continue
+
+            files_scanned += 1
+            entries = _parse_claude_code_jsonl(jsonl_path, min_cutoff_s)
+            total_entries += len(entries)
+
+            for e in entries:
+                # Weekly window
+                if e["ts_s"] >= week_cutoff_s:
+                    w = result["weekly"]
+                    w["input_tokens"] += e["input_tokens"]
+                    w["output_tokens"] += e["output_tokens"]
+                    w["cache_read"] += e["cache_read"]
+                    w["cache_write"] += e["cache_write"]
+                    w["total_tokens"] += e["total_tokens"]
+                    model = e["model"] or "unknown"
+                    w["by_model"][model] = w["by_model"].get(model, 0) + e["total_tokens"]
+
+                # Session window
+                if e["ts_s"] >= session_cutoff_s:
+                    s = result["session"]
+                    s["input_tokens"] += e["input_tokens"]
+                    s["output_tokens"] += e["output_tokens"]
+                    s["cache_read"] += e["cache_read"]
+                    s["cache_write"] += e["cache_write"]
+                    s["total_tokens"] += e["total_tokens"]
+                    model = e["model"] or "unknown"
+                    s["by_model"][model] = s["by_model"].get(model, 0) + e["total_tokens"]
+
+        result["available"] = True
+        result["files_scanned"] = files_scanned
+        result["entries_found"] = total_entries
+    except Exception as e:
+        result["error"] = str(e)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Data source: OpenClaw sessions + cron (existing)
+# ---------------------------------------------------------------------------
+
+def _parse_openclaw_session_jsonl_usage(session_path, cutoff_ms):
+    """Parse an OpenClaw session JSONL file and extract per-message token usage entries after cutoff.
 
     Returns list of {ts_ms, provider, model, input_tokens, output_tokens, total_tokens}.
     """
@@ -702,22 +932,18 @@ def _parse_session_jsonl_usage(session_path, cutoff_ms):
     return entries
 
 
-def _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms):
-    """Collect all token usage entries from cron runs and session JSONL files
-    within the rolling windows.
+def _collect_openclaw_rolling_usage(session_cutoff_ms, week_cutoff_ms):
+    """Collect token usage from OpenClaw cron runs and session JSONL files.
 
-    Returns {provider: {5h: {input, output, total}, 7d: {input, output, total}}}.
+    Returns {provider: {"session": {input, output, total}, "7d": {input, output, total}}}.
     """
-    # Use the wider cutoff to collect everything, then filter per window
-    min_cutoff = min(five_hour_cutoff_ms, week_cutoff_ms)
-
-    # Structure: provider -> {"5h": {input, output, total}, "7d": {input, output, total}}
+    min_cutoff = min(session_cutoff_ms, week_cutoff_ms)
     result = {}
 
     def _init_provider(p):
         if p not in result:
             result[p] = {
-                "5h": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+                "session": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
                 "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             }
 
@@ -727,12 +953,12 @@ def _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms):
             result[provider]["7d"]["input_tokens"] += input_t
             result[provider]["7d"]["output_tokens"] += output_t
             result[provider]["7d"]["total_tokens"] += total_t
-        if ts_ms >= five_hour_cutoff_ms:
-            result[provider]["5h"]["input_tokens"] += input_t
-            result[provider]["5h"]["output_tokens"] += output_t
-            result[provider]["5h"]["total_tokens"] += total_t
+        if ts_ms >= session_cutoff_ms:
+            result[provider]["session"]["input_tokens"] += input_t
+            result[provider]["session"]["output_tokens"] += output_t
+            result[provider]["session"]["total_tokens"] += total_t
 
-    # 1. Cron runs — each JSONL line is a completed run
+    # 1. Cron runs
     if os.path.isdir(RUNS_DIR):
         for path in glob.glob(os.path.join(RUNS_DIR, "*.jsonl")):
             try:
@@ -762,18 +988,16 @@ def _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms):
             except Exception:
                 continue
 
-    # 2. Session JSONL files — per-message granularity
+    # 2. OpenClaw session JSONL files
     if os.path.isdir(SESSIONS_DIR):
         for path in glob.glob(os.path.join(SESSIONS_DIR, "*.jsonl")):
-            # Quick check: skip files not modified since the wider cutoff
             try:
                 mtime_ms = os.path.getmtime(path) * 1000
                 if mtime_ms < min_cutoff:
                     continue
             except Exception:
                 continue
-
-            entries = _parse_session_jsonl_usage(path, min_cutoff)
+            entries = _parse_openclaw_session_jsonl_usage(path, min_cutoff)
             for e in entries:
                 _add_entry(e["provider"], e["ts_ms"], e["input_tokens"], e["output_tokens"], e["total_tokens"])
 
@@ -782,80 +1006,217 @@ def _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms):
 
 @openclaw_bp.route("/openclaw/rate-limits", methods=["GET"])
 def openclaw_rate_limits():
-    """Rolling token usage windows for rate limit tracking."""
-    now_ms = time.time() * 1000
-    five_hour_cutoff_ms = now_ms - 5 * 3600 * 1000
+    """Rolling token usage windows for rate limit tracking.
+
+    Aggregates from three data sources:
+    1. Codex SQLite (OpenAI actual usage)
+    2. Claude Code session JSONLs (Anthropic actual usage)
+    3. OpenClaw sessions + cron runs (supplementary — adds to Anthropic totals)
+    """
+    now_s = time.time()
+    now_ms = now_s * 1000
+    config = _read_rate_limits_config()
+
+    # Per-provider session windows (configurable)
+    anthropic_session_hours = config.get("anthropic", {}).get("sessionWindowHours", 5)
+    openai_session_hours = config.get("openai", {}).get("sessionWindowHours", 5)
+
+    week_cutoff_s = now_s - 7 * 86400
     week_cutoff_ms = now_ms - 7 * 86400 * 1000
 
-    config = _read_rate_limits_config()
-    usage_by_provider = _collect_rolling_usage(five_hour_cutoff_ms, week_cutoff_ms)
+    # --- 1. Codex SQLite (OpenAI) ---
+    openai_session_cutoff_s = now_s - openai_session_hours * 3600
+    codex_data = _read_codex_usage(openai_session_cutoff_s, week_cutoff_s)
 
+    # --- 2. Claude Code sessions (Anthropic) ---
+    anthropic_session_cutoff_s = now_s - anthropic_session_hours * 3600
+    claude_data = _read_claude_code_usage(anthropic_session_cutoff_s, week_cutoff_s)
+
+    # --- 3. OpenClaw sessions + cron (supplementary) ---
+    # Use the wider of the two session windows for OpenClaw data collection
+    max_session_hours = max(anthropic_session_hours, openai_session_hours)
+    openclaw_session_cutoff_ms = now_ms - max_session_hours * 3600 * 1000
+    openclaw_data = _collect_openclaw_rolling_usage(openclaw_session_cutoff_ms, week_cutoff_ms)
+
+    # --- Build response ---
     response = {}
     warnings = []
-    worst_percent = 0  # Track the highest utilization across all windows
+    worst_percent = 0
 
-    for provider_key in ("anthropic", "openai"):
-        pconfig = config.get(provider_key, {})
-        five_h_limit = pconfig.get("fiveHourTokenLimit", 0)
-        weekly_limit = pconfig.get("weeklyTokenLimit", 0)
-        label = pconfig.get("label", provider_key.title())
+    # === ANTHROPIC ===
+    anthropic_config = config.get("anthropic", {})
+    session_limit = anthropic_config.get("fiveHourTokenLimit", 0)
+    weekly_limit = anthropic_config.get("weeklyTokenLimit", 0)
+    label = anthropic_config.get("label", "Anthropic (Claude)")
 
-        usage = usage_by_provider.get(provider_key, {
-            "5h": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
-            "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
-        })
+    # Claude Code is the primary source; OpenClaw Anthropic sessions are additive
+    oc_anthropic = openclaw_data.get("anthropic", {
+        "session": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+        "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+    })
 
-        five_h = usage["5h"]
-        seven_d = usage["7d"]
+    anthropic_session_total = (
+        claude_data["session"]["total_tokens"] + oc_anthropic["session"]["total_tokens"]
+    )
+    anthropic_weekly_total = (
+        claude_data["weekly"]["total_tokens"] + oc_anthropic["7d"]["total_tokens"]
+    )
+    anthropic_session_input = (
+        claude_data["session"]["input_tokens"] + oc_anthropic["session"]["input_tokens"]
+    )
+    anthropic_session_output = (
+        claude_data["session"]["output_tokens"] + oc_anthropic["session"]["output_tokens"]
+    )
+    anthropic_weekly_input = (
+        claude_data["weekly"]["input_tokens"] + oc_anthropic["7d"]["input_tokens"]
+    )
+    anthropic_weekly_output = (
+        claude_data["weekly"]["output_tokens"] + oc_anthropic["7d"]["output_tokens"]
+    )
 
-        five_h_pct = round(five_h["total_tokens"] / five_h_limit * 100, 1) if five_h_limit > 0 else 0
-        weekly_pct = round(seven_d["total_tokens"] / weekly_limit * 100, 1) if weekly_limit > 0 else 0
+    session_pct = round(anthropic_session_total / session_limit * 100, 1) if session_limit > 0 else 0
+    weekly_pct = round(anthropic_weekly_total / weekly_limit * 100, 1) if weekly_limit > 0 else 0
+    worst_percent = max(worst_percent, session_pct, weekly_pct)
 
-        worst_percent = max(worst_percent, five_h_pct, weekly_pct)
-
-        # Calculate time until window resets
-        five_h_reset_ms = five_hour_cutoff_ms + 5 * 3600 * 1000  # when the oldest entry in window rolls off
-        week_reset_ms = week_cutoff_ms + 7 * 86400 * 1000
-
-        response[provider_key] = {
-            "label": label,
-            "tier": pconfig.get("tier", ""),
-            "rolling5h": {
-                "inputTokens": five_h["input_tokens"],
-                "outputTokens": five_h["output_tokens"],
-                "totalTokens": five_h["total_tokens"],
-                "windowStart": datetime.fromtimestamp(five_hour_cutoff_ms / 1000).isoformat(),
-                "estimatedLimit": five_h_limit,
-                "percentUsed": five_h_pct,
-                "remainingTokens": max(0, five_h_limit - five_h["total_tokens"]) if five_h_limit > 0 else None,
+    anthropic_session_cutoff_ms = anthropic_session_cutoff_s * 1000
+    response["anthropic"] = {
+        "label": label,
+        "tier": anthropic_config.get("tier", ""),
+        "sessionWindowHours": anthropic_session_hours,
+        "rolling5h": {
+            "inputTokens": anthropic_session_input,
+            "outputTokens": anthropic_session_output,
+            "cacheRead": claude_data["session"].get("cache_read", 0),
+            "cacheWrite": claude_data["session"].get("cache_write", 0),
+            "totalTokens": anthropic_session_total,
+            "windowStart": datetime.fromtimestamp(anthropic_session_cutoff_s).isoformat(),
+            "windowHours": anthropic_session_hours,
+            "estimatedLimit": session_limit,
+            "percentUsed": session_pct,
+            "remainingTokens": max(0, session_limit - anthropic_session_total) if session_limit > 0 else None,
+        },
+        "rollingWeek": {
+            "inputTokens": anthropic_weekly_input,
+            "outputTokens": anthropic_weekly_output,
+            "cacheRead": claude_data["weekly"].get("cache_read", 0),
+            "cacheWrite": claude_data["weekly"].get("cache_write", 0),
+            "totalTokens": anthropic_weekly_total,
+            "windowStart": datetime.fromtimestamp(week_cutoff_s).isoformat(),
+            "estimatedLimit": weekly_limit,
+            "percentUsed": weekly_pct,
+            "remainingTokens": max(0, weekly_limit - anthropic_weekly_total) if weekly_limit > 0 else None,
+        },
+        "dataSources": {
+            "claudeCode": {
+                "available": claude_data["available"],
+                "sessionTokens": claude_data["session"]["total_tokens"],
+                "weeklyTokens": claude_data["weekly"]["total_tokens"],
+                "filesScanned": claude_data.get("files_scanned", 0),
+                "entriesFound": claude_data.get("entries_found", 0),
+                "error": claude_data.get("error"),
+                "byModel": claude_data["session"].get("by_model", {}),
             },
-            "rollingWeek": {
-                "inputTokens": seven_d["input_tokens"],
-                "outputTokens": seven_d["output_tokens"],
-                "totalTokens": seven_d["total_tokens"],
-                "windowStart": datetime.fromtimestamp(week_cutoff_ms / 1000).isoformat(),
-                "estimatedLimit": weekly_limit,
-                "percentUsed": weekly_pct,
-                "remainingTokens": max(0, weekly_limit - seven_d["total_tokens"]) if weekly_limit > 0 else None,
+            "openclaw": {
+                "sessionTokens": oc_anthropic["session"]["total_tokens"],
+                "weeklyTokens": oc_anthropic["7d"]["total_tokens"],
             },
-        }
+        },
+    }
 
-        # Warnings
-        if five_h_pct >= 90:
-            warnings.append(f"🔴 {label} 5h window at {five_h_pct}% — STOP or slow down!")
-        elif five_h_pct >= 80:
-            warnings.append(f"🟡 {label} 5h window at {five_h_pct}% — approaching limit")
-        elif five_h_pct >= 60:
-            warnings.append(f"🟡 {label} 5h window at {five_h_pct}%")
+    # Anthropic warnings
+    if session_pct >= 90:
+        warnings.append(f"\U0001f534 {label} {anthropic_session_hours}h window at {session_pct}% — STOP or slow down!")
+    elif session_pct >= 80:
+        warnings.append(f"\U0001f7e1 {label} {anthropic_session_hours}h window at {session_pct}% — approaching limit")
+    elif session_pct >= 60:
+        warnings.append(f"\U0001f7e1 {label} {anthropic_session_hours}h window at {session_pct}%")
 
-        if weekly_pct >= 90:
-            warnings.append(f"🔴 {label} weekly at {weekly_pct}% — budget critically low!")
-        elif weekly_pct >= 80:
-            warnings.append(f"🟡 {label} weekly at {weekly_pct}% — approaching limit")
-        elif weekly_pct >= 60:
-            warnings.append(f"🟡 {label} weekly at {weekly_pct}%")
+    if weekly_pct >= 90:
+        warnings.append(f"\U0001f534 {label} weekly at {weekly_pct}% — budget critically low!")
+    elif weekly_pct >= 80:
+        warnings.append(f"\U0001f7e1 {label} weekly at {weekly_pct}% — approaching limit")
+    elif weekly_pct >= 60:
+        warnings.append(f"\U0001f7e1 {label} weekly at {weekly_pct}%")
 
-    # Overall traffic light: worst across all windows
+    # === OPENAI ===
+    openai_config = config.get("openai", {})
+    session_limit = openai_config.get("fiveHourTokenLimit", 0)
+    weekly_limit = openai_config.get("weeklyTokenLimit", 0)
+    label = openai_config.get("label", "OpenAI (Codex)")
+
+    # Codex SQLite is the primary source; OpenClaw OpenAI sessions are additive
+    oc_openai = openclaw_data.get("openai", {
+        "session": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+        "7d": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+    })
+
+    openai_session_total = (
+        codex_data["session"]["total_tokens"] + oc_openai["session"]["total_tokens"]
+    )
+    openai_weekly_total = (
+        codex_data["weekly"]["total_tokens"] + oc_openai["7d"]["total_tokens"]
+    )
+
+    session_pct = round(openai_session_total / session_limit * 100, 1) if session_limit > 0 else 0
+    weekly_pct = round(openai_weekly_total / weekly_limit * 100, 1) if weekly_limit > 0 else 0
+    worst_percent = max(worst_percent, session_pct, weekly_pct)
+
+    response["openai"] = {
+        "label": label,
+        "tier": openai_config.get("tier", ""),
+        "sessionWindowHours": openai_session_hours,
+        "rolling5h": {
+            "inputTokens": 0,  # Codex SQLite only tracks total, not input/output split
+            "outputTokens": 0,
+            "totalTokens": openai_session_total,
+            "windowStart": datetime.fromtimestamp(openai_session_cutoff_s).isoformat(),
+            "windowHours": openai_session_hours,
+            "estimatedLimit": session_limit,
+            "percentUsed": session_pct,
+            "remainingTokens": max(0, session_limit - openai_session_total) if session_limit > 0 else None,
+        },
+        "rollingWeek": {
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": openai_weekly_total,
+            "windowStart": datetime.fromtimestamp(week_cutoff_s).isoformat(),
+            "estimatedLimit": weekly_limit,
+            "percentUsed": weekly_pct,
+            "remainingTokens": max(0, weekly_limit - openai_weekly_total) if weekly_limit > 0 else None,
+        },
+        "dataSources": {
+            "codexSqlite": {
+                "available": codex_data["available"],
+                "sessionTokens": codex_data["session"]["total_tokens"],
+                "weeklyTokens": codex_data["weekly"]["total_tokens"],
+                "threadCountSession": codex_data.get("thread_count_session", 0),
+                "threadCountWeekly": codex_data.get("thread_count_weekly", 0),
+                "bySource": codex_data["session"].get("by_model", {}),
+                "error": codex_data.get("error"),
+            },
+            "openclaw": {
+                "sessionTokens": oc_openai["session"]["total_tokens"],
+                "weeklyTokens": oc_openai["7d"]["total_tokens"],
+            },
+        },
+    }
+
+    # OpenAI warnings
+    if session_pct >= 90:
+        warnings.append(f"\U0001f534 {label} {openai_session_hours}h window at {session_pct}% — STOP or slow down!")
+    elif session_pct >= 80:
+        warnings.append(f"\U0001f7e1 {label} {openai_session_hours}h window at {session_pct}% — approaching limit")
+    elif session_pct >= 60:
+        warnings.append(f"\U0001f7e1 {label} {openai_session_hours}h window at {session_pct}%")
+
+    if weekly_pct >= 90:
+        warnings.append(f"\U0001f534 {label} weekly at {weekly_pct}% — budget critically low!")
+    elif weekly_pct >= 80:
+        warnings.append(f"\U0001f7e1 {label} weekly at {weekly_pct}% — approaching limit")
+    elif weekly_pct >= 60:
+        warnings.append(f"\U0001f7e1 {label} weekly at {weekly_pct}%")
+
+    # Overall traffic light
     if worst_percent >= 80:
         traffic_light = "red"
     elif worst_percent >= 60:
@@ -868,6 +1229,11 @@ def openclaw_rate_limits():
         "trafficLight": traffic_light,
         "worstPercent": worst_percent,
         "calculatedAt": datetime.now().isoformat(),
+        "dataSourceStatus": {
+            "codexSqlite": codex_data["available"],
+            "claudeCode": claude_data["available"],
+            "openclawSessions": True,  # always available (may just be empty)
+        },
     }
 
     return jsonify(response)
