@@ -1,16 +1,18 @@
 {
   "anthropic": {
-    "sessionWindowHours": 5,
-    "fiveHourTokenLimit": 5000000000,
-    "weeklyTokenLimit": 25000000000,
+    "sessionWindowHours": 2,
+    "fiveHourTokenLimit": 250000000,
+    "weeklyTokenLimit": 3230000000,
     "tier": "sonnet-plan",
-    "notes": "Data from Claude Code project JSONLs + OpenClaw sessions. Limits are rough — tune to match console.anthropic.com."
+    "label": "Anthropic (Claude)",
+    "notes": "Session window set to 2h (matches console reset). Weekly limit back-calculated from 65% usage = ~3.23B. Session limit ~250M for 2h window."
   },
   "openai": {
     "sessionWindowHours": 5,
     "fiveHourTokenLimit": 5000000000,
-    "weeklyTokenLimit": 25000000000,
+    "weeklyTokenLimit": 9500000000,
     "tier": "pro",
-    "notes": "Data from ~/.codex/state_5.sqlite threads table. Limits are rough — tune to match chatgpt.com/codex/settings/usage."
+    "label": "OpenAI (Codex)",
+    "notes": "Weekly limit back-calculated from 15% usage = ~9.5B. 5h session limit 5B gives ~24% which is reasonable for dashboard."
   }
 }
