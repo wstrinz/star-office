@@ -74,8 +74,8 @@ const LAYOUT = {
 
     // Tiki bar
     coffeeMachine: {
-      x: 729,
-      y: 467,
+      x: 830,
+      y: 530,
       origin: { x: 0.5, y: 0.5 },
       depth: 99
     },
