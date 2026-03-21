@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,7 @@
             gap: 10px;
             overflow-x: hidden;
         }
-        /* 底部面板容器 */
+        /* Bottom panel container */
         #main-stage {
             position: relative;
             width: 1280px;
@@ -32,7 +32,7 @@
             will-change: transform;
         }
         body.drawer-open #main-stage {
-            /* 与右侧抽屉并列：按视口动态左移，确保与抽屉至少保留 20px 间隔 */
+            /* Side-by-side with right drawer: dynamically shift left by viewport, ensure 20px gap with drawer */
             transform: translateX(calc(-1 * max(0px, (min(320px, 92vw) + 20px) - ((100vw - 1280px) / 2))));
         }
         #bottom-panels {
@@ -58,14 +58,14 @@
             width: 100% !important;
             height: 100% !important;
             image-rendering: pixelated;
-            /* 再兜底一次：即使外层高度变化，也不要拉伸变形 */
+            /* Fallback: prevent stretch distortion even if outer height changes */
             object-fit: contain;
-            /* 边框改为直接贴合画布内部，避免"框比地图大" */
+            /* Border flush with canvas interior, avoids "frame bigger than map" */
             box-shadow: inset 0 0 0 4px #8b5e34;
             position: relative;
             z-index: 10;
         }
-        /* 首屏骨架：避免 Phaser 未就绪时纯黑屏 */
+        /* First screen skeleton: avoids pure black screen before Phaser is ready */
         #game-skeleton {
             position: absolute;
             inset: 0;
@@ -147,7 +147,7 @@
             text-overflow: ellipsis;
             line-height: 1.2;
         }
-        /* 状态控制栏 */
+        /* Status control bar */
         #control-bar {
             position: relative;
             background: #1a1510;
@@ -643,7 +643,7 @@
             background: #3d2f1f;
             border-color: #d4883a;
         }
-        /* Star 状态四按钮（不含装修）使用像素精灵皮肤 */
+        /* Star state buttons (excluding decor) use pixel sprite skin */
         #control-bar #btn-state-idle,
         #control-bar #btn-state-writing,
         #control-bar #btn-state-syncing,
@@ -681,7 +681,7 @@
             padding-bottom: 0;
             filter: brightness(0.97);
         }
-        /* 装修房间按钮使用像素精灵皮肤 */
+        /* Decorate room button uses pixel sprite skin */
         #control-bar #btn-open-drawer {
             background-image: url('/static/btn-open-drawer-sprite.png?v={{VERSION_TIMESTAMP}}') !important;
             background-color: transparent !important;
@@ -711,7 +711,7 @@
             padding-bottom: 5px !important;
             filter: brightness(0.97);
         }
-        /* Guest Agent 名单面板（右下角） */
+        /* Guest Agent list panel (bottom right) */
         #guest-agent-panel {
             position: relative;
             width: 390px;
@@ -833,7 +833,7 @@
         .guest-agent-buttons button.leave-btn:hover {
             background: #6a2828;
         }
-        /* Memo 区域 - 4:3 小正方形 */
+        /* Memo area - 4:3 small square */
         #memo-panel {
             position: relative;
             width: 460px;
@@ -955,7 +955,7 @@
             flex-shrink: 0;
         }
 
-        /* 手机端专属适配（不影响桌面） */
+        /* Mobile-specific layout (does not affect desktop) */
         @media (max-width: 900px), (pointer: coarse) {
             html, body {
                 height: 100%;
@@ -972,7 +972,7 @@
 
             #game-container {
                 width: 100vw;
-                height: 66.666vh; /* 办公室占 2/3 屏幕高度 */
+                height: 66.666vh; /* Office takes 2/3 screen height */
                 max-width: 100vw;
                 max-height: 66.666vh;
                 border-width: 0;
@@ -992,7 +992,7 @@
             #bottom-panels {
                 width: 100vw;
                 max-width: 100vw;
-                min-height: 33.334vh; /* 余下约 1/3 可见区 */
+                min-height: 33.334vh; /* Remaining ~1/3 visible area */
                 padding: 10px 10px 16px;
                 display: flex;
                 flex-direction: column;
@@ -1877,7 +1877,7 @@
     </style>
 </head>
 <body>
-    <!-- 加载遮罩 -->
+    <!-- Loading overlay -->
     <div id="loading-overlay">
         <div id="loading-text">Warming up The Hearth...</div>
         <div id="loading-progress-container">
@@ -1891,9 +1891,9 @@
             <div id="status-text">Loading...</div>
         </div>
 
-    <!-- 底部面板容器 -->
+    <!-- Bottom panel container -->
     <div id="bottom-panels">
-        <!-- Memo 面板 -->
+        <!-- Memo panel -->
         <div id="memo-panel">
             <div id="memo-title">Yesterday\'s Notes</div>
             <div id="memo-date"></div>
@@ -1904,7 +1904,7 @@
             <div class="memo-decoration">─ ─ ─ ─ ─</div>
         </div>
 
-        <!-- 状态控制栏 -->
+        <!-- Status control bar -->
         <div id="control-bar">
             <div id="control-bar-title">Cali Status</div>
             <div id="control-buttons">
@@ -1916,7 +1916,7 @@
             </div>
         </div>
 
-        <!-- Guest Agent 名单面板（右下角） -->
+        <!-- Guest Agent list panel (bottom right) -->
         <div id="guest-agent-panel">
             <div id="guest-agent-panel-title">Guest List</div>
             <div id="guest-agent-list">
@@ -2051,7 +2051,7 @@
 
     <script src="/static/vendor/phaser-3.80.1.min.js?v={{VERSION_TIMESTAMP}}"></script>
     <script>
-        // 简易中英文切换
+        // Simple Chinese/English language switcher
         let uiLang = localStorage.getItem('uiLang') || 'en';
         const I18N = {
             zh: {
@@ -2244,26 +2244,26 @@
             applyLanguage();
             updateSpeedModeUI();
 
-            // 语言切换后立即重绘资产侧栏，确保易懂名同步更新
+            // After language switch, immediately re-render asset sidebar to sync display names
             renderAssetDrawerList();
 
-            // 语言切换后同步刷新已选资产的指导文案（上传区小字三语联动）
+            // After language switch, refresh selected asset guidance text (upload area multi-language sync)
             if (selectedAssetInfo && selectedAssetInfo.path) {
                 const inScene = !!mapAssetPathToSprite(selectedAssetInfo.path);
                 renderSelectedAssetGuidance(selectedAssetInfo.path, inScene);
             }
 
-            // 语言切换时，当前正在显示的 loading 文案也实时切换
+            // On language switch, also update currently displayed loading text in real-time
             const overlay = document.getElementById('room-loading-overlay');
             if (overlay && overlay.style.display === 'flex') {
                 showRoomLoadingOverlay();
             }
         }
 
-        // 检测浏览器是否支持 WebP
+        // Detect browser WebP support
         let supportsWebP = false;
 
-        // 方法 1: 使用 canvas 检测
+        // Method 1: Canvas-based detection
         function checkWebPSupport() {
             return new Promise((resolve) => {
                 const canvas = document.createElement('canvas');
@@ -2275,7 +2275,7 @@
             });
         }
 
-        // 方法 2: 使用 image 检测（备用）
+        // Method 2: Image-based detection (fallback)
         function checkWebPSupportFallback() {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -2298,7 +2298,7 @@
             height: 720,
             parent: 'game-container',
             pixelArt: true,
-            // 桌面端保持 FIT；手机端用 RESIZE，并在相机里按高度做 fit（可横向 pan）
+            // Desktop keeps FIT; mobile uses RESIZE with camera height-fit (allows horizontal pan)
             scale: {
                 mode: IS_TOUCH_DEVICE ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -2313,7 +2313,7 @@
         let loadedAssets = 0;
         let loadingProgressBar, loadingProgressContainer, loadingOverlay, loadingText;
 
-        // Memo 相关函数
+        // Memo functions
         async function loadMemo() {
             const memoDate = document.getElementById('memo-date');
             const memoContent = document.getElementById('memo-content');
@@ -2329,12 +2329,12 @@
                     memoContent.innerHTML = '<div id="memo-placeholder">No diary entry for yesterday</div>';
                 }
             } catch (e) {
-                console.error('加载 memo 失败:', e);
+                console.error('Failed to load memo:', e);
                 memoContent.innerHTML = '<div id="memo-placeholder">Failed to load</div>';
             }
         }
 
-        // 更新加载进度
+        // Update loading progress
         function updateLoadingProgress() {
             loadedAssets++;
             const percent = Math.min(100, Math.round((loadedAssets / totalAssets) * 100));
@@ -2346,7 +2346,7 @@
             }
         }
 
-        // 隐藏加载界面
+        // Hide loading overlay
         function hideLoadingOverlay() {
             setTimeout(() => {
                 if (loadingOverlay) {
@@ -2359,7 +2359,7 @@
             }, 80);
         }
 
-        // Phaser 就绪后，移除首屏骨架，避免黑屏感
+        // After Phaser is ready, remove first-screen skeleton to avoid black screen
         function hideGameSkeleton() {
             const sk = document.getElementById('game-skeleton');
             if (!sk) return;
@@ -2370,14 +2370,14 @@
             }, 260);
         }
 
-        // 兜底：某些移动网络/CDN 抖动时，避免一直卡在"加载中"遮罩
+        // Fallback: prevent getting stuck on loading overlay during mobile network/CDN jitter
         setTimeout(() => {
             if (loadingOverlay && loadingOverlay.style.display !== 'none') {
                 hideLoadingOverlay();
             }
         }, 8000);
 
-        // 懒加载逻辑已取消（体验优先：装饰首屏直接出现）
+        // Lazy loading removed (UX first: decorations appear immediately on first screen)
 
         const STATES = {
             idle: { name: 'Idle', area: 'breakroom' },
@@ -2419,9 +2419,9 @@
         };
 
         let game, star, sofa, serverroom, officeBgSprite, areas = {}, currentState = 'idle', pendingDesiredState = null, statusText, lastFetch = 0, lastBlink = 0, lastBubble = 0, targetX = 660, targetY = 170, bubble = null, typewriterText = '', typewriterTarget = '', typewriterIndex = 0, lastTypewriter = 0, syncAnimSprite = null, syncAnimPlayable = false, catBubble = null, selectionBoxGraphics = null;
-        const IDLE_SOFA_ANCHOR = { x: 798, y: 272 }; // 统一中心锚点（原 sofa 左上 670,144 的中心）
-        const IDLE_STAR_SCALE = 1.0; // star idle 改为256帧原生显示，不再放大
-        // flowers 精灵表规格：固定单帧 128x128，4x4
+        const IDLE_SOFA_ANCHOR = { x: 798, y: 272 }; // Unified center anchor (center of original sofa top-left 670,144)
+        const IDLE_STAR_SCALE = 1.0; // star idle uses native 256-frame display, no scaling
+        // flowers spritesheet spec: fixed frame 128x128, 4x4
         let FLOWERS_FRAME_W = 65;
         let FLOWERS_FRAME_H = 65;
         let FLOWERS_FRAME_COLS = 4;
@@ -2439,13 +2439,13 @@
         let homeFavoritesCache = [];
         let homeFavoritesLoadedAt = 0;
 
-        // 坐标以服务端为准；清理历史本地缓存，避免把素材挪飞
+        // Coordinates are server-authoritative; clear legacy local cache to prevent asset displacement
         let assetPositionOverrides = {};
         let roomLoadingTimer = null;
         let roomLoadingIndex = 0;
         let roomLoadingEmojiIndex = 0;
 
-        // 默认走更稳的模型档（quality），避免部分通道不支持 fast 模型时报错
+        // Default to more stable model tier (quality), avoids errors when some channels don\'t support fast model
         let speedMode = localStorage.getItem('speedMode') || 'quality';
         function setSpeedMode(mode) {
             speedMode = (mode === 'quality') ? 'quality' : 'fast';
@@ -2487,7 +2487,7 @@
         let lastGuestAgentsFetch = 0;
         let lastGuestBubbleAt = 0;
         const TYPEWRITER_DELAY = 50;
-        let lastSeenGuestIds = new Set(); // 用于检测新加入的访客，触发欢迎气泡
+        let lastSeenGuestIds = new Set(); // Used to detect newly joined guests, trigger welcome bubble
         let guestWelcomeInitialized = false;
 
         // OpenClaw live agents - subagents & cron jobs rendered as pixel characters
@@ -2521,7 +2521,7 @@
         };
         const OC_AGENT_COLORS = [0xe8a849, 0xd4883a, 0xff9966, 0xcc7733, 0xffbb66, 0xffa657, 0xe8c88a, 0xf7a858];
 
-        // 状态控制栏函数（用于测试）
+        // Status control bar function (for testing)
         function setState(state, detail) {
             fetch('/set_state', {
                 method: 'POST',
@@ -3308,7 +3308,7 @@
                     applyScenePreview(selectedPath);
                 }
             } catch (e) {
-                console.error('加载资产列表失败', e);
+                console.error('Failed to load asset list', e);
                 if (out) out.textContent = '❌ Asset loading failed, click Refresh to retry';
             }
         }
@@ -3405,7 +3405,7 @@
                             }
                             resolve(true);
                         } catch (e) {
-                            console.warn('替换场景纹理失败(setTexture):', e);
+                            console.warn('Failed to replace scene texture (setTexture):', e);
                             resolve(false);
                         }
                     });
@@ -3419,7 +3419,7 @@
                     scene.load.image(newKey, url);
                     scene.load.start();
                 } catch (e) {
-                    console.warn('替换场景纹理失败(load):', e);
+                    console.warn('Failed to replace scene texture (load):', e);
                     resolve(false);
                 }
             });
@@ -4269,7 +4269,7 @@ function toggleBrokerPanel() {
             // 区域坐标（海辛提供，左上-右下；这里的 x/y 作为 sprite 底部锚点坐标来用）
             // 休息区域范围（511,262）（841,621）
             // 工作区域范围（190,526）（380,683）
-            // error 区域范围（932,275）（1109,327）
+            // error area bounds (932,275)(1109,327)
             const rects = {
                 breakroom: { x1: 511, y1: 262, x2: 841, y2: 621 },
                 writing:   { x1: 190, y1: 526, x2: 380, y2: 683 },
@@ -4637,7 +4637,7 @@ function toggleBrokerPanel() {
                         }
                     });
                 }
-            } catch (e) { console.error('强制冒泡失败:', e); }
+            } catch (e) { console.error('Failed to force bubble:', e); }
         }
 
         function fetchGuestAgents() {
@@ -4695,8 +4695,8 @@ function toggleBrokerPanel() {
                     renderGuestAgentsInScene();
                 })
                 .catch(error => {
-                    console.error('拉取访客列表失败:', error);
-                    // 即使拉取失败，demo 也要能渲染
+                    console.error('Failed to fetch guest list:', error);
+                    // Even if fetch fails, demo should still render
                     if (DEMO_MODE) {
                         renderGuestAgentList();
                         renderGuestAgentsInScene();
@@ -5136,7 +5136,7 @@ function toggleBrokerPanel() {
                 }
             }
 
-            console.log('WebP 支持:', supportsWebP);
+            console.log('WebP support:', supportsWebP);
             applyLanguage();
             updateSpeedModeUI();
 
@@ -5162,7 +5162,7 @@ function toggleBrokerPanel() {
                         }
                     }
                 } catch (e) {
-                    console.warn('flowers 规格探测失败，使用默认 65x65', e);
+                    console.warn('Flowers spec detection failed, using default 65x65', e);
                 }
 
                 // Only fetch /assets/positions and /assets/defaults when user is authed,
@@ -5265,7 +5265,7 @@ function toggleBrokerPanel() {
                 door: { x: 640, y: 550 }, // 墙的门（偏下 1/3 位置）
                 writing: { x: 320, y: 360 }, // 左 1/3 中间（办公桌）
                 researching: { x: 320, y: 360 }, // 左 1/3 中间（研究也在办公区
-                error: { x: 1066, y: 180 }, // 右 1/3 上 1/2（服务器区
+                error: { x: 1066, y: 180 }, // right 1/3 upper 1/2 (server area
                 breakroom: { x: IDLE_SOFA_ANCHOR.x, y: IDLE_SOFA_ANCHOR.y } // 与 sofa-idle-v3 同中心锚点
             };
 
@@ -5852,14 +5852,14 @@ function toggleBrokerPanel() {
                 }
             }
 
-            // error 状态：显示 bug 动画，并在两点之间来回移动
+            // error state: show bug animation, move back and forth between two points
             if (window.errorBug) {
                 if (effectiveStateForServer === 'error') {
                     window.errorBug.setVisible(true);
                     if (!window.errorBug.anims.isPlaying || window.errorBug.anims.currentAnim?.key !== 'error_bug') {
                         window.errorBug.anims.play('error_bug', true);
                     }
-                    // 固定在原地（按需求取消 error 移动路径）
+                    // Stay in place (cancel error movement path as needed)
                     window.errorBug.x = 1007;
                     window.errorBug.y = 221;
                 } else {

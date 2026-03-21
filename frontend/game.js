@@ -1,10 +1,10 @@
-// Star Office UI - 游戏主逻辑
-// 依赖: layout.js（必须在这个之前加载）
+// Star Office UI - Main game logic
+// Dependency: layout.js (must load before this file)
 
-// 检测浏览器是否支持 WebP
+// Detect browser WebP support
 let supportsWebP = false;
 
-// 方法 1: 使用 canvas 检测
+// Method 1: Canvas-based detection
 function checkWebPSupport() {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -16,7 +16,7 @@ function checkWebPSupport() {
   });
 }
 
-// 方法 2: 使用 image 检测（备用）
+// Method 2: Image-based detection (fallback)
 function checkWebPSupportFallback() {
   return new Promise((resolve) => {
     const img = new Image();
@@ -26,13 +26,13 @@ function checkWebPSupportFallback() {
   });
 }
 
-// 获取文件扩展名（根据 WebP 支持情况 + 布局配置的 forcePng）
+// Get file extension (based on WebP support + layout forcePng config)
 function getExt(pngFile) {
-  // star-working-spritesheet.png 太宽了，WebP 不支持，始终用 PNG
+  // star-working-spritesheet.png is too wide for WebP, always use PNG
   if (pngFile === 'star-working-spritesheet.png') {
     return '.png';
   }
-  // 如果布局配置里强制用 PNG，就用 .png
+  // If layout config forces PNG, use .png
   if (LAYOUT.forcePng && LAYOUT.forcePng[pngFile.replace(/\.(png|webp)$/, '')]) {
     return '.png';
   }
@@ -53,7 +53,7 @@ let totalAssets = 0;
 let loadedAssets = 0;
 let loadingProgressBar, loadingProgressContainer, loadingOverlay, loadingText;
 
-// Memo 相关函数
+// Memo functions
 async function loadMemo() {
   const memoDate = document.getElementById('memo-date');
   const memoContent = document.getElementById('memo-content');
@@ -69,12 +69,12 @@ async function loadMemo() {
       memoContent.innerHTML = '<div id="memo-placeholder">No diary entry for yesterday</div>';
     }
   } catch (e) {
-    console.error('加载 memo 失败:', e);
+    console.error('Failed to load memo:', e);
     memoContent.innerHTML = '<div id="memo-placeholder">Failed to load</div>';
   }
 }
 
-// 更新加载进度
+// Update loading progress
 function updateLoadingProgress() {
   loadedAssets++;
   const percent = Math.min(100, Math.round((loadedAssets / totalAssets) * 100));
@@ -86,7 +86,7 @@ function updateLoadingProgress() {
   }
 }
 
-// 隐藏加载界面
+// Hide loading overlay
 function hideLoadingOverlay() {
   setTimeout(() => {
     if (loadingOverlay) {
@@ -203,7 +203,7 @@ let agents = {}; // agentId -> sprite/container
 let lastAgentsFetch = 0;
 const AGENTS_FETCH_INTERVAL = 2500;
 
-// agent 颜色配置
+// Agent color config
 const AGENT_COLORS = {
   star: 0xffd700,
   npc1: 0x00aaff,
@@ -211,7 +211,7 @@ const AGENT_COLORS = {
   default: 0x94a3b8
 };
 
-// agent 名字颜色
+// Agent name tag colors
 const NAME_TAG_COLORS = {
   approved: 0x22c55e,
   pending: 0xf59e0b,
@@ -220,7 +220,7 @@ const NAME_TAG_COLORS = {
   default: 0x1f2937
 };
 
-// breakroom / writing / error 区域的 agent 分布位置（多 agent 时错开）
+// breakroom / writing / error area agent positions (staggered for multiple agents)
 const AREA_POSITIONS = {
   breakroom: [
     { x: 620, y: 180 },
@@ -255,7 +255,7 @@ const AREA_POSITIONS = {
 };
 
 
-// 状态控制栏函数（用于测试）
+// Status control bar function (for testing)
 function setState(state, detail) {
   fetch('/set_state', {
     method: 'POST',
@@ -264,7 +264,7 @@ function setState(state, detail) {
   }).then(() => fetchStatus());
 }
 
-// 初始化：先检测 WebP 支持，再启动游戏
+// Initialize: detect WebP support first, then start game
 async function initGame() {
   try {
     supportsWebP = await checkWebPSupport();
@@ -276,7 +276,7 @@ async function initGame() {
     }
   }
 
-  console.log('WebP 支持:', supportsWebP);
+  console.log('WebP support:', supportsWebP);
   new Phaser.Game(config);
 }
 
@@ -286,7 +286,7 @@ function preload() {
   loadingText = document.getElementById('loading-text');
   loadingProgressContainer = document.getElementById('loading-progress-container');
 
-  // 从 LAYOUT 读取总资源数量（避免 magic number）
+  // Read total asset count from LAYOUT (avoids magic numbers)
   totalAssets = LAYOUT.totalAssets || 15;
   loadedAssets = 0;
 
@@ -317,7 +317,7 @@ function preload() {
   this.load.spritesheet('sync_anim', '/static/sync-animation-spritesheet-grid' + (supportsWebP ? '.webp' : '.png'), { frameWidth: 256, frameHeight: 256 });
   this.load.image('memo_bg', '/static/memo-bg' + (supportsWebP ? '.webp' : '.png'));
 
-  // 新办公桌：强制 PNG（透明）
+  // Desk: forced PNG (transparency)
   this.load.image('desk_v2', '/static/desk-v2.png');
   this.load.spritesheet('flowers', '/static/flowers-spritesheet' + (supportsWebP ? '.webp' : '.png'), { frameWidth: 65, frameHeight: 65 });
 }
@@ -326,7 +326,7 @@ function create() {
   game = this;
   this.add.image(640, 360, 'office_bg');
 
-  // === 沙发（来自 LAYOUT）===
+  // === Sofa (from LAYOUT) ===
   sofa = this.add.sprite(
     LAYOUT.furniture.sofa.x,
     LAYOUT.furniture.sofa.y,
@@ -369,7 +369,7 @@ function create() {
     sofa.anims.play('sofa_busy', true);
   }
 
-  // === 牌匾（来自 LAYOUT）===
+  // === Plaque (from LAYOUT) ===
   const plaqueX = LAYOUT.plaque.x;
   const plaqueY = LAYOUT.plaque.y;
   const plaqueBg = game.add.rectangle(plaqueX, plaqueY, LAYOUT.plaque.width, LAYOUT.plaque.height, 0x5d4037);
@@ -385,7 +385,7 @@ function create() {
   game.add.text(plaqueX - 190, plaqueY, '⭐', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
   game.add.text(plaqueX + 190, plaqueY, '⭐', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
 
-  // === 植物们（来自 LAYOUT）===
+  // === Plants (from LAYOUT) ===
   const plantFrameCount = 16;
   for (let i = 0; i < LAYOUT.furniture.plants.length; i++) {
     const p = LAYOUT.furniture.plants[i];
@@ -400,7 +400,7 @@ function create() {
     }));
   }
 
-  // === 海报（来自 LAYOUT）===
+  // === Poster (from LAYOUT) ===
   const postersFrameCount = 32;
   const CUSTOM_POSTER_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7]; // hearth-themed: crest, aurora cabin, winter window, fire, fireplace, crab mug, cave crab, bookshelf
   const randomPosterFrame = CUSTOM_POSTER_FRAMES[Math.floor(Math.random() * CUSTOM_POSTER_FRAMES.length)];
@@ -416,7 +416,7 @@ function create() {
     window.posterSprite.setFrame(next);
   });
 
-  // === 小猫（来自 LAYOUT）===
+  // === Cat (from LAYOUT) ===
   const catsFrameCount = 16;
   const randomCatFrame = Math.floor(Math.random() * catsFrameCount);
   const cat = game.add.sprite(LAYOUT.furniture.cat.x, LAYOUT.furniture.cat.y, 'cats', randomCatFrame).setOrigin(LAYOUT.furniture.cat.origin.x, LAYOUT.furniture.cat.origin.y);
@@ -429,7 +429,7 @@ function create() {
     window.catSprite.setFrame(next);
   });
 
-  // === 咖啡机（来自 LAYOUT）===
+  // === Tiki bar (from LAYOUT) ===
   this.anims.create({
     key: 'coffee_machine',
     frames: this.anims.generateFrameNumbers('coffee_machine', { start: 0, end: 95 }),
@@ -454,7 +454,7 @@ function create() {
     ease: 'Sine.easeInOut'
   });
 
-  // === 服务器区（来自 LAYOUT）===
+  // === Server area (from LAYOUT) ===
   this.anims.create({
     key: 'serverroom_on',
     frames: this.anims.generateFrameNumbers('serverroom', { start: 0, end: 39 }),
@@ -471,7 +471,7 @@ function create() {
   serverroom.anims.stop();
   serverroom.setFrame(0);
 
-  // === 新办公桌（来自 LAYOUT，强制透明 PNG）===
+  // === Desk (from LAYOUT, forced transparent PNG) ===
   const desk = this.add.image(
     LAYOUT.furniture.desk.x,
     LAYOUT.furniture.desk.y,
@@ -479,7 +479,7 @@ function create() {
   ).setOrigin(LAYOUT.furniture.desk.origin.x, LAYOUT.furniture.desk.origin.y);
   desk.setDepth(LAYOUT.furniture.desk.depth);
 
-  // === 花盆（来自 LAYOUT）===
+  // === Flower pot (from LAYOUT) ===
   const flowerFrameCount = 16;
   const randomFlowerFrame = Math.floor(Math.random() * flowerFrameCount);
   const flower = this.add.sprite(
@@ -498,7 +498,7 @@ function create() {
     window.flowerSprite.setFrame(next);
   });
 
-  // === Star 在桌前工作（来自 LAYOUT）===
+  // === Star working at desk (from LAYOUT) ===
   this.anims.create({
     key: 'star_working',
     frames: this.anims.generateFrameNumbers('star_working', { start: 0, end: 191 }),
@@ -512,7 +512,7 @@ function create() {
     repeat: -1
   });
 
-  // === 错误 bug（来自 LAYOUT）===
+  // === Error bug (from LAYOUT) ===
   const errorBug = this.add.sprite(
     LAYOUT.furniture.errorBug.x,
     LAYOUT.furniture.errorBug.y,
@@ -537,7 +537,7 @@ function create() {
   starWorking.setDepth(LAYOUT.furniture.starWorking.depth);
   window.starWorking = starWorking;
 
-  // === 同步动画（来自 LAYOUT）===
+  // === Sync animation (from LAYOUT) ===
   this.anims.create({
     key: 'sync_anim',
     frames: this.anims.generateFrameNumbers('sync_anim', { start: 1, end: 52 }),
@@ -581,7 +581,7 @@ function create() {
   fetchStatus();
   fetchAgents();
 
-  // 可选调试：仅在显式开启 debug 模式时渲染测试用尼卡 agent
+  // Optional debug: only render test Nika agent when debug mode is explicitly enabled
   let debugAgents = false;
   try {
     if (typeof window !== 'undefined') {
@@ -723,7 +723,7 @@ function fetchStatus() {
       const changed = (pendingDesiredState === null) && (nextState !== currentState);
       const nextLine = '[' + stateInfo.name + '] ' + nextDetail;
 
-      // Skip all updates if state and detail haven't changed (prevents flickering)
+      // Skip all updates if state and detail haven\'t changed (prevents flickering)
       if (!changed && typewriterTarget === nextLine) {
         return;
       }
@@ -920,7 +920,7 @@ function showBubble() {
 function showCatBubble() {
   if (!window.catSprite) return;
   if (window.catBubble) { window.catBubble.destroy(); window.catBubble = null; }
-  const texts = BUBBLE_TEXTS.cat || ['Meow~', '咕噜咕噜…'];
+  const texts = BUBBLE_TEXTS.cat || ['Meow~', 'Purrrr...'];
   const text = texts[Math.floor(Math.random() * texts.length)];
   const anchorX = window.catSprite.x;
   const anchorY = window.catSprite.y - 60;
@@ -937,8 +937,8 @@ function fetchAgents() {
     .then(response => response.json())
     .then(data => {
       if (!Array.isArray(data)) return;
-      // 重置位置计数器
-      // 按区域分配不同位置索引，避免重叠
+      // Reset position counters
+      // Assign different position slots per area to avoid overlap
       const areaSlots = { breakroom: 0, writing: 0, error: 0 };
       for (let agent of data) {
         const area = agent.area || 'breakroom';
@@ -946,7 +946,7 @@ function fetchAgents() {
         areaSlots[area] = (areaSlots[area] || 0) + 1;
         renderAgent(agent);
       }
-      // 移除不再存在的 agent
+      // Remove agents that no longer exist
       const currentIds = new Set(data.map(a => a.agentId));
       for (let id in agents) {
         if (!currentIds.has(id)) {
@@ -958,7 +958,7 @@ function fetchAgents() {
       }
     })
     .catch(error => {
-      console.error('拉取 agents 失败:', error);
+      console.error('Failed to fetch agents:', error);
     });
 }
 
@@ -975,34 +975,34 @@ function renderAgent(agent) {
   const authStatus = agent.authStatus || 'pending';
   const isMain = !!agent.isMain;
 
-  // 获取这个 agent 在区域里的位置
+  // Get this agent\'s position in the area
   const pos = getAreaPosition(area, agent._slotIndex || 0);
   const baseX = pos.x;
   const baseY = pos.y;
 
-  // 颜色
+  // Colors
   const bodyColor = AGENT_COLORS[agentId] || AGENT_COLORS.default;
   const nameColor = NAME_TAG_COLORS[authStatus] || NAME_TAG_COLORS.default;
 
-  // 透明度（离线/待批准/拒绝时变半透明）
+  // Alpha (semi-transparent when offline/pending/rejected)
   let alpha = 1;
   if (authStatus === 'pending') alpha = 0.7;
   if (authStatus === 'rejected') alpha = 0.4;
   if (authStatus === 'offline') alpha = 0.5;
 
   if (!agents[agentId]) {
-    // 新建 agent
+    // Create new agent
     const container = game.add.container(baseX, baseY);
-    container.setDepth(1200 + (isMain ? 100 : 0)); // 放到最顶层！
+    container.setDepth(1200 + (isMain ? 100 : 0)); // Top layer!
 
-    // 像素小人：用星星图标，更明显
+    // Pixel character: star icon for visibility
     const starIcon = game.add.text(0, 0, '⭐', {
       fontFamily: 'ArkPixel, monospace',
       fontSize: '32px'
     }).setOrigin(0.5);
     starIcon.name = 'starIcon';
 
-    // 名字标签（漂浮）
+    // Name tag (floating)
     const nameTag = game.add.text(0, -36, name, {
       fontFamily: 'ArkPixel, monospace',
       fontSize: '14px',
@@ -1013,7 +1013,7 @@ function renderAgent(agent) {
     }).setOrigin(0.5);
     nameTag.name = 'nameTag';
 
-    // 状态小点（绿色/黄色/红色）
+    // Status dot (green/yellow/red)
     let dotColor = 0x64748b;
     if (authStatus === 'approved') dotColor = 0x22c55e;
     if (authStatus === 'pending') dotColor = 0xf59e0b;
@@ -1026,19 +1026,19 @@ function renderAgent(agent) {
     container.add([starIcon, statusDot, nameTag]);
     agents[agentId] = container;
   } else {
-    // 更新 agent
+    // Update agent
     const container = agents[agentId];
     container.setPosition(baseX, baseY);
     container.setAlpha(alpha);
     container.setDepth(1200 + (isMain ? 100 : 0));
 
-    // 更新名字和颜色（如果变化）
+    // Update name and color (if changed)
     const nameTag = container.getAt(2);
     if (nameTag && nameTag.name === 'nameTag') {
       nameTag.setText(name);
       nameTag.setFill('#' + (NAME_TAG_COLORS[authStatus] || NAME_TAG_COLORS.default).toString(16).padStart(6, '0'));
     }
-    // 更新状态点颜色
+    // Update status dot color
     const statusDot = container.getAt(1);
     if (statusDot && statusDot.name === 'statusDot') {
       let dotColor = 0x64748b;
@@ -1051,5 +1051,5 @@ function renderAgent(agent) {
   }
 }
 
-// 启动游戏
+// Start game
 initGame();

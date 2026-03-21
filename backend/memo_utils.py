@@ -36,10 +36,10 @@ def extract_memo_from_file(file_path: str) -> str:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # 提取真实内容，不做过度包装
+        # Extract real content without over-wrapping
         lines = content.strip().split("\n")
 
-        # 提取核心要点
+        # Extract core points
         core_points = []
         for line in lines:
             line = line.strip()
@@ -55,41 +55,41 @@ def extract_memo_from_file(file_path: str) -> str:
         if not core_points:
             return "No events recorded yesterday.\n\nConsistency beats intensity."
 
-        # 从核心内容中提取 2-3 个关键点
+        # Select 2-3 key points from core content
         selected_points = core_points[:3]
 
-        # 睿智语录库
+        # Wisdom quotes collection
         wisdom_quotes = [
-            "「工欲善其事，必先利其器。」",
-            "「不积跬步，无以至千里；不积小流，无以成江海。」",
-            "「知行合一，方可致远。」",
-            "「业精于勤，荒于嬉；行成于思，毁于随。」",
-            "「路漫漫其修远兮，吾将上下而求索。」",
-            "「昨夜西风凋碧树，独上高楼，望尽天涯路。」",
-            "「衣带渐宽终不悔，为伊消得人憔悴。」",
-            "「众里寻他千百度，蓦然回首，那人却在，灯火阑珊处。」",
-            "「世事洞明皆学问，人情练达即文章。」",
-            "「纸上得来终觉浅，绝知此事要躬行。」"
+            "\"A craftsman must first sharpen his tools.\"",
+            "\"A journey of a thousand miles begins with a single step.\"",
+            "\"Knowledge and action in unity lead far.\"",
+            "\"Excellence comes from diligence; ruin comes from idleness.\"",
+            "\"The road ahead is long; I shall search high and low.\"",
+            "\"Last night the west wind withered the green trees — alone I climbed the tower.\"",
+            "\"My belt grows looser, yet I have no regrets.\"",
+            "\"After searching a thousand times in the crowd, there she stands in the dim light.\"",
+            "\"Understanding the world is true learning; mastering human nature is true writing.\"",
+            "\"What you read on paper feels shallow; true knowledge requires practice.\""
         ]
 
         quote = random.choice(wisdom_quotes)
 
-        # 组合内容
+        # Compose content
         result = []
 
-        # 添加核心内容
+        # Add core content
         if selected_points:
             for point in selected_points:
-                # 隐私清理
+                # Privacy cleanup
                 point = sanitize_content(point)
-                # 截断过长的内容
+                # Truncate overly long content
                 if len(point) > 40:
                     point = point[:37] + "..."
-                # 每行最多 20 字
+                # Max 20 chars per line
                 if len(point) <= 20:
                     result.append(f"· {point}")
                 else:
-                    # 按 20 字切分
+                    # Split at 20 chars
                     for j in range(0, len(point), 20):
                         chunk = point[j:j+20]
                         if j == 0:
@@ -97,7 +97,7 @@ def extract_memo_from_file(file_path: str) -> str:
                         else:
                             result.append(f"  {chunk}")
 
-        # 添加睿智语录
+        # Add wisdom quote
         if quote:
             if len(quote) <= 20:
                 result.append(f"\n{quote}")
