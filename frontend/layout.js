@@ -74,8 +74,8 @@ const LAYOUT = {
 
     // 咖啡机
     coffeeMachine: {
-      x: 659,
-      y: 397,
+      x: 729,
+      y: 467,
       origin: { x: 0.5, y: 0.5 },
       depth: 99
     },

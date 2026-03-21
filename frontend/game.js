@@ -444,6 +444,16 @@ function create() {
   coffeeMachine.setDepth(LAYOUT.furniture.coffeeMachine.depth);
   coffeeMachine.anims.play('coffee_machine', true);
 
+  // Tiki bar gentle sway animation
+  this.tweens.add({
+    targets: coffeeMachine,
+    angle: { from: -1.5, to: 1.5 },
+    duration: 2000,
+    yoyo: true,
+    repeat: -1,
+    ease: 'Sine.easeInOut'
+  });
+
   // === 服务器区（来自 LAYOUT）===
   this.anims.create({
     key: 'serverroom_on',
