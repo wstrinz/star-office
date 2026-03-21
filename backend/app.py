@@ -63,7 +63,7 @@ HOME_FAVORITES_INDEX_FILE = os.path.join(HOME_FAVORITES_DIR, "index.json")
 HOME_FAVORITES_MAX = 30
 ASSET_POSITIONS_FILE = os.path.join(ROOT_DIR, "asset-positions.json")
 
-# 性能保护：默认关闭“每次打开页面随机换背景”，避免首页首屏被磁盘复制拖慢
+# default“background”copy
 AUTO_ROTATE_HOME_ON_PAGE_OPEN = (os.getenv("AUTO_ROTATE_HOME_ON_PAGE_OPEN", "0").strip().lower() in {"1", "true", "yes", "on"})
 AUTO_ROTATE_MIN_INTERVAL_SECONDS = int(os.getenv("AUTO_ROTATE_MIN_INTERVAL_SECONDS", "60"))
 _last_home_rotate_at = 0
@@ -193,7 +193,7 @@ def load_state():
                 age = (datetime.now() - dt).total_seconds()
             if age > ttl:
                 state["state"] = "idle"
-                state["detail"] = "待命中（自动回到休息区）"
+                state["detail"] = "match"
                 state["progress"] = 0
                 state["updated_at"] = datetime.now().isoformat()
                 # persist the auto-idle so every client sees it consistently
@@ -257,8 +257,8 @@ _INDEX_HTML_CACHE = None
 @app.route("/", methods=["GET"])
 def index():
     """Serve the pixel office UI with built-in version cache busting"""
-    # 默认禁用页面打开即换背景，避免首屏慢
-    # 如需启用，可配置 AUTO_ROTATE_HOME_ON_PAGE_OPEN=1
+    # defaultdisablebackground
+ # enableconfig AUTO_ROTATE_HOME_ON_PAGE_OPEN=1
     _maybe_apply_random_home_favorite()
 
     global _INDEX_HTML_CACHE
@@ -496,7 +496,7 @@ def _animated_to_spritesheet(
             try:
                 with Image.open(upload_path) as im:
                     n = getattr(im, "n_frames", 1)
-                    # 默认保留用户原始帧尺寸（避免先压缩再放大导致像素糊）
+                    # defaultkeepframe(s)
                     if preserve_original:
                         out_fw, out_fh = im.size
                     for i in range(n):
@@ -520,16 +520,16 @@ def _animated_to_spritesheet(
                 raise RuntimeError("Animated image has no valid frames")
 
         if backend == "magick":
-            # 像素风动图转精灵表默认无损，避免颜色/边缘被压缩糊掉
+        # spritedefault/
             quality_flag = "-define webp:lossless=true -define webp:method=6 -quality 100" if ext == ".webp" else ""
-            # 允许按 cols/rows 排布；默认单行
+            # cols/rows default
             if cols is None or cols <= 0:
                 cols_eff = frames
             else:
                 cols_eff = max(1, int(cols))
             rows_eff = max(1, int(rows)) if (rows is not None and rows > 0) else max(1, math.ceil(frames / cols_eff))
 
-            # 先规范单帧尺寸
+            # frame(s)
             prep = ""
             if not preserve_original:
                 magick_filter = "-filter point" if pixel_art else ""
@@ -589,7 +589,7 @@ def normalize_agent_state(s):
 
 # User-facing model aliases -> provider model ids
 USER_MODEL_TO_PROVIDER_MODELS = {
-    # 严格按用户要求：仅两种官方模型映射
+#
     "nanobanana-pro": [
         "nano-banana-pro-preview",
     ],
@@ -652,7 +652,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
     if not style_hint:
         style_hint = theme
 
-    # 默认使用更稳妥的 quality 档，避免 fast 模型在部分 API 通道不可用
+        # defaultuses quality fast API
     mode = (speed_mode or "quality").strip().lower()
     if mode not in {"fast", "quality"}:
         mode = "quality"
@@ -660,7 +660,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
     configured_user_model = _normalize_user_model(runtime_cfg.get("gemini_model") or "nanobanana-pro")
     if mode == "fast":
         preferred_user_model = "nanobanana-2"
-        # fast 也提高基础清晰度：从 1024x576 提升到 1152x648（牺牲少量速度）
+        # fast upgraded from 1024x576 to 1152x648speed
         gen_width, gen_height = 1152, 648
         ref_width, ref_height = 1152, 648
     else:
@@ -668,8 +668,8 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
         gen_width, gen_height = width, height
         ref_width, ref_height = width, height
 
-    # 同时规避可能触发 400 的特殊能力参数：
-    # 仅 nanobanana-2 走 aspect-ratio，nanobanana-pro 交给模型默认比例（后续再标准化到 1280x720）
+        # trigger 400
+ # nanobanana-2 aspect-rationanobanana-pro default 1280x720
     allow_aspect_ratio = (preferred_user_model == "nanobanana-2")
 
     prompt = (
@@ -692,7 +692,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
     if allow_aspect_ratio:
         cmd.extend(["--aspect-ratio", "16:9"])
 
-    # 强约束：每次都带固定参考图，保持房间区域布局不漂移
+        # area
     ref_for_call = None
     if os.path.exists(ROOM_REFERENCE_IMAGE):
         ref_for_call = ROOM_REFERENCE_IMAGE
@@ -710,7 +710,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
         cmd.extend(["--reference-image", ref_for_call])
 
     env = os.environ.copy()
-    # 运行时配置优先：只保留 GEMINI_API_KEY，避免脚本因双 key 报错
+    # configkeep GEMINI_API_KEY key
     env.pop("GOOGLE_API_KEY", None)
     env["GEMINI_API_KEY"] = api_key
 
@@ -738,15 +738,15 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
             m.extend(["--model", model_name])
         return m
 
-    # 模型多级回退（仅允许两类用户模型：nanobanana-pro / nanobanana-2）
-    # 每个用户模型映射到若干 provider 真实模型。
+        # nanobanana-pro / nanobanana-2
+ # provider
     user_model_order = [preferred_user_model, configured_user_model]
     user_model_order = [m for i, m in enumerate(user_model_order) if m and m not in user_model_order[:i]]
 
     model_candidates = []
     for um in user_model_order:
         model_candidates.extend(_provider_model_candidates(um))
-    # 去重并清理空项
+        # Deduplicate
     model_candidates = [m for i, m in enumerate(model_candidates) if m and m not in model_candidates[:i]]
 
     proc = None
@@ -763,7 +763,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
         err_text = (proc.stderr or proc.stdout or "").strip()
         last_err_text = err_text
 
-        # key 失效/泄漏：立即终止，不继续尝试
+        # key /continue
         low = err_text.lower()
         if "your api key was reported as leaked" in low or "permission_denied" in low:
             raise RuntimeError("API_KEY_REVOKED_OR_LEAKED")
@@ -772,7 +772,7 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
             model_unavailable_count += 1
             continue
 
-        # 非模型不可用错误，直接返回真实错误
+            # errorerror
         raise RuntimeError(f"Image generation failed: {err_text}")
 
     if proc is None or proc.returncode != 0:
@@ -800,15 +800,15 @@ def _generate_rpg_background_to_webp(out_webp_path: str, width: int = 1280, heig
 
     with Image.open(gen_path) as im:
         im = im.convert("RGBA")
-        # 质量模式优先保细节；快速模式优先速度
+        # speed
         if mode == "fast":
             im = im.resize((gen_width, gen_height), Image.Resampling.LANCZOS)
             if (gen_width, gen_height) != (width, height):
-                # fast 的放大改为 LANCZOS，牺牲少量速度换更高细节
+            # fast LANCZOSspeed
                 im = im.resize((width, height), Image.Resampling.LANCZOS)
             im.save(out_webp_path, "WEBP", quality=96, method=6)
         else:
-            # quality：确保输出标准尺寸，同时使用无损 webp，减少压缩损失
+        # qualityoutputuses webp
             if im.size != (width, height):
                 im = im.resize((width, height), Image.Resampling.LANCZOS)
             im.save(out_webp_path, "WEBP", lossless=True, quality=100, method=6)
@@ -858,7 +858,7 @@ def get_agents():
         auth_expires_at_str = a.get("authExpiresAt")
         auth_status = a.get("authStatus", "pending")
 
-        # 1) 超时未批准自动 leave
+        # 1) timeout leave
         if auth_status == "pending" and auth_expires_at_str:
             try:
                 auth_expires_at = datetime.fromisoformat(auth_expires_at_str)
@@ -875,13 +875,13 @@ def get_agents():
             except Exception:
                 pass
 
-        # 2) 超时未推送自动离线（超过5分钟）
+                # 2) timeout5minutes
         last_push_at_str = a.get("lastPushAt")
         if auth_status == "approved" and last_push_at_str:
             try:
                 last_push_at = datetime.fromisoformat(last_push_at_str)
                 age = (now - last_push_at).total_seconds()
-                if age > 300:  # 5分钟无推送自动离线
+                if age > 300:  # 5 minutes
                     a["authStatus"] = "offline"
             except Exception:
                 pass
@@ -910,7 +910,7 @@ def agent_approve():
 
         target["authStatus"] = "approved"
         target["authApprovedAt"] = datetime.now().isoformat()
-        target["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()  # 默认授权24h
+        target["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat() # default24h
 
         save_agents_state(agents)
         return jsonify({"ok": True, "agentId": agent_id, "authStatus": "approved"})
@@ -979,10 +979,10 @@ def join_agent():
         key_item = next((k for k in keys_data.get("keys", []) if k.get("key") == join_key), None)
         if not key_item:
             return jsonify({"ok": False, "msg": "Invalid join key"}), 403
-        # key 可复用：不再因为 used=true 拒绝
+            # key used=true
 
         with join_lock:
-            # 在锁内重新读取，避免并发请求都基于同一旧快照通过校验
+        # concurrentrequest
             keys_data = load_join_keys()
             key_item = next((k for k in keys_data.get("keys", []) if k.get("key") == join_key), None)
             if not key_item:
@@ -1000,8 +1000,8 @@ def join_agent():
 
             agents = load_agents_state()
 
-            # 并发上限：同一个 key “同时在线”最多 3 个。
-            # 在线判定：lastPushAt/updated_at 在 5 分钟内；否则视为 offline，不计入并发。
+            # concurrenttop key “” 3
+ # lastPushAt/updated_at 5 minutes offlineconcurrent
             now = datetime.now()
             existing = next((a for a in agents if a.get("name") == name and not a.get("isMain")), None)
             existing_id = existing.get("agentId") if existing else None
@@ -1058,7 +1058,7 @@ def join_agent():
                 existing["authStatus"] = "approved"
                 existing["authApprovedAt"] = datetime.now().isoformat()
                 existing["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()
-                existing["lastPushAt"] = datetime.now().isoformat()  # join 视为上线，纳入并发/离线判定
+                existing["lastPushAt"] = datetime.now().isoformat() # join topconcurrent/
                 if not existing.get("avatar"):
                     import random
                     existing["avatar"] = random.choice(["guest_role_1", "guest_role_2", "guest_role_3", "guest_role_4", "guest_role_5", "guest_role_6"])
@@ -1091,8 +1091,8 @@ def join_agent():
             key_item["usedAt"] = datetime.now().isoformat()
             key_item["reusable"] = True
 
-            # 拿到有效 key 直接批准，不再等待主人手动点击
-            # （状态已在上面 existing/new 分支写入）
+            # key wait
+ # statetop existing/new
             save_agents_state(agents)
             save_join_keys(keys_data)
 
@@ -1251,7 +1251,7 @@ def health():
 def get_yesterday_memo():
     """Get yesterday's diary entry"""
     try:
-        # 先尝试找昨天的文件
+    #
         yesterday_str = get_yesterday_date_str()
         yesterday_file = os.path.join(MEMORY_DIR, f"{yesterday_str}.md")
         
@@ -1261,12 +1261,12 @@ def get_yesterday_memo():
         if os.path.exists(yesterday_file):
             target_file = yesterday_file
         else:
-            # 如果昨天没有，找最近的一天
+        #
             if os.path.exists(MEMORY_DIR):
                 files = [f for f in os.listdir(MEMORY_DIR) if f.endswith(".md") and re.match(r"\d{4}-\d{2}-\d{2}\.md", f)]
                 if files:
                     files.sort(reverse=True)
-                    # 跳过今天的（如果存在）
+                    #
                     today_str = datetime.now().strftime("%Y-%m-%d")
                     for f in files:
                         if f != f"{today_str}.md":
@@ -1358,7 +1358,7 @@ def _bg_generate_worker(task_id: str, custom_prompt: str, speed_mode: str):
     try:
         target = FRONTEND_PATH / "office_bg_small.webp"
 
-        # 覆盖前保留最近一次备份
+        # keep
         bak = target.with_suffix(target.suffix + ".bak")
         shutil.copy2(target, bak)
 
@@ -1370,7 +1370,7 @@ def _bg_generate_worker(task_id: str, custom_prompt: str, speed_mode: str):
             speed_mode=speed_mode,
         )
 
-        # 每次生成都归档一份历史底图（可回溯风格演化）
+        #
         os.makedirs(BG_HISTORY_DIR, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         hist_file = os.path.join(BG_HISTORY_DIR, f"office_bg_small-{ts}.webp")
@@ -1585,11 +1585,11 @@ def assets_restore_reference_background():
         if not os.path.exists(ROOM_REFERENCE_IMAGE):
             return jsonify({"ok": False, "msg": "Reference image does not exist"}), 404
 
-        # 备份当前底图
+            # current
         bak = target.with_suffix(target.suffix + ".bak")
         shutil.copy2(target, bak)
 
-        # 快速路径：若参考图已是 1280x720 的 webp，直接拷贝（秒级）
+        # 1280x720 webpseconds
         ref_ext = os.path.splitext(ROOM_REFERENCE_IMAGE)[1].lower()
         fast_copied = False
         if ref_ext == '.webp':
@@ -1601,7 +1601,7 @@ def assets_restore_reference_background():
             except Exception:
                 fast_copied = False
 
-        # 慢路径：仅在必要时重编码
+                #
         if not fast_copied:
             if Image is None:
                 return jsonify({"ok": False, "msg": "Pillow not available"}), 500
@@ -1723,7 +1723,7 @@ def assets_home_favorites_save_current():
             "created_at": datetime.now().isoformat(timespec="seconds"),
         })
 
-        # 控制收藏数量上限，清理最旧项
+        # Favoritescounttop
         if len(items) > HOME_FAVORITES_MAX:
             extra = items[HOME_FAVORITES_MAX:]
             items = items[:HOME_FAVORITES_MAX]
@@ -1973,7 +1973,7 @@ def assets_restore_default():
         if not os.path.exists(default_path):
             return jsonify({"ok": False, "msg": "Default asset snapshot not found"}), 404
 
-        # 回滚前保留上一版
+            # rollbackkeeptop
         bak = str(target) + ".bak"
         if os.path.exists(str(target)):
             shutil.copy2(str(target), bak)
@@ -2041,7 +2041,7 @@ def assets_upload():
 
         target.parent.mkdir(parents=True, exist_ok=True)
 
-        # 首次上传前固化默认资产快照，供“重置为默认资产”使用
+        # topdefault“Reset to default asset”uses
         default_snap = Path(str(target) + ".default")
         if not default_snap.exists():
             try:
@@ -2065,7 +2065,7 @@ def assets_upload():
                 frame_w = int(request.form.get("frame_w") or (in_w or 64))
                 frame_h = int(request.form.get("frame_h") or (in_h or 64))
 
-                # 如果是静态图上传到精灵表目标，按网格切片而不是整图覆盖
+                # statictopsprite
                 if not (ext_name.endswith(".gif") or ext_name.endswith(".webp")) and Image is not None:
                     try:
                         with Image.open(src_path) as sim:
@@ -2081,7 +2081,7 @@ def assets_upload():
                                 raise RuntimeError("Static image dimensions do not match frame spec")
 
                             cropped = sim.crop((0, 0, sheet_w, sheet_h))
-                            # 目标是 webp 仍按无损保存，避免像素损失
+                            # webp save
                             if target.suffix.lower() == ".webp":
                                 cropped.save(str(target), "WEBP", lossless=True, quality=100, method=6)
                             else:
@@ -2108,7 +2108,7 @@ def assets_upload():
                     finally:
                         pass
 
-                # 默认：优先保留输入帧尺寸；若前端传了强制值则按前端。
+                        # defaultkeepinputframe(s)
                 preserve_original_val = request.form.get("preserve_original")
                 if preserve_original_val is None:
                     preserve_original = True
