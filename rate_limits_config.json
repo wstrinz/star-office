@@ -3,16 +3,20 @@
     "sessionWindowHours": 2,
     "fiveHourTokenLimit": 250000000,
     "weeklyTokenLimit": 3230000000,
+    "weeklyResetDay": "saturday",
+    "weeklyResetHour": 12,
     "tier": "sonnet-plan",
     "label": "Anthropic (Claude)",
-    "notes": "Session window set to 2h (matches console reset). Weekly limit back-calculated from 65% usage = ~3.23B. Session limit ~250M for 2h window."
+    "notes": "Weekly resets Saturday at noon CT. Session window 2h. Weekly limit ~3.23B."
   },
   "openai": {
     "sessionWindowHours": 5,
     "fiveHourTokenLimit": 5000000000,
     "weeklyTokenLimit": 9500000000,
+    "weeklyResetDay": null,
+    "weeklyResetHour": null,
     "tier": "pro",
     "label": "OpenAI (Codex)",
-    "notes": "Weekly limit back-calculated from 15% usage = ~9.5B. 5h session limit 5B gives ~24% which is reasonable for dashboard."
+    "notes": "Rolling 7-day window (no fixed reset). Weekly limit ~9.5B."
   }
 }

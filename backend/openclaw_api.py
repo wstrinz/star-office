@@ -1035,16 +1035,41 @@ def openclaw_rate_limits():
     anthropic_session_hours = config.get("anthropic", {}).get("sessionWindowHours", 5)
     openai_session_hours = config.get("openai", {}).get("sessionWindowHours", 5)
 
-    week_cutoff_s = now_s - 7 * 86400
-    week_cutoff_ms = now_ms - 7 * 86400 * 1000
+    # Weekly cutoffs — per-provider, supports fixed reset day or rolling 7d
+    def _compute_weekly_cutoff(provider_config):
+        """Compute weekly cutoff timestamp. If weeklyResetDay is set, use fixed
+        reset point (most recent occurrence of that day+hour). Otherwise rolling 7d."""
+        reset_day = provider_config.get("weeklyResetDay")
+        reset_hour = provider_config.get("weeklyResetHour", 0)
+        if reset_day:
+            day_map = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+                       "friday": 4, "saturday": 5, "sunday": 6}
+            target_dow = day_map.get(reset_day.lower(), 5)  # default saturday
+            from datetime import datetime as _dt, timedelta as _td
+            now_dt = _dt.now()
+            # Find most recent reset point
+            days_since = (now_dt.weekday() - target_dow) % 7
+            reset_date = now_dt.replace(hour=reset_hour, minute=0, second=0, microsecond=0) - _td(days=days_since)
+            # If we haven't reached reset_hour today and today is reset day, use last week
+            if reset_date > now_dt:
+                reset_date -= _td(days=7)
+            return reset_date.timestamp()
+        else:
+            return now_s - 7 * 86400
+
+    anthropic_week_cutoff_s = _compute_weekly_cutoff(config.get("anthropic", {}))
+    openai_week_cutoff_s = _compute_weekly_cutoff(config.get("openai", {}))
+    # Use the earliest cutoff for shared data collection
+    week_cutoff_s = min(anthropic_week_cutoff_s, openai_week_cutoff_s)
+    week_cutoff_ms = week_cutoff_s * 1000
 
     # --- 1. Codex SQLite (OpenAI) ---
     openai_session_cutoff_s = now_s - openai_session_hours * 3600
-    codex_data = _read_codex_usage(openai_session_cutoff_s, week_cutoff_s)
+    codex_data = _read_codex_usage(openai_session_cutoff_s, openai_week_cutoff_s)
 
     # --- 2. Claude Code sessions (Anthropic) ---
     anthropic_session_cutoff_s = now_s - anthropic_session_hours * 3600
-    claude_data = _read_claude_code_usage(anthropic_session_cutoff_s, week_cutoff_s)
+    claude_data = _read_claude_code_usage(anthropic_session_cutoff_s, anthropic_week_cutoff_s)
 
     # --- 3. OpenClaw sessions + cron (supplementary) ---
     # Use the wider of the two session windows for OpenClaw data collection
@@ -1115,10 +1140,14 @@ def openclaw_rate_limits():
             "cacheRead": claude_data["weekly"].get("cache_read", 0),
             "cacheWrite": claude_data["weekly"].get("cache_write", 0),
             "totalTokens": anthropic_weekly_total,
-            "windowStart": datetime.fromtimestamp(week_cutoff_s).isoformat(),
+            "windowStart": datetime.fromtimestamp(anthropic_week_cutoff_s).isoformat(),
             "estimatedLimit": weekly_limit,
             "percentUsed": weekly_pct,
             "remainingTokens": max(0, weekly_limit - anthropic_weekly_total) if weekly_limit > 0 else None,
+            "resetType": "fixed" if config.get("anthropic", {}).get("weeklyResetDay") else "rolling",
+            "resetDay": config.get("anthropic", {}).get("weeklyResetDay"),
+            "resetHour": config.get("anthropic", {}).get("weeklyResetHour"),
+            "nextReset": datetime.fromtimestamp(anthropic_week_cutoff_s + 7 * 86400).isoformat() if config.get("anthropic", {}).get("weeklyResetDay") else None,
         },
         "dataSources": {
             "claudeCode": {
