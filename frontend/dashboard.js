@@ -461,7 +461,24 @@
   function renderRateLimitsPanel(data) {
     var el = document.getElementById('oc-rate-limits-panel');
     if (!el) return;
-    if (!data || data.error) {
+
+    // Loading state — show skeleton while rate-limits endpoint responds
+    if (data === null) {
+      el.innerHTML = '<div class="oc-empty" style="display:flex;align-items:center;gap:8px;">' +
+        '<span class="oc-loading-pulse" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#584a3a;animation:oc-pulse 1.2s ease-in-out infinite;"></span>' +
+        ' Loading rate limits…' +
+        '</div>';
+      // Inject keyframes if not already present
+      if (!document.getElementById('oc-pulse-style')) {
+        var style = document.createElement('style');
+        style.id = 'oc-pulse-style';
+        style.textContent = '@keyframes oc-pulse{0%,100%{opacity:.3}50%{opacity:1}}';
+        document.head.appendChild(style);
+      }
+      return;
+    }
+
+    if (data.error) {
       el.innerHTML = '<div class="oc-empty">Rate limit data unavailable</div>';
       return;
     }
@@ -478,6 +495,13 @@
         html += '<div class="oc-rl-warning' + (isRed ? ' oc-rl-warning-red' : '') + '">' + escHtml(w) + '</div>';
       });
       html += '</div>';
+    }
+
+    // Cache/timing indicator
+    if (meta.cached) {
+      html += '<div style="font-size:9px;color:#484f58;text-align:right;margin-bottom:2px;">⚡ cached (' + Math.round(meta.cachedAge || 0) + 's ago)</div>';
+    } else if (meta.computeMs) {
+      html += '<div style="font-size:9px;color:#484f58;text-align:right;margin-bottom:2px;">computed in ' + meta.computeMs + 'ms</div>';
     }
 
     // Provider sections
@@ -841,30 +865,30 @@
   // ── Data refresh ────────────────────────────────────────
 
   async function refreshAll() {
-    const [status, cron, activity, costs, sessions, subagents, agentsCombined, usage, rateLimits] = await Promise.all([
-      fetchJSON('/openclaw/status'),
-      fetchJSON('/openclaw/cron'),
-      fetchJSON('/openclaw/activity?limit=' + ACTIVITY_LIMIT),
-      fetchJSON('/openclaw/costs?days=7'),
-      fetchJSON('/openclaw/sessions?limit=50'),
-      fetchJSON('/openclaw/subagents'),
-      fetchJSON('/openclaw/agents'),
-      fetchJSON('/openclaw/usage?period=current_month'),
-      fetchJSON('/openclaw/rate-limits'),
-    ]);
-    renderStatusBar(status);
-    renderUsagePanel(usage);
-    renderRateLimitsPanel(rateLimits);
-    renderCronGrid(cron);
-    renderActivity(activity);
-    renderCosts(costs);
-    renderSessions(sessions);
-    renderSubagents(subagents);
-    renderAgentsRoster(agentsCombined);
+    // Progressive rendering: fire all fetches independently so each panel
+    // renders as soon as its data arrives. Rate-limits (8s+ cold) no longer
+    // blocks the entire dashboard.
+    fetchJSON('/openclaw/status').then(renderStatusBar);
+    fetchJSON('/openclaw/usage?period=current_month').then(renderUsagePanel);
+    fetchJSON('/openclaw/cron').then(renderCronGrid);
+    fetchJSON('/openclaw/activity?limit=' + ACTIVITY_LIMIT).then(renderActivity);
+    fetchJSON('/openclaw/costs?days=7').then(renderCosts);
+    fetchJSON('/openclaw/sessions?limit=50').then(renderSessions);
+    fetchJSON('/openclaw/subagents').then(renderSubagents);
+    fetchJSON('/openclaw/agents').then(renderAgentsRoster);
 
-    // Update last-refresh timestamp
-    const ts = document.getElementById('oc-last-refresh');
-    if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // Rate limits: show loading state immediately, render when ready
+    renderRateLimitsPanel(null);
+    fetchJSON('/openclaw/rate-limits').then(function(rateLimits) {
+      renderRateLimitsPanel(rateLimits);
+    });
+
+    // Update last-refresh timestamp after a short delay so it appears
+    // once the fast panels have rendered
+    setTimeout(function() {
+      var ts = document.getElementById('oc-last-refresh');
+      if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }, 500);
   }
 
   // ── Toggle logic ────────────────────────────────────────

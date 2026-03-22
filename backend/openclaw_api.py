@@ -612,6 +612,10 @@ def openclaw_usage_config_set():
 # Rate Limits — rolling token window tracking
 # ---------------------------------------------------------------------------
 
+# In-memory cache for rate-limits (avoids re-scanning 3000+ JSONL files every request)
+_rate_limits_cache = {"data": None, "ts": 0}
+RATE_LIMITS_CACHE_TTL = 120  # seconds (2 minutes)
+
 def _read_rate_limits_config():
     """Read rate_limits_config.json with defaults."""
     defaults = {
@@ -1014,6 +1018,16 @@ def openclaw_rate_limits():
     3. OpenClaw sessions + cron runs (supplementary — adds to Anthropic totals)
     """
     now_s = time.time()
+
+    # Check cache first — avoid re-scanning thousands of JSONL files
+    cache_age = now_s - _rate_limits_cache["ts"]
+    if _rate_limits_cache["data"] is not None and cache_age < RATE_LIMITS_CACHE_TTL:
+        cached = _rate_limits_cache["data"]
+        # Update meta to reflect cache hit
+        if "_meta" in cached:
+            cached["_meta"]["cached"] = True
+            cached["_meta"]["cachedAge"] = round(cache_age, 1)
+        return jsonify(cached)
     now_ms = now_s * 1000
     config = _read_rate_limits_config()
 
@@ -1224,17 +1238,25 @@ def openclaw_rate_limits():
     else:
         traffic_light = "green"
 
+    compute_ms = round((time.time() - now_s) * 1000, 1)
     response["_meta"] = {
         "warnings": warnings,
         "trafficLight": traffic_light,
         "worstPercent": worst_percent,
         "calculatedAt": datetime.now().isoformat(),
+        "computeMs": compute_ms,
+        "cached": False,
+        "cachedAge": 0,
         "dataSourceStatus": {
             "codexSqlite": codex_data["available"],
             "claudeCode": claude_data["available"],
             "openclawSessions": True,  # always available (may just be empty)
         },
     }
+
+    # Store in cache
+    _rate_limits_cache["data"] = response
+    _rate_limits_cache["ts"] = time.time()
 
     return jsonify(response)
 
