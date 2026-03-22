@@ -198,6 +198,36 @@ const BLINK_INTERVAL = 2500;
 const BUBBLE_INTERVAL = 8000;
 const CAT_BUBBLE_INTERVAL = 18000;
 let lastCatBubble = 0;
+
+// Dynamic status message from backend
+let _latestStatusMessage = null;
+let _statusMessageFetchedAt = 0;
+const STATUS_MSG_TTL = 30000;
+
+function fetchStatusMessage() {
+  if (Date.now() - _statusMessageFetchedAt < STATUS_MSG_TTL && _latestStatusMessage) return;
+  fetch('/openclaw/status-message', {cache: 'no-store'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.message) {
+        _latestStatusMessage = data.message;
+        _statusMessageFetchedAt = Date.now();
+      }
+    })
+    .catch(function() {});
+}
+
+function getDynamicBubbleText(state) {
+  fetchStatusMessage();
+  if (_latestStatusMessage) {
+    var msg = _latestStatusMessage;
+    _latestStatusMessage = null;
+    return msg;
+  }
+  var texts = BUBBLE_TEXTS[state] || BUBBLE_TEXTS.idle;
+  return texts[Math.floor(Math.random() * texts.length)];
+}
+
 const TYPEWRITER_DELAY = 50;
 let agents = {}; // agentId -> sprite/container
 let lastAgentsFetch = 0;
@@ -891,8 +921,12 @@ function moveStar(time) {
 
 function showBubble() {
   if (bubble) { bubble.destroy(); bubble = null; }
-  const texts = BUBBLE_TEXTS[currentState] || BUBBLE_TEXTS.idle;
-  if (currentState === 'idle') return;
+
+  // Use dynamic status message from backend, fallback to static
+  const text = getDynamicBubbleText(currentState);
+  if (!text) return;
+  // Still skip idle if using static fallback (dynamic messages are always shown)
+  if (currentState === 'idle' && !_statusMessageFetchedAt) return;
 
   let anchorX = star.x;
   let anchorY = star.y;
@@ -906,8 +940,6 @@ function showBubble() {
     anchorX = window.starWorking.x;
     anchorY = window.starWorking.y;
   }
-
-  const text = texts[Math.floor(Math.random() * texts.length)];
   const bubbleY = anchorY - 70;
   const bg = game.add.rectangle(anchorX, bubbleY, text.length * 10 + 20, 28, 0xffffff, 0.95);
   bg.setStrokeStyle(2, 0x000000);

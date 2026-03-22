@@ -1,8 +1,9 @@
 """OpenClaw Dashboard API — read-only integration with OpenClaw data directory.
 
 Provides:
-  GET /openclaw/status    — gateway health + cron summary
-  GET /openclaw/cron      — all cron jobs with state
+  GET /openclaw/status         — gateway health + cron summary
+  GET /openclaw/status-message — contextual bubble status message for UI
+  GET /openclaw/cron           — all cron jobs with state
   GET /openclaw/activity  — recent cron run history
   GET /openclaw/costs     — token usage aggregation
   GET /openclaw/usage     — usage limits & cost tracking
@@ -168,6 +169,167 @@ def openclaw_status():
             "erroring": len(erroring),
         },
         "lastUpdated": datetime.now().isoformat(),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Status Message — contextual bubble text for the pixel office UI
+# ---------------------------------------------------------------------------
+
+import random as _random
+
+def _extract_channel_name(session_key, session_data):
+    """Extract a clean channel/thread name from session key or display name."""
+    display = session_data.get("displayName", "") or ""
+    if display:
+        channel_match = re.search(r"#([\w-]+)", display)
+        if channel_match:
+            return "#" + channel_match.group(1)
+        # Trim long display names
+        if len(display) > 30:
+            return display[:27] + "..."
+        return display
+    # Fallback: extract from key
+    if "discord:channel:" in session_key:
+        return "Discord thread"
+    return session_key.split(":")[-1][:20]
+
+
+@openclaw_bp.route("/openclaw/status-message", methods=["GET"])
+def openclaw_status_message():
+    """Return a short contextual status message for the speech bubble UI.
+
+    Reads real session/cron/rate-limit data and picks from a context-appropriate
+    pool.  No external API calls — must be fast.
+    """
+    sessions = _read_sessions()
+    now_ms = int(time.time() * 1000)
+    five_min = 5 * 60 * 1000
+
+    # --- Gather live context ---
+    active_threads = []
+    active_subagents = []
+    for key, s in sessions.items():
+        age_ms = now_ms - s.get("updatedAt", 0)
+        if age_ms > five_min:
+            continue
+        if key == "agent:main:main":
+            continue
+        if "discord:channel:" in key:
+            name = _extract_channel_name(key, s)
+            active_threads.append(name)
+        elif "subagent:" in key:
+            label = s.get("label") or s.get("displayName") or key.split(":")[-1][:12]
+            active_subagents.append(label)
+
+    # Cron activity
+    jobs = _read_jobs()
+    running_crons = []
+    for j in jobs:
+        if not j.get("enabled"):
+            continue
+        state = j.get("state", {}) or {}
+        last_run_ms = state.get("lastRunAtMs", 0)
+        last_status = state.get("lastRunStatus") or state.get("lastStatus", "")
+        if last_run_ms and (now_ms - last_run_ms) < 2 * 60 * 1000:
+            if last_status not in ("ok", "error", "skipped", ""):
+                running_crons.append(j.get("name", "cron"))
+
+    # --- Build message pool ---
+    messages = []
+
+    # Subagents
+    if active_subagents:
+        n = len(active_subagents)
+        messages.append(f"Running {n} agent{'s' if n > 1 else ''}")
+        first_label = active_subagents[0][:25]
+        messages.append(f"⚡ {first_label} is working...")
+        if n > 1:
+            messages.append(f"Delegating to {n} helpers")
+
+    # Threads
+    if len(active_threads) > 1:
+        messages.append(f"Active in {len(active_threads)} threads")
+        short_names = ", ".join(t[:15] for t in active_threads[:2])
+        messages.append(f"Multitasking: {short_names}")
+    elif len(active_threads) == 1:
+        messages.append(f"Focused on {active_threads[0][:30]}")
+
+    # Cron
+    if running_crons:
+        messages.append(f"⏰ Running: {running_crons[0][:25]}")
+
+    # Time-of-day flavor
+    hour = datetime.now().hour
+    if hour < 7:
+        messages.append("Early bird mode 🌅")
+        messages.append("Quiet hours, keeping watch")
+    elif hour > 22:
+        messages.append("Late night session...")
+        messages.append("Still here, don't stay up too late")
+    elif 12 <= hour <= 13:
+        messages.append("Lunch hour — still on duty 🍱")
+    elif 6 <= hour <= 8:
+        messages.append("Good morning ☀️")
+
+    # Token budget awareness
+    if _rate_limits_cache.get("data"):
+        rl = _rate_limits_cache["data"]
+        anthropic_data = rl.get("anthropic", {})
+        session_pct = anthropic_data.get("rolling5h", {}).get("percentUsed", 0)
+        weekly_pct = anthropic_data.get("rollingWeek", {}).get("percentUsed", 0)
+        if session_pct > 80 or weekly_pct > 80:
+            messages.append("⚠️ Token budget getting tight")
+        elif weekly_pct < 20:
+            messages.append("Plenty of capacity today 💪")
+
+    # Travel mode
+    try:
+        trip_cfg = os.path.join(OPENCLAW_DIR, "workspace", "config", "sanibel-trip-mode.json")
+        if os.path.isfile(trip_cfg):
+            with open(trip_cfg, "r", encoding="utf-8") as f:
+                trip = json.load(f)
+            if trip.get("active"):
+                messages.append("🏖️ Vacation mode: Sanibel Island")
+                messages.append("🌴 Working from the beach condo")
+                messages.append("🐚 Gulf Coast vibes")
+    except Exception:
+        pass
+
+    # Activity-based messages when things are happening
+    total_active = len(active_threads) + len(active_subagents) + len(running_crons)
+    if total_active > 3:
+        messages.append("Busy day — lots of plates spinning")
+        messages.append(f"{total_active} things running right now")
+    elif total_active == 0:
+        # Calm / idle messages
+        messages.extend([
+            "All systems nominal",
+            "Watching the hearth 🔥",
+            "Ready when you are",
+            "Keeping things warm",
+            "Standing by: ears up",
+            "Quiet moment — recharging",
+        ])
+
+    # Fallback (should not happen, but just in case)
+    if not messages:
+        messages = [
+            "All systems nominal",
+            "Watching the hearth 🔥",
+            "Ready when you are",
+            "Keeping things warm",
+        ]
+
+    chosen = _random.choice(messages)
+    return jsonify({
+        "message": chosen,
+        "pool_size": len(messages),
+        "context": {
+            "threads": len(active_threads),
+            "subagents": len(active_subagents),
+            "crons": len(running_crons),
+        },
     })
 
 

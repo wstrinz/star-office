@@ -2605,6 +2605,40 @@
         const BUBBLE_INTERVAL = 8000;
         const CAT_BUBBLE_INTERVAL = 18000; // cat bubble much less frequent
         let lastCatBubble = 0;
+
+        // Dynamic status message from backend (replaces static bubble texts)
+        let _latestStatusMessage = null;
+        let _statusMessageFetchedAt = 0;
+        const STATUS_MSG_TTL = 30000; // refresh every 30s
+
+        function fetchStatusMessage() {
+            if (Date.now() - _statusMessageFetchedAt < STATUS_MSG_TTL && _latestStatusMessage) return;
+            fetch('/openclaw/status-message', {cache: 'no-store'})
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.message) {
+                        _latestStatusMessage = data.message;
+                        _statusMessageFetchedAt = Date.now();
+                    }
+                })
+                .catch(function() {}); // fail silently, fall back to static
+        }
+
+        function getDynamicBubbleText(state, lang) {
+            fetchStatusMessage(); // non-blocking refresh
+            if (_latestStatusMessage) {
+                var msg = _latestStatusMessage;
+                // Clear so next bubble call fetches fresh or falls back
+                // (keeps variety — don't show same message twice in a row)
+                _latestStatusMessage = null;
+                return msg;
+            }
+            // Fallback to static messages
+            var pool = BUBBLE_TEXTS[lang] || BUBBLE_TEXTS.zh;
+            var msgs = pool[state] || pool.idle || [];
+            return msgs[Math.floor(Math.random() * msgs.length)];
+        }
+
         let lastGuestAgentsFetch = 0;
         let lastGuestBubbleAt = 0;
         const TYPEWRITER_DELAY = 50;
@@ -6306,8 +6340,12 @@ function toggleBrokerPanel() {
 
         function showBubble() {
             if (bubble) { bubble.destroy(); bubble = null; }
-            const texts = getBubbleTextsByState(currentState);
- if (currentState === 'idle') return; // idle show bubble
+
+            // Use dynamic status message from backend, fallback to static
+            const text = getDynamicBubbleText(currentState, uiLang);
+            if (!text) return;
+            // Still skip idle if using static fallback (dynamic messages are always shown)
+            if (currentState === 'idle' && !_statusMessageFetchedAt) return;
 
             // Bubble anchor should follow current visible character:
             // - syncing: syncAnimSprite
@@ -6326,8 +6364,6 @@ function toggleBrokerPanel() {
                 anchorX = window.starWorking.x;
                 anchorY = window.starWorking.y;
             }
-
-            const text = texts[Math.floor(Math.random() * texts.length)];
             const bubbleOffsetY = (currentState === 'writing') ? 85 : 70;
             const bubbleY = anchorY - bubbleOffsetY;
 
