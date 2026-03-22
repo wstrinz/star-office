@@ -283,19 +283,6 @@ def openclaw_status_message():
         elif weekly_pct < 20:
             messages.append("Plenty of capacity today 💪")
 
-    # Travel mode
-    try:
-        trip_cfg = os.path.join(OPENCLAW_DIR, "workspace", "config", "sanibel-trip-mode.json")
-        if os.path.isfile(trip_cfg):
-            with open(trip_cfg, "r", encoding="utf-8") as f:
-                trip = json.load(f)
-            if trip.get("active"):
-                messages.append("🏖️ Vacation mode: Sanibel Island")
-                messages.append("🌴 Working from the beach condo")
-                messages.append("🐚 Gulf Coast vibes")
-    except Exception:
-        pass
-
     # Activity-based messages when things are happening
     total_active = len(active_threads) + len(active_subagents) + len(running_crons)
     if total_active > 3:
@@ -311,6 +298,24 @@ def openclaw_status_message():
             "Standing by: ears up",
             "Quiet moment — recharging",
         ])
+
+    # Travel mode — add just ONE travel flavor (not 3) to avoid dominating
+    try:
+        trip_cfg = os.path.join(OPENCLAW_DIR, "workspace", "config", "sanibel-trip-mode.json")
+        if os.path.isfile(trip_cfg):
+            with open(trip_cfg, "r", encoding="utf-8") as f:
+                trip = json.load(f)
+            if trip.get("active"):
+                import random as _rnd
+                travel_msgs = [
+                    "🏖️ Vacation mode: Sanibel Island",
+                    "🌴 Working from the beach condo",
+                    "🐚 Gulf Coast vibes",
+                    "🌅 Sun, shells, and servers",
+                ]
+                messages.append(_rnd.choice(travel_msgs))
+    except Exception:
+        pass
 
     # Fallback (should not happen, but just in case)
     if not messages:

@@ -179,7 +179,7 @@ def load_state():
 
     # Auto-idle
     try:
-        ttl = int(state.get("ttl_seconds", 300))
+        ttl = int(state.get("ttl_seconds", 45))
         updated_at = state.get("updated_at")
         s = state.get("state", "idle")
         if updated_at and s in WORKING_STATES:
