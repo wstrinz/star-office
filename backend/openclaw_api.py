@@ -1770,27 +1770,52 @@ def openclaw_agent_detail(name):
         else:
             main_state = "idle"
 
-        # Collect recent sessions
+        # Collect recent sessions and active threads
         recent_sessions = []
+        active_threads = []
+        five_min_ms = 5 * 60 * 1000
         for sk, s in sessions.items():
+            updated_at = s.get("updatedAt", 0)
+            display_name = s.get("displayName", sk)
+            channel = s.get("channel", "")
+            age_ms = now_ms - updated_at if updated_at else float("inf")
+
             recent_sessions.append({
                 "sessionKey": sk,
-                "displayName": s.get("displayName", sk),
-                "channel": s.get("channel", ""),
+                "displayName": display_name,
+                "channel": channel,
                 "chatType": s.get("chatType", ""),
                 "model": s.get("model", ""),
                 "modelProvider": s.get("modelProvider", ""),
-                "updatedAt": s.get("updatedAt", 0),
-                "updatedAtRelative": _relative_time_label(s.get("updatedAt", 0)),
+                "updatedAt": updated_at,
+                "updatedAtRelative": _relative_time_label(updated_at),
                 "totalTokens": s.get("totalTokens", 0),
                 "inputTokens": s.get("inputTokens", 0),
                 "outputTokens": s.get("outputTokens", 0),
                 "cacheRead": s.get("cacheRead", 0),
                 "cacheWrite": s.get("cacheWrite", 0),
                 "compactionCount": s.get("compactionCount", 0),
-                "status": _session_status(s.get("updatedAt", 0)),
+                "status": _session_status(updated_at),
             })
+
+            # Build active threads from discord channel sessions
+            if "discord:channel:" in sk and age_ms < 30 * 60 * 1000:
+                thread_state = "executing" if age_ms < five_min_ms else "writing"
+                clean_name = display_name or sk
+                if "discord:channel:" in sk and not display_name:
+                    clean_name = "Discord thread"
+                active_threads.append({
+                    "name": clean_name,
+                    "state": thread_state,
+                    "displayName": display_name or sk,
+                    "sessionKey": sk,
+                    "totalTokens": s.get("totalTokens", 0) or 0,
+                    "model": s.get("model", "") or "",
+                    "lastActivityAge": _relative_time_label(updated_at),
+                })
+
         recent_sessions.sort(key=lambda x: x.get("updatedAt", 0), reverse=True)
+        active_threads.sort(key=lambda x: x.get("state", "") == "executing", reverse=True)
 
         return jsonify({
             "name": "Cali",
@@ -1805,6 +1830,7 @@ def openclaw_agent_detail(name):
             "inputTokens": most_recent.get("inputTokens", 0) if most_recent else 0,
             "outputTokens": most_recent.get("outputTokens", 0) if most_recent else 0,
             "recentSessions": recent_sessions[:10],
+            "activeThreads": active_threads,
         })
 
     # Check subagent runs

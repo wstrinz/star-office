@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1328,6 +1328,127 @@
             text-align: center;
             padding: 20px;
             font-style: italic;
+        }
+
+        /* ═══ Agent Detail Modal — Enhanced ═══ */
+        .adm-stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: #120e0a;
+            border-bottom: 1px solid #2d2218;
+            font-size: 11px;
+            color: #8b949e;
+        }
+        .adm-stats-bar span { white-space: nowrap; }
+        .adm-stats-bar .adm-stat-val { color: #e8a849; font-weight: bold; }
+        .adm-stats-bar .adm-stat-sep { color: #3d2f1f; }
+
+        .adm-thread-card {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: #1e1710;
+            border: 1px solid #2d2218;
+            border-left: 3px solid #484f58;
+            font-size: 11px;
+            transition: border-color 0.2s;
+        }
+        .adm-thread-card.thread-executing { border-left-color: #3fb950; }
+        .adm-thread-card.thread-writing { border-left-color: #d29922; }
+        .adm-thread-card.thread-idle { border-left-color: #484f58; }
+        .adm-thread-name {
+            flex: 1;
+            color: #c9d1d9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .adm-thread-state {
+            font-size: 10px;
+            padding: 1px 5px;
+            border: 1px solid;
+        }
+        .adm-thread-time { color: #484f58; font-size: 10px; white-space: nowrap; }
+
+        .adm-status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .adm-status-dot.active { background: #3fb950; box-shadow: 0 0 4px rgba(63,185,80,0.4); }
+        .adm-status-dot.recent { background: #d29922; box-shadow: 0 0 4px rgba(210,153,34,0.3); }
+        .adm-status-dot.stale, .adm-status-dot.idle { background: #484f58; }
+
+        .adm-session-row {
+            padding: 5px 0;
+            border-bottom: 1px solid #1e1710;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .adm-session-row:hover { background: rgba(232,168,73,0.04); }
+        .adm-session-row .adm-session-summary {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+        }
+        .adm-session-row .adm-sess-icon { flex-shrink: 0; font-size: 11px; }
+        .adm-session-row .adm-sess-name {
+            flex: 1;
+            color: #c9d1d9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .adm-session-row .adm-sess-tokens { color: #e8a849; font-size: 10px; white-space: nowrap; }
+        .adm-session-row .adm-sess-time { color: #484f58; font-size: 10px; white-space: nowrap; }
+
+        .adm-session-detail {
+            display: none;
+            padding: 6px 0 4px 14px;
+            font-size: 10px;
+            color: #8b949e;
+            line-height: 1.7;
+        }
+        .adm-session-row.expanded .adm-session-detail { display: block; }
+        .adm-session-detail .adm-token-bar {
+            height: 4px;
+            background: #120e0a;
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            margin: 4px 0 2px;
+        }
+        .adm-token-bar-seg { height: 100%; min-width: 1px; }
+
+        .adm-section-label {
+            font-size: 11px;
+            color: #484f58;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 10px 0 6px;
+        }
+
+        @media (max-width: 767px) {
+            .adm-session-row {
+                min-height: 44px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .adm-session-row .adm-session-summary { font-size: 13px; }
+            .adm-session-row .adm-sess-tokens { font-size: 11px; }
+            .adm-session-row .adm-sess-time { font-size: 11px; }
+            .adm-session-detail { font-size: 12px; padding: 8px 0 6px 14px; line-height: 1.8; }
+            .adm-thread-card { padding: 8px 10px; font-size: 13px; }
+            .adm-stats-bar { font-size: 12px; }
         }
 
         /* ═══ OpenClaw Dashboard ═══ */
@@ -2890,7 +3011,7 @@
         }
 
         function mapAssetPathToSprite(path) {
-            // 背景做特殊映射：即使纹理 key 已变成 office_bg_live_xxx，也能稳定定位到背景对象
+ // backgroundtexture key office_bg_live_xxxbackground
             if ((path || '').includes('office_bg_small.webp') && officeBgSprite) return officeBgSprite;
 
             const item = sceneAssetItems.find(x => x.path === path && x.ref && x.ref.getBounds);
@@ -2959,7 +3080,7 @@
 
         async function applySavedPositionOverrides() {
             try {
-                // 优先：后端持久化坐标；回退：后端默认坐标；最后：本地内存覆盖
+ // coordinatesdefaultcoordinates
                 let serverPositions = {};
                 let serverDefaults = {};
                 try {
@@ -2978,19 +3099,19 @@
                     const texKey = ch?.texture?.key;
                     if (!texKey) continue;
 
-                    // 先尝试资产路径命中（推荐持久化键，优先级最高）
+ // match
                     const assetPath = resolveAssetPathByTextureKey(texKey);
                     let ov = null;
                     if (assetPath) {
                         ov = serverPositions[assetPath] || serverDefaults[assetPath] || assetPositionOverrides[assetPath];
                     }
 
-                    // 再尝试 textureKey 命中（兼容旧数据）
+ // textureKey matchcompatible with
                     if (!ov) {
                         ov = serverPositions[texKey] || serverDefaults[texKey] || assetPositionOverrides[texKey];
                     }
 
-                    // 最后按 stem 模糊匹配（处理 webp/png 或 live key 差异）
+ // stem handle webp/png live key 
                     if (!ov) {
                         const stem = toAssetStem(assetPath || texKey);
                         const hitKey = Object.keys(serverPositions).find(k => toAssetStem(k) === stem)
@@ -3054,7 +3175,7 @@
         }
 
         function selectAssetInDrawer(path) {
-            // 二次点击同一资产 = 取消选择
+ // = deselect
             if (selectedAssetInfo && selectedAssetInfo.path === path) {
                 clearAssetSelection(true);
                 return;
@@ -3074,7 +3195,7 @@
         function inferSpritesheetFrameMetaByPath(path) {
             const p = (path || '').toLowerCase();
             if (!p) return null;
-            // 优先用文件命名约定推断（不写死具体尺寸）
+ // 
             if (p.includes('spritesheet') || p.includes('sprite-sheet') || p.includes('sheet') || p.includes('anim') || p.includes('grid')) {
                 return { w: null, h: null };
             }
@@ -3082,16 +3203,16 @@
         }
 
         function getSpritesheetFrameMeta(item) {
-            // 先看命名是否属于精灵表
+ // sprite
             const inferred = inferSpritesheetFrameMetaByPath(item?.path || '');
             if (!inferred) return null;
-            // 仅返回"是精灵表"的信号，单帧尺寸后续自动推断
+ // "sprite"frame(s)
             return { w: null, h: null, isSheet: true };
         }
 
         function guessThumbFrameSize(fullW, fullH, path = '') {
             const p = (path || '').toLowerCase();
-            // 常见核心资产优先用显式提示（避免误判）
+ // 
             const hints = [
                 [/star-working-spritesheet-grid\.webp$/, 300, 300],
                 [/star-idle-v5\.(webp|png)$/, 256, 256],
@@ -3104,7 +3225,7 @@
                 if (re.test(p) && fullW % fw === 0 && fullH % fh === 0) return { fw, fh };
             }
 
-            // 通用推断：枚举可整除候选，偏好 cols≈8、帧尺寸适中、近似方形
+ // cols≈8frame(s)
             const divisors = (n) => {
                 const arr = [];
                 for (let i = 1; i * i <= n; i++) {
@@ -3156,7 +3277,7 @@
                 const fw = guessed.fw;
                 const fh = guessed.fh;
 
-                // 判断是否可能是精灵表：整图宽高至少是单帧的整数倍，且总帧数>1
+ // spriteframe(s)frame(s)>1
                 const cols = Math.floor(fullW / fw);
                 const rows = Math.floor(fullH / fh);
                 const frames = cols * rows;
@@ -3214,7 +3335,7 @@
             const list = document.getElementById('asset-list');
             if (!list) return;
 
-            // 统一显示后端全部资产（不再区分已加载/全部）
+ // showload/
             const baseRows = assetListData.map(it => ({ ...it, key: '' }));
 
             const statePriority = [
@@ -3226,12 +3347,12 @@
             const assetRank = (path='') => {
                 const p = (path || '').toLowerCase();
                 const idx = statePriority.findIndex(x => p.endsWith(x));
-                if (idx >= 0) return idx; // 0~3: 四个主状态最前
+ if (idx >= 0) return idx; // 0~3: state
 
-                // 按钮素材最不重要：统一沉到列表末尾
+ // buttonassetlist
                 if (p.includes('/btn-') || p.includes('btn-') || p.includes('button')) return 1000;
 
-                if (p.includes('guest_anim_')) return 999; // guest 动画靠后
+ if (p.includes('guest_anim_')) return 999; // guest animation
                 return 100;
             };
             const rows = baseRows
@@ -3266,7 +3387,7 @@
                 </div>`;
             }).join('');
 
-            // 先画静态缩略图，再尝试对精灵表做逐帧预览
+ // staticspriteframe(s)
             rows.forEach(it => {
                 const canvas = document.getElementById(`asset-thumb-canvas-${(it.path || '').replace(/[^a-zA-Z0-9]/g, '_')}`);
                 if (!canvas) return;
@@ -3291,7 +3412,7 @@
                 const data = await res.json();
                 assetListData = data.items || [];
 
-                // 场景渲染可能稍晚，做一次延迟抓取
+ // scenerender
                 buildSceneAssetItems();
                 if (sceneAssetItems.length === 0) {
                     setTimeout(() => {
@@ -3359,7 +3480,7 @@
             if (!body) return;
             body.addEventListener('click', (e) => {
                 if (!assetDrawerOpen || !assetDrawerAuthed) return;
-                // 点击空白处才取消选择；点击控件/资产项不取消
+ // deselect/cancel
                 const keep = e.target.closest('.asset-item, .asset-toolbar, #asset-upload-panel, #asset-move-panel, button, input, textarea, label, canvas');
                 if (keep) return;
                 clearAssetSelection(true);
@@ -3387,19 +3508,19 @@
                 try {
                     scene.load.once('complete', () => {
                         try {
-                            // 替换到新纹理
+ // texture
                             if (sprite.setTexture) sprite.setTexture(newKey);
-                            // 同 key 角色（如多个同材质装饰）一起替换
+ // key 
                             getSceneChildren().forEach(ch => {
                                 if (ch !== sprite && ch.texture && ch.texture.key === oldKey && ch.setTexture) {
                                     ch.setTexture(newKey);
                                 }
                             });
-                            // 更新背景引用
+ // updatebackground
                             if (oldKey === 'office_bg' && officeBgSprite && officeBgSprite.texture && officeBgSprite.texture.key === newKey) {
                                 currentOfficeBgTextureKey = newKey;
                             }
-                            // 移除旧纹理，避免内存堆积
+ // texture
                             if (oldKey !== newKey && scene.textures.exists(oldKey)) {
                                 scene.textures.remove(oldKey);
                             }
@@ -3411,7 +3532,7 @@
                     });
                     scene.load.once('loaderror', () => resolve(false));
 
-                    // 按扩展名用对应 loader
+ // loader
                     if (ext === 'json') {
                         resolve(false);
                         return;
@@ -3430,7 +3551,7 @@
             const fi = document.getElementById('asset-upload-file');
             const out = document.getElementById('asset-upload-result');
             if (!path) { out.textContent = 'Please select an asset path first'; return false; }
-            if (!fi.files.length) { return true; } // 允许仅改坐标
+ if (!fi.files.length) { return true; } // coordinates
             const file = fi.files[0];
             const fd = new FormData();
             fd.append('path', path);
@@ -3443,11 +3564,11 @@
 
             if (isSheetTarget) {
                 fd.append('auto_spritesheet', '1');
-                // 全自动：后端识别并切帧
+ // frame(s)
                 if (isAnimInput) {
                     fd.append('preserve_original', '1');
                 } else {
-                    // 静态图兜底切法
+ // static
                     fd.append('frame_w', '64');
                     fd.append('frame_h', '64');
                     fd.append('preserve_original', '0');
@@ -3485,7 +3606,7 @@
                 else out.textContent = '✅ Confirmed and refreshed';
             }
 
-            // 刷新前关闭侧边栏，行为与地图替换一致
+ // refreshSidebar
             assetDrawerOpen = false;
             const drawer = document.getElementById('asset-drawer');
             if (drawer) drawer.classList.remove('open');
@@ -3513,7 +3634,7 @@ function toggleBrokerPanel() {
             const fallbackBox = document.getElementById('game-container');
             const rect = canvasEl?.getBoundingClientRect?.() || fallbackBox?.getBoundingClientRect?.();
 
-            // 1) loading 遮罩
+            // 1) loading overlay
             const overlay = document.getElementById('room-loading-overlay');
             if (overlay) {
                 if (!rect || !(rect.width > 0 && rect.height > 0)) {
@@ -3529,7 +3650,7 @@ function toggleBrokerPanel() {
                 }
             }
 
-            // 2) detail/status 严格限制在画布内部左下角
+ // 2) detail/status canvas
             const st = document.getElementById('status-text');
             const gameContainer = document.getElementById('game-container');
             if (st && gameContainer) {
@@ -3565,7 +3686,7 @@ function toggleBrokerPanel() {
                     'Switching timezone to adventure mode...',
                     'Receiving Wi-Fi heartbeat from unknown streets...',
                     'Testing next destination\'s sea breeze BGM...',
-                    '正在加载"也许会爱上"的新房间……',
+                    'Loading a room you might just fall in love with...',
                     'Preparing introductions for unknown neighbors...',
                     'Unlocking the next digital ocean...',
                     'Cranking curiosity to maximum...',
@@ -3843,7 +3964,7 @@ function toggleBrokerPanel() {
             }
 
             setWorkingStatus('Going home');
-            // 点击即刻显示遮罩，先于任何网络调用
+ // showoverlay
             showRoomLoadingOverlay();
             out.textContent = '🏡 Going home (restoring original background)...';
             try {
@@ -3918,7 +4039,7 @@ function toggleBrokerPanel() {
             if (!box) return;
             const now = Date.now();
             if (!force && homeFavoritesCache.length > 0 && (now - homeFavoritesLoadedAt) < 30000) {
-                // 使用缓存，避免频繁请求
+ // usescacherequest
             } else {
                 try {
                     const data = await fetchJsonSafe('/assets/home-favorites/list', { cache: 'no-store' });
@@ -4065,7 +4186,7 @@ function toggleBrokerPanel() {
             }
         }
 
-        // 记录 body scroll 位置，drawer 关闭时恢复
+ // body scroll positiondrawer Restore
         let _drawerScrollY = 0;
 
         async function toggleAssetDrawer(force) {
@@ -4075,7 +4196,7 @@ function toggleBrokerPanel() {
             assetDrawerOpen = next;
             drawer.classList.toggle('open', next);
             if (backdrop) backdrop.classList.toggle('open', next);
-            // 移动端 body 锁定：打开时冻结滚动位置，关闭时恢复
+ // body lockpositionRestore
             if (next) {
                 _drawerScrollY = window.scrollY;
                 document.body.style.top = `-${_drawerScrollY}px`;
@@ -4114,7 +4235,7 @@ function toggleBrokerPanel() {
             }
         }
 
-        // Guest Agent 离开房间
+ // Guest Agent 
         function removeGuestSpriteByName(name) {
             const target = guestAgents.find(a => (a.name || '') === name);
             if (target && guestSprites[target.agentId]) {
@@ -4135,7 +4256,7 @@ function toggleBrokerPanel() {
                 body: JSON.stringify({ agentId, name })
             }).then(response => response.json()).then(data => {
                 if (data.ok) {
-                    // 优先按 agentId 清理，避免重名误伤
+ // agentId 
                     if (agentId && guestSprites[agentId]) {
                         guestSprites[agentId].sprite.destroy();
                         guestSprites[agentId].nameText.destroy();
@@ -4148,7 +4269,7 @@ function toggleBrokerPanel() {
                     fetchGuestAgents();
                     alert((name || agentId) + ' has left the room');
                 } else {
-                    // demo agent 没在后端也允许本地隐藏
+ // demo agent hidden
                     if (DEMO_MODE && (name === 'Nika' || name === 'Mercury')) {
                         hiddenDemoNames.add(name);
                         removeGuestSpriteByName(name);
@@ -4266,9 +4387,9 @@ function toggleBrokerPanel() {
         }
 
         function getAreaRect(area) {
-            // 区域坐标（海辛提供，左上-右下；这里的 x/y 作为 sprite 底部锚点坐标来用）
-            // 休息区域范围（511,262）（841,621）
-            // 工作区域范围（190,526）（380,683）
+ // areacoordinatestop- x/y sprite coordinates
+ // arearange511,262841,621
+ // arearange190,526380,683
             // error area bounds (932,275)(1109,327)
             const rects = {
                 breakroom: { x1: 511, y1: 262, x2: 841, y2: 621 },
@@ -4287,7 +4408,7 @@ function toggleBrokerPanel() {
         }
 
         function getAreaPoint(area, idx) {
-            // 非 demo 访客：仍用固定点位，避免每次轮询都抖动。
+ // non-demo 
             const map = {
                 breakroom: [
                     { x: 511, y: 262 },
@@ -4343,20 +4464,20 @@ function toggleBrokerPanel() {
                     : getAreaPoint(area, idx);
 
                 if (!guestSprites[id]) {
-                    // 优先用图标：demo visitor 有专门映射
+ // icondemo visitor 
                     let sprite;
                     const isDemoNika = DEMO_MODE && (agent.agentId === 'demo_nika' || agent.name === 'Nika');
                     const isDemoMercury = DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury');
 
                     if (isDemoNika || isDemoMercury) {
-                        // 统一使用动态像素角色，避免依赖已删除的 demo 静态图
+ // usesdelete demo static
                         const animKey = 'guest_anim_1';
                         const f = 0;
                         sprite = game.add.sprite(p.x, p.y, animKey, f).setOrigin(0.5, 1).setScale(1.1);
                         if (sprite.anims && sprite.anims.play) sprite.anims.play(animKey, true);
                     } else {
-                        // 非 demo 访客：优先用动画精灵（guest_anim_x），其次静态图，兜底星星
-                        // 先确定角色索引（1-6）
+ // non-demo animationspriteguest_anim_xstatic
+ // 1-6
                         let animIdx = agent.avatar
                             ? parseInt((agent.avatar.match(/_(\d+)$/) || [])[1] || '0', 10)
                             : 0;
@@ -4394,7 +4515,7 @@ function toggleBrokerPanel() {
                         sprite.y = sprite.y + 10;
                     }
 
-                    // demo 水星下移 10px（仅 demo_mercury）
+ // demo 10px demo_mercury
                     const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) ? 10 : 0;
 
                     const mobileGuest = isMobile();
@@ -4418,7 +4539,7 @@ function toggleBrokerPanel() {
                     const g = guestSprites[id];
                     const yOffset = (DEMO_MODE && (agent.agentId === 'demo_mercury' || agent.name === 'Mercury')) ? 10 : 0;
 
-                    // demo：平滑移动（避免闪现）；非 demo：保持稳定位置（避免轮询抖动）
+ // demonon-demoposition
                     if (isDemo) {
                         // kill previous tweens for this id
                         if (guestTweens[id] && guestTweens[id].move) {
@@ -4428,7 +4549,7 @@ function toggleBrokerPanel() {
                             guestTweens[id].name.stop();
                         }
 
-                        const duration = 2000 + Math.floor(Math.random() * 1000); // 2~3s 走路感
+ const duration = 2000 + Math.floor(Math.random() * 1000); // 2~3s 
                         const ease = 'Sine.easeInOut';
 
                         const moveTween = game.tweens.add({
@@ -4457,7 +4578,7 @@ function toggleBrokerPanel() {
                 }
             });
 
-            // 删除消失的 agent + 清理其气泡/tween
+ // delete agent + /tween
             Object.keys(guestSprites).forEach(id => {
                 if (!seenIds.has(id)) {
                     guestSprites[id].sprite.destroy();
@@ -4484,7 +4605,7 @@ function toggleBrokerPanel() {
             const id = ids[Math.floor(Math.random() * ids.length)];
             const g = guestSprites[id];
 
-            // demo 气泡：优先展示与状态对应的内容，便于验证"状态→区域→气泡"链路
+ // demo state"state→area→"
             const demoVisitor = (DEMO_MODE && window.__demoVisitors)
                 ? (window.__demoVisitors.find(v => v.agentId === id) || window.__demoVisitors.find(v => v.name === (g.nameText && g.nameText.text)))
                 : null;
@@ -4507,7 +4628,7 @@ function toggleBrokerPanel() {
             }
 
             const bx = g.sprite.x;
-            // 气泡位置：demo 维持原逻辑；真实访客放在"名字上方"，避免压角色也避免压名字
+ // positiondemo "above"
             const isDemoGuest = (demoVisitor && demoVisitor.isDemo) || (id === 'demo_nika' || id === 'demo_mercury');
             const nameH = (g.nameText && g.nameText.height) ? g.nameText.height : 16;
             const by = isDemoGuest ? (g.sprite.y - 90) : ((g.nameText ? g.nameText.y : (g.sprite.y - 150)) - (nameH / 2) - 22);
@@ -4519,7 +4640,7 @@ function toggleBrokerPanel() {
             bubble.setDepth(2700);
             guestBubbles[id] = bubble;
 
-            // 让气泡跟随 sprite 锚点（用于 demo 平滑移动时也保持贴合）
+ // sprite demo 
             bubble.__followAgentId = id;
 
             setTimeout(() => {
@@ -4534,7 +4655,7 @@ function toggleBrokerPanel() {
             if (!DEMO_MODE) return;
             ensureDemoVisitors();
 
-            // 按海辛需求：每 8 秒切换一次状态
+ // 8 secondsstate
             window.__demoNextAt = window.__demoNextAt || 0;
             const now = Date.now();
             if (now < window.__demoNextAt) return;
@@ -4569,7 +4690,7 @@ function toggleBrokerPanel() {
             };
             const bubbleTextMap = bubbleTextMapByLang[uiLang] || bubbleTextMapByLang.zh;
 
-            // 确保两位 demo 角色不会总是同一个状态（增加可观测性）
+ // demo state
             const pickJs = (exclude) => {
                 let s = states[Math.floor(Math.random() * states.length)];
                 let tries = 0;
@@ -4584,7 +4705,7 @@ function toggleBrokerPanel() {
             const cur0 = current[0] ? (current[0].state || 'idle') : 'idle';
 
             const next0 = pickJs(cur0);
-            const next1 = pickJs(next0); // 尽量不同
+ const next1 = pickJs(next0); // 
             const nextStates = [next0, next1];
 
             const prevVisitors = current.map((v) => ({ ...v }));
@@ -4598,10 +4719,10 @@ function toggleBrokerPanel() {
                 };
             });
 
-            // 状态切换时：每一位 demo 都立即冒泡（强制），用于清晰验证链路
+ // state demo bubbling
             try {
                 if (typeof game !== 'undefined' && game) {
-                    // 找出状态实际变了的 demo visitor，给他们强制冒泡
+ // state demo visitorbubbling
                     const prevById = {};
                     prevVisitors.forEach(v => { prevById[v.agentId] = v; });
                     const newVisitors = window.__demoVisitors || [];
@@ -4609,7 +4730,7 @@ function toggleBrokerPanel() {
                         const prev = prevById[agent.agentId];
                         const changed = !prev || prev.state !== agent.state;
                         if (changed) {
-                            // 直接冒泡
+ // bubbling
                             if (guestSprites[agent.agentId]) {
                                 const g = guestSprites[agent.agentId];
                                 const text = agent.bubbleText || '';
@@ -4641,22 +4762,22 @@ function toggleBrokerPanel() {
         }
 
         function fetchGuestAgents() {
-            // demo 随机状态先更新（不依赖后端）
+ // demo stateupdate
             maybeRandomizeDemoVisitors();
 
             return fetch('/agents?t=' + Date.now(), { cache: 'no-store' })
                 .then(response => response.json())
                 .then(data => {
-                    // 无论后端返回是否为数组，demo=1 都应保证本地 demo 访客可见
+ // demo=1 demo visible
                     guestAgents = Array.isArray(data) ? data : [];
 
-                    // 新访客检测：触发 Star 欢迎气泡（只欢迎真实访客，不欢迎 demo）
+ // detecttrigger Star welcome bubble demo
                     try {
                         const merged = getMergedVisitors();
                         const currentIds = new Set((merged || []).filter(a => !a.isMain && !a.isDemo).map(a => a.agentId));
 
                         if (!guestWelcomeInitialized) {
-                            // 首次初始化不欢迎，避免刷新页面就刷屏
+ // initrefresh
                             lastSeenGuestIds = currentIds;
                             guestWelcomeInitialized = true;
                         } else {
@@ -4664,13 +4785,13 @@ function toggleBrokerPanel() {
                             currentIds.forEach(id => { if (!lastSeenGuestIds.has(id)) newIds.push(id); });
 
                             if (newIds.length > 0) {
-                                // 只欢迎第一个新来的（避免同一时刻多人加入刷屏）
+ // firstjoining
                                 const newAgent = (merged || []).find(a => a.agentId === newIds[0]);
                                 if (newAgent && newAgent.name) {
-                                    // 临时将 currentState 视为 writing 以允许 showBubble 展示
+ // currentState writing showBubble 
                                     const oldState = currentState;
                                     currentState = 'writing';
-                                    // 临时更换 bubble 文案
+ // bubble 
                                     const lang = uiLang;
                                     const welcomeTexts = {
                                         zh: [`Welcome ${newAgent.name} to the office~`,`Hi ${newAgent.name}, let\'s get to work`,`${newAgent.name} has joined, welcome!`],
@@ -4681,7 +4802,7 @@ function toggleBrokerPanel() {
                                     const oldTexts = Array.isArray(langPack.writing) ? [...langPack.writing] : [];
                                     langPack.writing = welcomeTexts[lang] || welcomeTexts.zh;
                                     showBubble();
-                                    // 还原
+ // 
                                     langPack.writing = oldTexts;
                                     currentState = oldState;
                                 }
@@ -5123,9 +5244,9 @@ function toggleBrokerPanel() {
             }
         }
 
-        // 初始化：先检测 WebP 支持，再启动游戏
+ // initdetect WebP Start game
         async function initGame() {
-            // 检测 WebP 支持
+ // detect WebP 
             try {
                 supportsWebP = await checkWebPSupport();
             } catch (e) {
@@ -5141,20 +5262,20 @@ function toggleBrokerPanel() {
             updateSpeedModeUI();
 
 
-            // 直接启动 Phaser，避免首屏被额外接口阻塞
+ // Phaser
 
             new Phaser.Game(config);
 
-            // 非关键初始化延后到首屏之后，提升首开速度
+ // initspeed
             setTimeout(async () => {
-                // 动态探测 flowers 精灵表帧规格（避免写死 65x65 导致显示比例异常）
+ // flowers spritesheet frame spec 65x65 show
                 try {
                     const res = await fetch('/assets/list?t=' + Date.now(), { cache: 'no-store' });
                     const data = await res.json();
                     if (data && data.ok && Array.isArray(data.items)) {
                         const flowerItem = data.items.find(it => (it.path || '').toLowerCase().includes('flowers-bloom-v2'));
                         if (flowerItem && Number(flowerItem.width) > 0 && Number(flowerItem.height) > 0) {
-                            // 固定规则：花朵单帧 128x128，4x4
+ // frame(s) 128x1284x4
                             FLOWERS_FRAME_W = 128;
                             FLOWERS_FRAME_H = 128;
                             FLOWERS_FRAME_COLS = 4;
@@ -5178,17 +5299,17 @@ function toggleBrokerPanel() {
         }
 
         function preload() {
-            // 获取加载界面元素
+ // load
             loadingOverlay = document.getElementById('loading-overlay');
             loadingProgressBar = document.getElementById('loading-progress-bar');
             loadingText = document.getElementById('loading-text');
             loadingProgressContainer = document.getElementById('loading-progress-container');
 
-            // 设置资源总数（全部首屏加载：装饰也第一时间出现）
+ // settingsresourcetotalload
             totalAssets = 15;
             loadedAssets = 0;
 
-            // 加载进度监听
+ // loadlistener
             this.load.on('filecomplete', () => {
                 updateLoadingProgress();
             });
@@ -5216,7 +5337,7 @@ function toggleBrokerPanel() {
             // Error / bug animation: 180x180, 96 frames (repacked grid)
             this.load.spritesheet('error_bug', '/static/error-bug-spritesheet-grid.webp?v={{VERSION_TIMESTAMP}}', { frameWidth: 220, frameHeight: 220 });
 
-            // 运行时 Gemini 配置（用于搬家/中介生图）
+ // Gemini configMove/Broker
             this.geminiConfig = { hasKey: false, model: 'gemini-3.1-flash-image-preview' };
 
             // Cat spritesheet: 160x160, 4x4=16 cats
@@ -5225,14 +5346,14 @@ function toggleBrokerPanel() {
             // Desk
             // Star working animation: repacked to grid to avoid WebGL max texture size limits
             // NOTE: prefer WebP for size, PNG fallback
-            // 动态替换后按最新素材识别：当前 writing 素材为 300x300 单帧
+ // assetcurrent writing asset 300x300 frame(s)
             this.load.spritesheet('star_working', '/static/star-working-spritesheet-grid.webp?v={{VERSION_TIMESTAMP}}', { frameWidth: 300, frameHeight: 300 });
 
-            // Sync state animation (256x256, 多帧): 非同步显示首帧，同步从第2帧循环
+ // Sync state animation (256x256, frame(s)): syncshowframe(s)sync2frame(s)loop
             this.load.spritesheet('sync_anim', '/static/sync-animation-v3-grid.webp?v={{VERSION_TIMESTAMP}}', { frameWidth: 256, frameHeight: 256 });
 
             // Memo background image
-            // memo 底图固定走 png，避免某些端 webp 透明通道异常导致"底图丢失"
+ // memo png webp transparent""
             this.load.image('memo_bg', '/static/memo-bg.webp?v={{VERSION_TIMESTAMP}}');
             // Desk v2 (webp only)
             this.load.image('desk_v2', '/static/desk-v3.webp?v={{VERSION_TIMESTAMP}}');
@@ -5262,14 +5383,14 @@ function toggleBrokerPanel() {
             sofa = this.add.sprite(IDLE_SOFA_ANCHOR.x, IDLE_SOFA_ANCHOR.y, 'sofa_idle').setOrigin(0.5);
             sofa.setDepth(10);
             areas = {
-                door: { x: 640, y: 550 }, // 墙的门（偏下 1/3 位置）
-                writing: { x: 320, y: 360 }, // 左 1/3 中间（办公桌）
-                researching: { x: 320, y: 360 }, // 左 1/3 中间（研究也在办公区
+ door: { x: 640, y: 550 }, // 1/3 position
+ writing: { x: 320, y: 360 }, // 1/3 
+ researching: { x: 320, y: 360 }, // 1/3 
                 error: { x: 1066, y: 180 }, // right 1/3 upper 1/2 (server area
-                breakroom: { x: IDLE_SOFA_ANCHOR.x, y: IDLE_SOFA_ANCHOR.y } // 与 sofa-idle-v3 同中心锚点
+ breakroom: { x: IDLE_SOFA_ANCHOR.x, y: IDLE_SOFA_ANCHOR.y } // sofa-idle-v3 center anchor
             };
 
-            // 创建 Star 角色待命动画（每次先移除旧定义，确保不复用历史动画）
+ // create Star animationanimation
             const starIdleFrameMax = Math.max(0, (this.textures.get('star_idle')?.frameTotal || 1) - 1);
             if (this.anims.exists('star_idle')) {
                 this.anims.remove('star_idle');
@@ -5282,7 +5403,7 @@ function toggleBrokerPanel() {
             });
 
 
-            // 创建 6 个访客角色的循环 idle 动画（8帧循环）
+ // create 6 loop idle animation8frame(s)loop
             for (let i = 1; i <= 6; i++) {
                 this.anims.create({
                     key: `guest_anim_${i}_idle`,
@@ -5319,7 +5440,7 @@ function toggleBrokerPanel() {
             sofa.anims.stop();
             sofa.setTexture('sofa_idle');
 
-            // 加像素风小牌匾：海辛小龙虾的办公室
+ // 
             const plaqueX = config.width / 2;
             const plaqueY = config.height - 36;
             const plaqueBg = game.add.rectangle(plaqueX, plaqueY, 420, 44, 0x3d2a1a);
@@ -5335,7 +5456,7 @@ function toggleBrokerPanel() {
                 wordWrap: { width: 400 },
                 align: 'center'
             }).setOrigin(0.5);
-            // 牌匾两边加个小装饰（跟随牌匾居中）- fire crabs for The Hearth
+ // center- fire crabs for The Hearth
             game.add.text(plaqueX - 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
             game.add.text(plaqueX + 190, plaqueY, '🔥', { fontFamily: 'ArkPixel, monospace', fontSize: '20px' }).setOrigin(0.5);
             window.officePlaqueText = plaqueText;
@@ -5513,7 +5634,7 @@ function toggleBrokerPanel() {
             });
             serverroom = this.add.sprite(1021, 142, 'serverroom', 0).setOrigin(0.5);
             serverroom.setDepth(2);
-            // 默认 idle: 静止第0帧
+ // default idle: 0frame(s)
             serverroom.anims.stop();
             serverroom.setFrame(0);
 
@@ -5522,7 +5643,7 @@ function toggleBrokerPanel() {
             desk.setDepth(1001);  // desk above starWorking
 
             // Random flower pot at (310,390), default scale 0.8 (top layer)
-            const flowerFrameCount = Math.max(1, FLOWERS_FRAME_COLS * FLOWERS_FRAME_ROWS); // 动态帧数
+ const flowerFrameCount = Math.max(1, FLOWERS_FRAME_COLS * FLOWERS_FRAME_ROWS); // frame(s)
             const randomFlowerFrame = Math.floor(Math.random() * flowerFrameCount);
             const flower = this.add.sprite(310, 390, 'flowers', randomFlowerFrame).setOrigin(0.5);
             flower.setScale(0.8);
@@ -5538,7 +5659,7 @@ function toggleBrokerPanel() {
             // Star working at desk (217,333)
             this.anims.create({
                 key: 'star_working',
-                // 38 帧（0~37），避免沿用旧 192 帧导致疯狂闪烁
+ // 38 frame(s)0~37 192 frame(s)
                 frames: this.anims.generateFrameNumbers('star_working', { start: 0, end: 37 }),
                 frameRate: 12,
                 repeat: -1
@@ -5584,7 +5705,7 @@ function toggleBrokerPanel() {
             const syncFrameTotal = Number(this.textures.get('sync_anim')?.frameTotal || 0);
             const syncFrameStart = 1;
             const syncFrameEnd = Math.max(0, syncFrameTotal - 2);
-            // 仅在确实存在可播放帧（>=1）时才创建同步动画，避免单帧素材触发播放异常
+ // playframe(s)>=1createsyncanimationframe(s)assettriggerplay
             syncAnimPlayable = syncFrameTotal >= 3 && syncFrameEnd >= syncFrameStart;
             if (this.anims.exists('sync_anim')) {
                 this.anims.remove('sync_anim');
@@ -5614,7 +5735,7 @@ function toggleBrokerPanel() {
             coordsDisplay = document.getElementById('coords-display');
             coordsToggle = document.getElementById('coords-toggle');
 
-            // guest agent 将由 /agents 动态拉取并渲染到右侧访客列表
+ // guest agent /agents fetchrenderright sidelist
             coordsToggle.addEventListener('click', () => {
                 showCoords = !showCoords;
                 coordsOverlay.style.display = showCoords ? 'block' : 'none';
@@ -5622,8 +5743,8 @@ function toggleBrokerPanel() {
                 coordsToggle.style.background = showCoords ? '#d4883a' : '#333';
             });
 
-            // 允许手机端"拖动/滑动"来移动视野（本质：移动 Phaser Camera）
-            // iPhone 等触屏设备默认开启；桌面端默认关闭（可手动开）。
+ // "/" Phaser Camera
+ // iPhone defaultdefault
             const panToggle = document.getElementById('pan-toggle');
             const isTouchDevice = IS_TOUCH_DEVICE;
             let panEnabled = false;
@@ -5647,21 +5768,21 @@ function toggleBrokerPanel() {
                 camera.scrollY = clamp(camera.scrollY, 0, maxScrollY());
             }
 
-            // 手机上：锁定"办公室画布高度 = 2/3 区域高度"，
-            // 让世界坐标在竖向恰好看满（不需要上下拖），只保留横向拖动浏览左右。
-            // 记录初始是否已手动平移（避免 resize 时把用户拖好的位置重置）
+ // toplock"canvas height = 2/3 areaheight"
+ // coordinatestopkeephorizontal
+ // pan resize positionreset
             let hasManuallyPanned = false;
             function applyMobileCameraFit() {
                 if (!isTouchDevice) return;
                 const h = Math.max(1, camera.height);
                 const w = Math.max(1, camera.width);
 
-                // 关键：先按高度 fit，再看是否需要按宽度微调，
-                // 保证既不会让画面歪，又能左右拖到最左最右边缘不被裁。
+ // height fitwidth
+ // 
                 const fitHeightZoom = h / MAP_H;
                 const candidateZoom = fitHeightZoom;
 
-                // 按 candidateZoom 计算：viewport 在世界坐标里的宽高
+ // candidateZoom viewport coordinates
                 const viewW = w / candidateZoom;
                 const maxX = Math.max(0, MAP_W - viewW);
 
@@ -5669,7 +5790,7 @@ function toggleBrokerPanel() {
                 camera.scrollX = Math.min(camera.scrollX, maxX);
                 camera.scrollY = 0;
 
-                // 仅在未手动平移过时才居中（避免把用户拖好的位置冲掉）
+ // pancenterposition
                 if (!hasManuallyPanned) {
                     camera.centerOn(MAP_W / 2, MAP_H / 2);
                 }
@@ -5678,7 +5799,7 @@ function toggleBrokerPanel() {
             }
             applyMobileCameraFit();
 
-            // 手机端旋转屏幕/地址栏伸缩时，重算 zoom + 夹紧 camera
+ // rotation/ zoom + camera
             if (isTouchDevice && game.scale) {
                 game.scale.on('resize', () => {
                     applyMobileCameraFit();
@@ -5712,19 +5833,19 @@ function toggleBrokerPanel() {
                 panToggle.addEventListener('click', () => setPanEnabled(!panEnabled));
             }
 
-            // 手机端默认关闭拖动画面：由左上角"移动视野"开关显式开启
+ // defaultanimationtop""
             if (isTouchDevice) {
                 setPanEnabled(false);
             }
 
-            // iOS/Safari 手势策略：
-            // - 保留垂直滚动（让页面能下滑看三个面板）
-            // - 水平方向拖动时才阻止默认行为，并转为 camera 横向平移
-            // 说明：iOS 对 pointer + touch-action 支持存在机型差异，所以这里加一套原生 touch 兜底。
+ // iOS/Safari gesture
+ // - keeppanel
+ // - directiondefault camera horizontalpan
+ // iOS pointer + touch-action native touch 
             const canvasEl = game.canvas;
             let touchPan = null; // {x,y,sx,sy,lock:'x'|'y'|null}
             if (canvasEl) {
-                // 手机端允许页面自然滚动，避免"不能滑动"
+ // ""
                 canvasEl.style.touchAction = 'auto';
 
                 canvasEl.addEventListener('touchstart', (e) => {
@@ -5745,12 +5866,12 @@ function toggleBrokerPanel() {
                     }
 
                     if (touchPan.lock === 'x') {
-                        // 横向拖动交给办公室视野；阻止浏览器默认滚动
+ // horizontaldefault
                         e.preventDefault();
                         hasManuallyPanned = true;
                         camera.scrollX = clamp(touchPan.sx - dx, 0, maxScrollX());
                     }
-                    // lock==='y' 时不阻止默认，交给页面纵向滚动
+ // lock==='y' defaultvertical
                 }, { passive: false });
 
                 const clearTouchPan = () => { touchPan = null; };
@@ -5777,17 +5898,17 @@ function toggleBrokerPanel() {
                 const dx = pointer.x - panStart.x;
                 const dy = pointer.y - panStart.y;
 
-                // 手机端优先"横向拖动看办公室"，纵向手势留给页面滚动看下方面板。
+ // "horizontal"verticalgesturebelowpanel
                 if (isTouchDevice && Math.abs(dy) > Math.abs(dx)) {
                     return;
                 }
 
-                // 手指向右拖，视野跟着向右看：camera scroll 向左减小（反向）
+ // fingercamera scroll 
                 const newX = panStart.sx - dx;
                 hasManuallyPanned = true;
                 camera.scrollX = clamp(newX, 0, maxScrollX());
 
-                // 桌面端保留自由二维拖动
+ // keep
                 if (!isTouchDevice) {
                     const newY = panStart.sy - dy;
                     camera.scrollY = clamp(newY, 0, maxScrollY());
@@ -5806,7 +5927,7 @@ function toggleBrokerPanel() {
                 coordsOverlay.style.top = (pointer.y + 18) + 'px';
             });
 
-            // 加载昨日 memo
+ // load memo
             loadMemo();
 
             // Mobile: show "tap for details" hint on first visit
@@ -5837,7 +5958,7 @@ function toggleBrokerPanel() {
             if (time - lastGuestAgentsFetch > GUEST_AGENTS_FETCH_INTERVAL) { fetchGuestAgents(); lastGuestAgentsFetch = time; }
             if (time - lastOcAgentsFetch > OC_AGENTS_FETCH_INTERVAL) { fetchOpenClawAgents(); lastOcAgentsFetch = time; }
 
-            // 兜底：非 idle 时确保机房动画在播，idle 时静止
+ // idle animationidle 
             const effectiveStateForServer = pendingDesiredState || currentState;
             if (serverroom) {
                 if (effectiveStateForServer === 'idle') {
@@ -5884,18 +6005,18 @@ function toggleBrokerPanel() {
                 }
             }
 
-            // 冒气泡
+ // 
             if (time - lastBubble > BUBBLE_INTERVAL) {
                 showBubble();
                 lastBubble = time;
             }
-            // 猫的气泡（频率低）
+ // 
             if (time - lastCatBubble > CAT_BUBBLE_INTERVAL) {
                 showCatBubble();
                 lastCatBubble = time;
             }
 
-            // 打字机效果
+ // 
             if (typewriterIndex < typewriterTarget.length && time - lastTypewriter > TYPEWRITER_DELAY) {
                 typewriterText += typewriterTarget[typewriterIndex];
                 statusText.textContent = typewriterText;
@@ -5903,13 +6024,13 @@ function toggleBrokerPanel() {
                 lastTypewriter = time;
             }
 
-            // 移动 + 小踱步
+ // + 
             moveStar(time);
 
-            // guest 随机想法泡泡
+ // guest 
             maybeShowGuestBubble(time);
 
-            // demo 平滑移动时：让气泡每帧跟随角色锚点（避免 tween 时气泡滞留在旧位置）
+ // demo frame(s) tween position
             try {
                 Object.keys(guestBubbles).forEach(id => {
                     const b = guestBubbles[id];
@@ -5928,7 +6049,7 @@ function toggleBrokerPanel() {
                 });
             } catch (e) {}
 
-            // guest 列表会定时刷新
+ // guest listrefresh
         }
 
         function normalizeState(s) {
@@ -6072,7 +6193,7 @@ function toggleBrokerPanel() {
             const stateInfo = STATES[effectiveState] || STATES.idle;
             const baseTarget = areas[stateInfo.area] || areas.breakroom;
 
-            // idle 时锁定位置（不走任何移动路径）
+ // idle lockposition
             if (effectiveState === 'idle') {
                 if (star && star.visible) {
                     star.setPosition(IDLE_SOFA_ANCHOR.x, IDLE_SOFA_ANCHOR.y);
@@ -6186,7 +6307,7 @@ function toggleBrokerPanel() {
         function showBubble() {
             if (bubble) { bubble.destroy(); bubble = null; }
             const texts = getBubbleTextsByState(currentState);
-            if (currentState === 'idle') return; // idle 不显示气泡（可按需开启）
+ if (currentState === 'idle') return; // idle show bubble
 
             // Bubble anchor should follow current visible character:
             // - syncing: syncAnimSprite
@@ -6210,7 +6331,7 @@ function toggleBrokerPanel() {
             const bubbleOffsetY = (currentState === 'writing') ? 85 : 70;
             const bubbleY = anchorY - bubbleOffsetY;
 
-            // 只做手机端稍微调大一点，避免发糊
+ // 
             const isTouch = IS_TOUCH_DEVICE;
             const fontSize = isTouch ? 14 : 12;
             const bg = game.add.rectangle(anchorX, bubbleY, text.length * 10 + 20, 28, 0xffffff, 0.95);
@@ -6236,7 +6357,7 @@ function toggleBrokerPanel() {
             setTimeout(() => { if (window.catBubble) { window.catBubble.destroy(); window.catBubble = null; } }, 4000);
         }
 
-        // 假 Agent 气泡逻辑已移除，统一以真实 /agents 数据为准
+ // Agent /agents 
 
         // ═══ Agent Detail Modal ═══
         function closeAgentDetailModal(event, force) {
@@ -6256,6 +6377,12 @@ function toggleBrokerPanel() {
             const icons = { main: '🔥', subagent: '⚡', cron: '⏰' };
             if (iconEl) iconEl.textContent = icons[agentType] || '⚡';
             if (nameEl) nameEl.textContent = agentName || 'Agent';
+            // Clean up any pre-content from previous render
+            var modal = document.getElementById('agent-detail-modal');
+            if (modal) {
+                var oldPre = modal.querySelectorAll('.adm-pre-content');
+                oldPre.forEach(function(el) { el.remove(); });
+            }
             bodyEl.innerHTML = '<div class="adm-loading">Loading agent details...</div>';
             backdrop.classList.add('open');
 
@@ -6277,6 +6404,65 @@ function toggleBrokerPanel() {
 
         function renderAgentDetailModal(data, bodyEl) {
             var stateClass = 'adm-state-' + (data.state || 'idle');
+            var isMain = data.type === 'main';
+            // For main agent, we inject stats+threads before the body div
+            // by writing to the modal container, then re-appending body content
+            var preHtml = '';
+
+            // ── Summary stats bar (main agent only) ──
+            if (isMain && data.recentSessions && data.recentSessions.length > 0) {
+                var totalSessions = data.recentSessions.length;
+                var totalTok = 0;
+                var activeSessions = 0;
+                data.recentSessions.forEach(function(s) {
+                    totalTok += (s.totalTokens || 0);
+                    if (s.status === 'active') activeSessions++;
+                });
+                var threadCount = (data.activeThreads && data.activeThreads.length) || 0;
+                preHtml += '<div class="adm-stats-bar">';
+                preHtml += '<span><span class="adm-stat-val">' + activeSessions + '</span> active</span>';
+                preHtml += '<span class="adm-stat-sep">·</span>';
+                preHtml += '<span><span class="adm-stat-val">' + fmtTokensSimple(totalTok) + '</span> tokens</span>';
+                preHtml += '<span class="adm-stat-sep">·</span>';
+                preHtml += '<span><span class="adm-stat-val">' + totalSessions + '</span> sessions</span>';
+                if (threadCount > 0) {
+                    preHtml += '<span class="adm-stat-sep">·</span>';
+                    preHtml += '<span><span class="adm-stat-val">' + threadCount + '</span> threads</span>';
+                }
+                preHtml += '</div>';
+            }
+
+            // ── Active threads (main agent, shown prominently before info rows) ──
+            if (isMain && data.activeThreads && data.activeThreads.length > 0) {
+                preHtml += '<div style="padding:10px 14px 4px;">';
+                preHtml += '<div class="adm-section-label">🔥 Active Threads</div>';
+                data.activeThreads.forEach(function(t) {
+                    var tState = t.state || 'idle';
+                    var tStateClass = 'thread-' + tState;
+                    var tBadgeClass = 'adm-state-' + tState;
+                    var cleaned = cleanSessionName(t.displayName || t.name, t.sessionKey || '');
+                    preHtml += '<div class="adm-thread-card ' + tStateClass + '">';
+                    preHtml += '<span style="flex-shrink:0;">' + cleaned.icon + '</span>';
+                    preHtml += '<span class="adm-thread-name">' + escHtmlSimple(cleaned.name) + '</span>';
+                    preHtml += '<span class="adm-thread-state ' + tBadgeClass + '">' + escHtmlSimple(tState) + '</span>';
+                    preHtml += '<span class="adm-thread-time">' + escHtmlSimple(t.lastActivityAge || '') + '</span>';
+                    preHtml += '</div>';
+                });
+                preHtml += '</div>';
+            }
+
+            // If we have pre-content, insert it before the body div
+            if (preHtml) {
+                // Remove any previously injected pre-content
+                var modal = bodyEl.parentElement;
+                var existing = modal.querySelectorAll('.adm-pre-content');
+                existing.forEach(function(el) { el.remove(); });
+                var preDiv = document.createElement('div');
+                preDiv.className = 'adm-pre-content';
+                preDiv.innerHTML = preHtml;
+                modal.insertBefore(preDiv, bodyEl);
+            }
+
             var html = '';
 
             // Type badge
@@ -6370,19 +6556,71 @@ function toggleBrokerPanel() {
                 });
             }
 
-            // Recent sessions (main)
+            // ── Enhanced recent sessions (main agent) ──
             if (data.recentSessions && data.recentSessions.length > 0) {
                 html += '<hr class="adm-separator">';
-                html += '<div class="adm-row"><span class="adm-label">Sessions</span></div>';
-                data.recentSessions.slice(0, 5).forEach(function(s) {
-                    var name = s.displayName || s.sessionKey || '?';
-                    if (name.length > 50) name = name.substring(0, 47) + '…';
-                    var model = (s.model || '').split('/').pop();
-                    html += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #1e1710;display:flex;gap:6px;align-items:center;">';
-                    html += '<span style="color:#c9d1d9;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtmlSimple(name) + '</span>';
-                    if (model) html += '<span class="oc-model-tag" style="font-size:9px;">' + escHtmlSimple(model) + '</span>';
-                    html += '<span style="color:#484f58;font-size:10px;">' + escHtmlSimple(s.updatedAtRelative || '') + '</span>';
+                html += '<div class="adm-section-label">Sessions</div>';
+                data.recentSessions.slice(0, 10).forEach(function(s, idx) {
+                    var cleaned = cleanSessionName(s.displayName, s.sessionKey);
+                    var statusCls = s.status || 'idle';
+                    var rowId = 'adm-sess-' + idx;
+
+                    html += '<div class="adm-session-row" id="' + rowId + '" onclick="(function(){var r=document.getElementById(\'' + rowId + '\');r.classList.toggle(\'expanded\');})()">';
+
+                    // Summary line
+                    html += '<div class="adm-session-summary">';
+                    html += '<span class="adm-status-dot ' + escHtmlSimple(statusCls) + '"></span>';
+                    html += '<span class="adm-sess-icon">' + cleaned.icon + '</span>';
+                    html += '<span class="adm-sess-name">' + escHtmlSimple(cleaned.name) + '</span>';
+                    if (s.totalTokens) {
+                        html += '<span class="adm-sess-tokens">' + fmtTokensSimple(s.totalTokens) + '</span>';
+                    }
+                    html += '<span class="adm-sess-time">' + escHtmlSimple(s.updatedAtRelative || '') + '</span>';
                     html += '</div>';
+
+                    // Expandable detail
+                    html += '<div class="adm-session-detail">';
+                    // Full display name
+                    var fullName = s.displayName || s.sessionKey || '';
+                    if (fullName.length > 45) {
+                        html += '<div style="color:#c9d1d9;margin-bottom:4px;word-break:break-word;">' + escHtmlSimple(fullName) + '</div>';
+                    }
+                    // Token breakdown
+                    html += '<div>In: <span style="color:#58a6ff;">' + fmtTokensSimple(s.inputTokens || 0) + '</span>';
+                    html += ' · Out: <span style="color:#e8a849;">' + fmtTokensSimple(s.outputTokens || 0) + '</span>';
+                    html += ' · Total: <span style="color:#c9d1d9;">' + fmtTokensSimple(s.totalTokens || 0) + '</span></div>';
+                    // Cache stats
+                    if (s.cacheRead || s.cacheWrite) {
+                        html += '<div>Cache read: <span style="color:#3fb950;">' + fmtTokensSimple(s.cacheRead || 0) + '</span>';
+                        html += ' · write: <span style="color:#d29922;">' + fmtTokensSimple(s.cacheWrite || 0) + '</span></div>';
+                    }
+                    // Model + provider
+                    if (s.model) {
+                        var shortModel = (s.model || '').split('/').pop();
+                        html += '<div>Model: <span style="color:#c9d1d9;">' + escHtmlSimple(shortModel) + '</span>';
+                        if (s.modelProvider) html += ' <span style="color:#484f58;">(' + escHtmlSimple(s.modelProvider) + ')</span>';
+                        html += '</div>';
+                    }
+                    // Compaction count
+                    if (s.compactionCount && s.compactionCount > 0) {
+                        html += '<div>Compactions: <span style="color:#d29922;">' + s.compactionCount + '</span></div>';
+                    }
+                    // Token ratio bar
+                    var barTotal = (s.inputTokens || 0) + (s.outputTokens || 0) + (s.cacheRead || 0);
+                    if (barTotal > 0) {
+                        var inPct = Math.round(((s.inputTokens || 0) / barTotal) * 100);
+                        var outPct = Math.round(((s.outputTokens || 0) / barTotal) * 100);
+                        var cachePct = 100 - inPct - outPct;
+                        html += '<div class="adm-token-bar">';
+                        html += '<div class="adm-token-bar-seg" style="width:' + inPct + '%;background:#58a6ff;"></div>';
+                        html += '<div class="adm-token-bar-seg" style="width:' + outPct + '%;background:#e8a849;"></div>';
+                        if (cachePct > 0) html += '<div class="adm-token-bar-seg" style="width:' + cachePct + '%;background:#3fb950;"></div>';
+                        html += '</div>';
+                        html += '<div style="font-size:9px;color:#484f58;">blue=input · amber=output · green=cache</div>';
+                    }
+                    html += '</div>'; // end detail
+
+                    html += '</div>'; // end row
                 });
             }
 
@@ -6437,7 +6675,73 @@ function toggleBrokerPanel() {
             return String(n);
         }
 
-        // 启动游戏
+        function cleanSessionName(displayName, sessionKey) {
+            var dn = displayName || '';
+            var sk = sessionKey || '';
+
+            // Main heartbeat session
+            if (sk === 'agent:main:main' || sk.match(/^agent:[^:]+:main$/)) {
+                return { icon: '🔥', name: 'Main (heartbeat)' };
+            }
+
+            // Cron run sub-session: agent:main:cron:job-name:run:uuid
+            if (sk.match(/cron:[^:]+:run:/)) {
+                var cronRunMatch = sk.match(/cron:([^:]+):run:/);
+                var cronRunName = cronRunMatch ? cronRunMatch[1] : 'cron';
+                return { icon: '⏰', name: cronRunName + ' (run)' };
+            }
+
+            // Cron session: agent:main:cron:job-name
+            if (sk.indexOf(':cron:') !== -1) {
+                var cronMatch = sk.match(/cron:([^:]+)/);
+                var cronName = cronMatch ? cronMatch[1] : 'cron';
+                return { icon: '⏰', name: cronName };
+            }
+
+            // Subagent session: agent:main:subagent:uuid
+            if (sk.indexOf(':subagent:') !== -1) {
+                // Use label from displayName if meaningful, otherwise generic
+                if (dn && dn.indexOf('subagent') === -1 && dn.length < 60) {
+                    return { icon: '⚡', name: dn };
+                }
+                return { icon: '⚡', name: 'Subagent' };
+            }
+
+            // Discord thread: "Discord thread #channel > Thread Name"
+            var discordThreadMatch = dn.match(/Discord\s+thread\s+#(.+)/i);
+            if (discordThreadMatch) {
+                var threadStr = discordThreadMatch[1];
+                if (threadStr.length > 45) threadStr = threadStr.substring(0, 42) + '…';
+                return { icon: '💬', name: '#' + threadStr };
+            }
+
+            // Discord channel: "Discord #channel-name"
+            var discordChanMatch = dn.match(/Discord\s+#(.+)/i);
+            if (discordChanMatch) {
+                return { icon: '💬', name: '#' + discordChanMatch[1] };
+            }
+
+            // Discord by session key
+            if (sk.indexOf('discord:channel:') !== -1) {
+                var shortDn = dn || 'Discord';
+                if (shortDn.length > 45) shortDn = shortDn.substring(0, 42) + '…';
+                return { icon: '💬', name: shortDn };
+            }
+
+            // Direct message / DM
+            if (sk.indexOf(':dm:') !== -1 || (dn && dn.toLowerCase().indexOf('direct') !== -1)) {
+                var dmName = dn || 'Direct';
+                if (dmName.length > 45) dmName = dmName.substring(0, 42) + '…';
+                return { icon: '📩', name: dmName };
+            }
+
+            // Fallback
+            var fallback = dn || sk;
+            if (fallback.length > 50) fallback = fallback.substring(0, 47) + '…';
+            return { icon: '💬', name: fallback };
+        }
+
+        // Start game
         initGame();
     </script>
     <script src="/static/dashboard.js?v={{VERSION_TIMESTAMP}}"></script>
