@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import time
 from pathlib import Path
 from security_utils import is_production_mode, is_strong_secret, is_strong_drawer_pass
 from memo_utils import get_yesterday_date_str, sanitize_content, extract_memo_from_file
@@ -157,6 +158,67 @@ DEFAULT_STATE = {
 }
 
 
+def _derive_state_from_sessions():
+    """Check if any OpenClaw session is actually active RIGHT NOW.
+
+    Reads sessions.json and checks if any session was updated within the
+    freshness window (15s). This provides real-time state detection instead
+    of relying on timeout-based TTL guessing.
+
+    Returns {"state": "writing", "detail": "...", "source": "session_activity"}
+    or None if no recent activity.
+    """
+    try:
+        openclaw_dir = os.environ.get("OPENCLAW_DIR", "").strip()
+        if not openclaw_dir:
+            # Fallback to default
+            openclaw_dir = os.path.join(os.path.expanduser("~"), ".openclaw")
+        sessions_file = os.path.join(openclaw_dir, "agents", "main", "sessions", "sessions.json")
+        if not os.path.exists(sessions_file):
+            return None
+        with open(sessions_file, "r", encoding="utf-8") as f:
+            sessions = json.load(f)
+
+        now_ms = int(time.time() * 1000)
+        freshness_ms = 15_000  # 15 seconds
+
+        active_detail = None
+        most_recent_ms = 0
+
+        for key, s in sessions.items():
+            # Skip the main heartbeat session
+            if key == "agent:main:main":
+                continue
+
+            updated_at = s.get("updatedAt", 0)
+            age_ms = now_ms - updated_at
+
+            if age_ms < freshness_ms and updated_at > most_recent_ms:
+                most_recent_ms = updated_at
+                # Extract a meaningful detail
+                display = s.get("displayName", "")
+                if "discord:channel:" in key:
+                    # Clean up channel name
+                    if ">" in display:
+                        active_detail = display.split(">")[-1].strip()[:50]
+                    elif "#" in display:
+                        active_detail = display
+                    else:
+                        active_detail = key.split(":")[-1][:12]
+                elif "subagent:" in key:
+                    active_detail = s.get("label", display or "subagent")
+                elif "cron:" in key:
+                    active_detail = key.split("cron:")[-1].split(":")[0]
+                else:
+                    active_detail = "processing..."
+
+        if active_detail:
+            return {"state": "writing", "detail": active_detail, "source": "session_activity"}
+        return None
+    except Exception:
+        return None
+
+
 def load_state():
     """Load state from file.
 
@@ -165,6 +227,10 @@ def load_state():
       and the state is a "working" state, we fall back to idle.
 
     This avoids the UI getting stuck at the desk when no new updates arrive.
+
+    Additionally checks live OpenClaw session data as a secondary signal:
+    - If state.json says idle but a session was active in the last 15s → writing
+    - If state.json says working but no session active in last 15s → force idle
     """
     state = None
     if os.path.exists(STATE_FILE):
@@ -203,6 +269,27 @@ def load_state():
                     pass
     except Exception:
         pass
+
+    # --- Live session activity detection ---
+    # Supplements the TTL-based auto-idle with real-time session checks.
+    # If state.json says "writing" but no session is active → force idle immediately.
+    # If state.json says "idle" but a session IS active → override to writing.
+    try:
+        live = _derive_state_from_sessions()
+        current = state.get("state", "idle")
+
+        if current in WORKING_STATES and not live:
+            # state.json says working, but no session activity in last 15s → go idle
+            state["state"] = "idle"
+            state["detail"] = ""
+            state["progress"] = 0
+            # Don't persist here — let the next poll re-derive naturally
+        elif current == "idle" and live:
+            # state.json says idle, but a session is actively being updated → writing
+            state["state"] = live["state"]
+            state["detail"] = live.get("detail", "")
+    except Exception:
+        pass  # Non-fatal — fall through to existing state
 
     return state
 
