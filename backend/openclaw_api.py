@@ -2135,31 +2135,61 @@ def _get_process_info(pid):
 
 
 def _extract_exec_output(lines, session_name, max_chars=500):
-    """Find the most recent output for an exec session from JSONL lines."""
-    last_output = None
+    """Find the most recent real output for an exec session from JSONL lines.
+    
+    Strategy: find the line with 'Command still running (session <name>...)',
+    then look at subsequent toolResult entries for actual program output.
+    Also captures poll/log results that reference this session.
+    """
+    # Boilerplate patterns to skip
+    _SKIP_PATTERNS = [
+        "Command still running",
+        "Use process (list/poll/log/write/kill",
+        "No session found for",
+        "Process exited with code",
+    ]
+    
+    last_real_output = None
+    found_session = False
+    
     for line in lines:
-        if session_name not in line:
+        # Track when we've seen this exec session mentioned
+        if session_name in line and "Command still running" in line:
+            found_session = True
             continue
-        if '"toolResult"' not in line and '"toolName"' not in line:
+        
+        # After finding the session, look for toolResult entries with real output
+        if not found_session and session_name not in line:
             continue
+            
+        if '"toolResult"' not in line:
+            continue
+        
         try:
             entry = json.loads(line)
             msg = entry.get("message", {})
             content = msg.get("content", [])
+            texts = []
             if isinstance(content, list):
                 for part in content:
                     if isinstance(part, dict) and part.get("type") == "text":
-                        text = part.get("text", "")
-                        if text and session_name in text:
-                            last_output = text
-            elif isinstance(content, str) and session_name in content:
-                last_output = content
+                        texts.append(part.get("text", ""))
+            elif isinstance(content, str):
+                texts.append(content)
+            
+            for text in texts:
+                if not text or not text.strip():
+                    continue
+                # Skip boilerplate
+                if any(skip in text for skip in _SKIP_PATTERNS):
+                    continue
+                last_real_output = text
         except Exception:
             continue
-
-    if last_output and len(last_output) > max_chars:
-        last_output = "..." + last_output[-max_chars:]
-    return last_output
+    
+    if last_real_output and len(last_real_output) > max_chars:
+        last_real_output = "..." + last_real_output[-max_chars:]
+    return last_real_output
 
 
 def _scan_exec_processes():
@@ -2526,7 +2556,7 @@ def openclaw_agent_detail(name):
                     "name": ep["name"],
                     "type": "exec",
                     "state": "executing",
-                    "detail": ep.get("command", ""),
+                    "detail": f"Background process from {ep.get('parentSession', 'unknown')}",
                     "pid": ep.get("pid"),
                     "startedAt": int(ep.get("createTime", 0) * 1000) if ep.get("createTime") else 0,
                     "startedAtRelative": _relative_time_label(int(ep.get("createTime", 0) * 1000)) if ep.get("createTime") else None,
