@@ -4527,7 +4527,7 @@ function toggleBrokerPanel() {
                 seenIds.add(id);
 
                 const isDemo = !!agent.isDemo || (DEMO_MODE && (id === 'demo_nika' || id === 'demo_mercury' || agent.name === 'Nika' || agent.name === 'Mercury'));
-                const area = agent.area || (agent.state === 'error' ? 'error' : (agent.state === 'idle' ? 'breakroom' : 'writing'));
+                const area = agent.area || (agent.type === 'exec' ? 'error' : (agent.state === 'error' ? 'error' : (agent.state === 'idle' ? 'breakroom' : 'writing')));
 
                 const idx = area === 'breakroom' ? idxBreak++ : area === 'error' ? idxError++ : idxWrite++;
                 const p = isDemo

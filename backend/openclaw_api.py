@@ -2468,6 +2468,46 @@ def openclaw_agent_detail(name):
                 "recentRuns": recent_runs,
             })
 
+    # Check exec processes BEFORE session fallback (exec names like "tidy-river"
+    # would otherwise match generic session key substring search)
+    try:
+        now_s_ep = time.time()
+        cache_age_ep = now_s_ep - _exec_processes_cache["ts"]
+        if _exec_processes_cache["data"] is not None and cache_age_ep < _EXEC_CACHE_TTL:
+            exec_procs = _exec_processes_cache["data"]
+        else:
+            exec_procs = _scan_exec_processes()
+            _exec_processes_cache["data"] = exec_procs
+            _exec_processes_cache["ts"] = now_s_ep
+
+        for ep in exec_procs:
+            if ep.get("name") == name:
+                runtime = ep.get("runtimeMinutes")
+                runtime_str = None
+                if runtime:
+                    if runtime >= 60:
+                        runtime_str = f"{runtime // 60}h {runtime % 60}m"
+                    else:
+                        runtime_str = f"{runtime}m"
+                return jsonify({
+                    "name": ep["name"],
+                    "type": "exec",
+                    "state": "executing",
+                    "detail": ep.get("command", ""),
+                    "pid": ep.get("pid"),
+                    "startedAt": int(ep.get("createTime", 0) * 1000) if ep.get("createTime") else 0,
+                    "startedAtRelative": _relative_time_label(int(ep.get("createTime", 0) * 1000)) if ep.get("createTime") else None,
+                    "runtimeMinutes": runtime,
+                    "runtimeFormatted": runtime_str,
+                    "cpuSeconds": ep.get("cpuSeconds", 0),
+                    "memoryMB": ep.get("memoryMB", 0),
+                    "parentSession": ep.get("parentSession", ""),
+                    "command": ep.get("command", ""),
+                    "processName": ep.get("processName", ""),
+                })
+    except Exception:
+        pass
+
     # Check active sessions (thread/subagent/cron sessions not in runs.json)
     sessions = _read_sessions()
     # Strip emoji prefixes for matching (💬, ⚡, ⏰ etc.)
@@ -2513,44 +2553,7 @@ def openclaw_agent_detail(name):
                 "chatType": s.get("chatType", ""),
             })
 
-    # Check exec processes
-    try:
-        now_s_ep = time.time()
-        cache_age_ep = now_s_ep - _exec_processes_cache["ts"]
-        if _exec_processes_cache["data"] is not None and cache_age_ep < _EXEC_CACHE_TTL:
-            exec_procs = _exec_processes_cache["data"]
-        else:
-            exec_procs = _scan_exec_processes()
-            _exec_processes_cache["data"] = exec_procs
-            _exec_processes_cache["ts"] = now_s_ep
-
-        for ep in exec_procs:
-            if ep.get("name") == name:
-                runtime = ep.get("runtimeMinutes")
-                runtime_str = None
-                if runtime:
-                    if runtime >= 60:
-                        runtime_str = f"{runtime // 60}h {runtime % 60}m"
-                    else:
-                        runtime_str = f"{runtime}m"
-                return jsonify({
-                    "name": ep["name"],
-                    "type": "exec",
-                    "state": "executing",
-                    "detail": ep.get("command", ""),
-                    "pid": ep.get("pid"),
-                    "startedAt": int(ep.get("createTime", 0) * 1000) if ep.get("createTime") else 0,
-                    "startedAtRelative": _relative_time_label(int(ep.get("createTime", 0) * 1000)) if ep.get("createTime") else None,
-                    "runtimeMinutes": runtime,
-                    "runtimeFormatted": runtime_str,
-                    "cpuSeconds": ep.get("cpuSeconds", 0),
-                    "memoryMB": ep.get("memoryMB", 0),
-                    "parentSession": ep.get("parentSession", ""),
-                    "command": ep.get("command", ""),
-                    "processName": ep.get("processName", ""),
-                })
-    except Exception:
-        pass
+    # (exec processes already checked above, before session fallback)
 
     return jsonify({"error": "Agent not found"}), 404
 
