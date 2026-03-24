@@ -2134,6 +2134,34 @@ def _get_process_info(pid):
         return None
 
 
+def _extract_exec_output(lines, session_name, max_chars=500):
+    """Find the most recent output for an exec session from JSONL lines."""
+    last_output = None
+    for line in lines:
+        if session_name not in line:
+            continue
+        if '"toolResult"' not in line and '"toolName"' not in line:
+            continue
+        try:
+            entry = json.loads(line)
+            msg = entry.get("message", {})
+            content = msg.get("content", [])
+            if isinstance(content, list):
+                for part in content:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        text = part.get("text", "")
+                        if text and session_name in text:
+                            last_output = text
+            elif isinstance(content, str) and session_name in content:
+                last_output = content
+        except Exception:
+            continue
+
+    if last_output and len(last_output) > max_chars:
+        last_output = "..." + last_output[-max_chars:]
+    return last_output
+
+
 def _scan_exec_processes():
     """Scan recent session JSONL files for exec processes, cross-ref with OS."""
     if not os.path.isdir(SESSIONS_DIR):
@@ -2162,7 +2190,7 @@ def _scan_exec_processes():
             }
 
     # Scan each file for exec sessions — collect most recent per session name
-    found = {}  # name -> {pid, parentSession, timestamp}
+    found = {}  # name -> {pid, parentSession, timestamp, lines}
     for filepath, mtime in jsonl_files:
         basename = os.path.basename(filepath)
         # Try to match session ID from filename
@@ -2205,6 +2233,7 @@ def _scan_exec_processes():
                     "pid": pid,
                     "parentSession": parent_session,
                     "timestamp": ts,
+                    "lines": lines,
                 }
 
     # Cross-reference with OS process table
@@ -2226,6 +2255,9 @@ def _scan_exec_processes():
         if len(command) > 200:
             command = command[:197] + "..."
 
+        # Extract last output from JSONL lines for this exec session
+        last_output = _extract_exec_output(info.get("lines", []), name, max_chars=500)
+
         processes.append({
             "name": name,
             "pid": pid,
@@ -2237,6 +2269,7 @@ def _scan_exec_processes():
             "runtimeMinutes": runtime_minutes,
             "cpuSeconds": proc_info.get("cpuSeconds", 0),
             "memoryMB": proc_info.get("memoryMB", 0),
+            "lastOutput": last_output,
         })
 
     return processes
@@ -2504,6 +2537,7 @@ def openclaw_agent_detail(name):
                     "parentSession": ep.get("parentSession", ""),
                     "command": ep.get("command", ""),
                     "processName": ep.get("processName", ""),
+                    "lastOutput": ep.get("lastOutput"),
                 })
     except Exception:
         pass

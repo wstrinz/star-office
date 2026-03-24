@@ -6572,6 +6572,11 @@ function toggleBrokerPanel() {
                     html += '<div class="adm-row"><span class="adm-label">Command</span></div>';
                     html += '<div class="adm-detail-text" style="font-size:10px;word-break:break-all;">' + escHtmlSimple(data.command) + '</div>';
                 }
+                if (data.lastOutput) {
+                    html += '<hr class="adm-separator">';
+                    html += '<div class="adm-row"><span class="adm-label">Last Output</span></div>';
+                    html += '<div style="background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:8px;margin-top:4px;font-family:monospace;font-size:11px;color:#8b949e;white-space:pre-wrap;max-height:200px;overflow-y:auto;word-break:break-all;">' + escHtmlSimple(data.lastOutput) + '</div>';
+                }
             }
 
             // Time
