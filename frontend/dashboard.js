@@ -779,6 +779,54 @@
     return name.replace(/^[\u{1F4AC}\u{26A1}\u{23F0}\u{1F525}\s]+/gu, '').trim() || name;
   }
 
+  // ── Exec Processes ────────────────────────────────────────
+
+  function fmtRuntime(minutes) {
+    if (!minutes && minutes !== 0) return '—';
+    if (minutes < 60) return minutes + 'm';
+    var h = Math.floor(minutes / 60);
+    var m = minutes % 60;
+    return h + 'h ' + m + 'm';
+  }
+
+  function fmtCpuTime(seconds) {
+    if (!seconds) return '0s';
+    if (seconds < 60) return seconds + 's';
+    if (seconds < 3600) return (seconds / 60).toFixed(1) + 'm';
+    return (seconds / 3600).toFixed(1) + 'h';
+  }
+
+  function renderExecProcesses(data) {
+    var el = document.getElementById('oc-exec-processes');
+    if (!el) return;
+    if (!data || !data.processes || !data.processes.length) {
+      el.innerHTML = '<div class="oc-empty">No background processes</div>';
+      return;
+    }
+
+    el.innerHTML = data.processes.map(function (p) {
+      var cmd = p.command || '';
+      // Extract just the script filename for display
+      var cmdShort = cmd;
+      if (cmd.length > 80) cmdShort = cmd.substring(0, 77) + '…';
+
+      return '<div class="oc-exec-card">' +
+        '<div class="oc-exec-header">' +
+          '<span class="oc-exec-icon">⚙️</span>' +
+          '<span class="oc-exec-name">' + escHtml(p.name) + '</span>' +
+          '<span class="oc-exec-pid">PID ' + (p.pid || '?') + '</span>' +
+          '<span class="oc-exec-runtime">' + fmtRuntime(p.runtimeMinutes) + '</span>' +
+        '</div>' +
+        (cmdShort ? '<div class="oc-exec-cmd" title="' + escHtml(cmd) + '">📂 ' + escHtml(cmdShort) + '</div>' : '') +
+        '<div class="oc-exec-stats">' +
+          '<span>💻 CPU: ' + fmtCpuTime(p.cpuSeconds) + '</span>' +
+          '<span>RAM: ' + (p.memoryMB || 0) + ' MB</span>' +
+          (p.parentSession ? '<span>📍 ' + escHtml(p.parentSession) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   function renderAgentsRoster(agents) {
     var el = document.getElementById('oc-agents-roster');
     if (!el) return;
@@ -791,7 +839,7 @@
     var filteredAgents = agents.filter(function(a) { return a.type !== 'thread'; });
 
     el.innerHTML = filteredAgents.map(function (a) {
-      var icon = a.type === 'main' ? '🔥' : (a.type === 'subagent' ? '⚡' : '⏰');
+      var icon = a.type === 'main' ? '🔥' : (a.type === 'exec' ? '⚙️' : (a.type === 'subagent' ? '⚡' : '⏰'));
       var displayName = a.type === 'main' ? a.name : stripAgentEmojiPrefix(a.name);
       var model = (a.model || '').split('/').pop();
       var fullDetail = a.detail || '';
@@ -876,6 +924,7 @@
     fetchJSON('/openclaw/sessions?limit=50').then(renderSessions);
     fetchJSON('/openclaw/subagents').then(renderSubagents);
     fetchJSON('/openclaw/agents').then(renderAgentsRoster);
+    fetchJSON('/openclaw/exec-processes').then(renderExecProcesses);
 
     // Rate limits: show loading state immediately, render when ready
     renderRateLimitsPanel(null);
@@ -937,6 +986,8 @@
       '<div id="oc-rate-limits-panel" class="oc-rate-limits-panel">Loading…</div>' +
       '<div class="oc-section-label">WHO\'S IN THE OFFICE</div>' +
       '<div id="oc-agents-roster" class="oc-agents-roster"></div>' +
+      '<div class="oc-section-label">BACKGROUND PROCESSES</div>' +
+      '<div id="oc-exec-processes" class="oc-exec-processes"></div>' +
       '<div class="oc-two-col">' +
         '<div class="oc-col">' +
           '<div class="oc-section-label">ACTIVE SESSIONS</div>' +

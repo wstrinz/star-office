@@ -10,6 +10,7 @@ Provides:
   GET /openclaw/sessions  — live session registry
   GET /openclaw/subagents — subagent run history
   GET /openclaw/agents    — combined agent view for pixel office
+  GET /openclaw/exec-processes — live background exec processes (PID cross-ref)
 """
 
 import glob
@@ -271,6 +272,25 @@ def openclaw_status_message():
         messages.append("Lunch hour — still on duty 🍱")
     elif 6 <= hour <= 8:
         messages.append("Good morning ☀️")
+
+    # Exec processes
+    try:
+        if _exec_processes_cache.get("data"):
+            n_exec = len(_exec_processes_cache["data"])
+            if n_exec > 0:
+                ep0 = _exec_processes_cache["data"][0]
+                ep_name = ep0.get("name", "process")
+                rt = ep0.get("runtimeMinutes", 0)
+                if rt and rt > 60:
+                    messages.append(f"⚙️ {ep_name} running ({rt // 60}h {rt % 60}m)")
+                elif rt:
+                    messages.append(f"⚙️ {ep_name} running ({rt}m)")
+                else:
+                    messages.append(f"⚙️ {ep_name} running")
+                if n_exec > 1:
+                    messages.append(f"⚙️ {n_exec} background processes")
+    except Exception:
+        pass
 
     # Token budget awareness
     if _rate_limits_cache.get("data"):
@@ -1902,6 +1922,58 @@ def openclaw_agents_combined():
             "tokens": 0,
         })
 
+    # 4. Exec processes — background exec sessions with live PIDs
+    try:
+        now_s = time.time()
+        cache_age = now_s - _exec_processes_cache["ts"]
+        if _exec_processes_cache["data"] is not None and cache_age < _EXEC_CACHE_TTL:
+            exec_procs = _exec_processes_cache["data"]
+        else:
+            exec_procs = _scan_exec_processes()
+            _exec_processes_cache["data"] = exec_procs
+            _exec_processes_cache["ts"] = now_s
+
+        for ep in exec_procs:
+            ep_name = ep.get("name", "exec")
+            if ep_name in dismissed:
+                continue
+            # Build a short detail from the command
+            cmd = ep.get("command", "")
+            detail_short = cmd
+            # Extract just the script name + key args
+            if "python" in cmd.lower():
+                parts = cmd.split()
+                script_parts = [p for p in parts if p.endswith(".py")]
+                if script_parts:
+                    detail_short = os.path.basename(script_parts[0])
+                    # Add model flag if present
+                    for i, p in enumerate(parts):
+                        if p == "--model" and i + 1 < len(parts):
+                            model_name = parts[i + 1].split("/")[-1]
+                            detail_short += " — " + model_name
+                            break
+            if len(detail_short) > 120:
+                detail_short = detail_short[:117] + "..."
+
+            runtime = ep.get("runtimeMinutes")
+            agents.append({
+                "name": ep_name,
+                "type": "exec",
+                "state": "executing",
+                "detail": detail_short,
+                "model": "",
+                "startedAt": int(ep.get("createTime", 0) * 1000) if ep.get("createTime") else 0,
+                "tokens": 0,
+                "pid": ep.get("pid"),
+                "runtimeMinutes": runtime,
+                "cpuSeconds": ep.get("cpuSeconds", 0),
+                "memoryMB": ep.get("memoryMB", 0),
+                "parentSession": ep.get("parentSession", ""),
+                "command": cmd,
+            })
+    except Exception:
+        pass  # non-fatal
+
     # --- Write main agent state to state.json (server-side sync) ---
     # Only write if state or detail actually changed to prevent flickering
     main_entry = next((a for a in agents if a.get("type") == "main"), None)
@@ -1944,6 +2016,252 @@ def openclaw_agents_combined():
             pass  # non-fatal; don't break the API response
 
     return jsonify(agents)
+
+
+# ---------------------------------------------------------------------------
+# Exec Processes — detect live background exec sessions from JSONL + OS PIDs
+# ---------------------------------------------------------------------------
+
+_exec_processes_cache = {"data": None, "ts": 0}
+_EXEC_CACHE_TTL = 30  # seconds
+
+_EXEC_SESSION_RE = re.compile(r'Command still running \(session (\S+), pid (\d+)\)')
+
+
+def _tail_lines(filepath, n=100):
+    """Read the last n lines of a file efficiently (seek from end)."""
+    try:
+        with open(filepath, "rb") as f:
+            f.seek(0, 2)  # end
+            size = f.tell()
+            if size == 0:
+                return []
+            # Read up to 64KB from end — should cover 100 lines easily
+            chunk_size = min(size, 64 * 1024)
+            f.seek(-chunk_size, 2)
+            data = f.read(chunk_size)
+            lines = data.decode("utf-8", errors="replace").splitlines()
+            return lines[-n:]
+    except Exception:
+        return []
+
+
+def _get_process_info(pid):
+    """Get process info for a PID. Returns dict or None if dead.
+    
+    Aggregates CPU and memory from child processes (e.g. powershell wrapping python).
+    """
+    try:
+        import psutil
+        p = psutil.Process(pid)
+        if not p.is_running():
+            return None
+        cmdline = p.cmdline()
+        cpu_times = p.cpu_times()
+        total_cpu = cpu_times.user + cpu_times.system
+        total_mem = p.memory_info().rss
+        best_command = " ".join(cmdline) if cmdline else ""
+
+        # Aggregate child process stats — the real work often runs in a child
+        try:
+            children = p.children(recursive=True)
+            for child in children:
+                try:
+                    child_cpu = child.cpu_times()
+                    child_cpu_total = child_cpu.user + child_cpu.system
+                    total_cpu += child_cpu_total
+                    total_mem += child.memory_info().rss
+                    # If a child has significantly more CPU time, use its cmdline
+                    if child_cpu_total > 10 and child_cpu_total > (cpu_times.user + cpu_times.system):
+                        child_cmdline = child.cmdline()
+                        if child_cmdline:
+                            best_command = " ".join(child_cmdline)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+        except Exception:
+            pass
+
+        return {
+            "alive": True,
+            "command": best_command,
+            "processName": p.name(),
+            "startedAt": datetime.fromtimestamp(p.create_time()).isoformat(),
+            "createTime": p.create_time(),
+            "cpuSeconds": int(total_cpu),
+            "memoryMB": round(total_mem / 1024 / 1024),
+        }
+    except ImportError:
+        pass
+    except Exception:
+        return None
+
+    # Fallback: subprocess on Windows
+    try:
+        import subprocess as _sp
+        result = _sp.run(
+            ["powershell", "-Command",
+             f"Get-Process -Id {pid} -ErrorAction SilentlyContinue | "
+             f"Select-Object Id,ProcessName,StartTime,CPU,WorkingSet64 | ConvertTo-Json"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            return None
+        info = json.loads(result.stdout)
+        start_time = None
+        create_time = None
+        if info.get("StartTime"):
+            try:
+                # PowerShell serializes DateTime as "/Date(ms)/"
+                st_str = info["StartTime"]
+                if "/Date(" in st_str:
+                    ms = int(re.search(r'/Date\((\d+)', st_str).group(1))
+                    start_time = datetime.fromtimestamp(ms / 1000).isoformat()
+                    create_time = ms / 1000
+                else:
+                    start_time = st_str
+            except Exception:
+                pass
+        return {
+            "alive": True,
+            "command": "",
+            "processName": info.get("ProcessName", ""),
+            "startedAt": start_time,
+            "createTime": create_time,
+            "cpuSeconds": int(info.get("CPU", 0) or 0),
+            "memoryMB": round((info.get("WorkingSet64", 0) or 0) / 1024 / 1024),
+        }
+    except Exception:
+        return None
+
+
+def _scan_exec_processes():
+    """Scan recent session JSONL files for exec processes, cross-ref with OS."""
+    if not os.path.isdir(SESSIONS_DIR):
+        return []
+
+    # Get the top 5 most recently modified JSONL files
+    jsonl_files = []
+    for path in glob.glob(os.path.join(SESSIONS_DIR, "*.jsonl")):
+        try:
+            mtime = os.path.getmtime(path)
+            jsonl_files.append((path, mtime))
+        except Exception:
+            continue
+    jsonl_files.sort(key=lambda x: x[1], reverse=True)
+    jsonl_files = jsonl_files[:5]
+
+    # Map session filename to display name from sessions.json
+    sessions = _read_sessions()
+    file_to_session = {}
+    for session_key, s in sessions.items():
+        sid = s.get("sessionId", "")
+        if sid:
+            file_to_session[sid] = {
+                "key": session_key,
+                "displayName": s.get("displayName", ""),
+            }
+
+    # Scan each file for exec sessions — collect most recent per session name
+    found = {}  # name -> {pid, parentSession, timestamp}
+    for filepath, mtime in jsonl_files:
+        basename = os.path.basename(filepath)
+        # Try to match session ID from filename
+        parent_session = "Unknown"
+        for sid, sinfo in file_to_session.items():
+            if sid in basename:
+                display = sinfo.get("displayName", "")
+                if display:
+                    # Extract channel name like #the-hearth from display
+                    ch_match = re.search(r"#([\w-]+)", display)
+                    if ch_match:
+                        parent_session = "#" + ch_match.group(1)
+                    else:
+                        parent_session = display[:50]
+                else:
+                    parent_session = sinfo.get("key", "")[:50]
+                break
+
+        lines = _tail_lines(filepath, 100)
+        for line in lines:
+            m = _EXEC_SESSION_RE.search(line)
+            if not m:
+                continue
+            sess_name = m.group(1)
+            pid = int(m.group(2))
+
+            # Extract timestamp from the JSONL line
+            ts = None
+            try:
+                obj = json.loads(line)
+                ts_str = obj.get("timestamp", "")
+                if ts_str:
+                    ts = ts_str
+            except Exception:
+                pass
+
+            # Keep only the most recent occurrence of each session name
+            if sess_name not in found or (ts and ts > found[sess_name].get("timestamp", "")):
+                found[sess_name] = {
+                    "pid": pid,
+                    "parentSession": parent_session,
+                    "timestamp": ts,
+                }
+
+    # Cross-reference with OS process table
+    processes = []
+    now = time.time()
+    for name, info in found.items():
+        pid = info["pid"]
+        proc_info = _get_process_info(pid)
+        if proc_info is None or not proc_info.get("alive"):
+            continue
+
+        runtime_minutes = None
+        if proc_info.get("createTime"):
+            runtime_minutes = round((now - proc_info["createTime"]) / 60)
+
+        # Try to extract the actual command from proc_info
+        command = proc_info.get("command", "")
+        # Truncate very long commands
+        if len(command) > 200:
+            command = command[:197] + "..."
+
+        processes.append({
+            "name": name,
+            "pid": pid,
+            "alive": True,
+            "parentSession": info["parentSession"],
+            "command": command,
+            "processName": proc_info.get("processName", ""),
+            "startedAt": proc_info.get("startedAt"),
+            "runtimeMinutes": runtime_minutes,
+            "cpuSeconds": proc_info.get("cpuSeconds", 0),
+            "memoryMB": proc_info.get("memoryMB", 0),
+        })
+
+    return processes
+
+
+@openclaw_bp.route("/openclaw/exec-processes", methods=["GET"])
+def openclaw_exec_processes():
+    """Detect live background exec processes by scanning session JSONLs + OS PIDs."""
+    now_s = time.time()
+    cache_age = now_s - _exec_processes_cache["ts"]
+    if _exec_processes_cache["data"] is not None and cache_age < _EXEC_CACHE_TTL:
+        return jsonify({
+            "processes": _exec_processes_cache["data"],
+            "cached": True,
+            "cachedAge": round(cache_age, 1),
+        })
+
+    processes = _scan_exec_processes()
+    _exec_processes_cache["data"] = processes
+    _exec_processes_cache["ts"] = now_s
+
+    return jsonify({
+        "processes": processes,
+        "cached": False,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -2194,6 +2512,45 @@ def openclaw_agent_detail(name):
                 "channel": s.get("channel", ""),
                 "chatType": s.get("chatType", ""),
             })
+
+    # Check exec processes
+    try:
+        now_s_ep = time.time()
+        cache_age_ep = now_s_ep - _exec_processes_cache["ts"]
+        if _exec_processes_cache["data"] is not None and cache_age_ep < _EXEC_CACHE_TTL:
+            exec_procs = _exec_processes_cache["data"]
+        else:
+            exec_procs = _scan_exec_processes()
+            _exec_processes_cache["data"] = exec_procs
+            _exec_processes_cache["ts"] = now_s_ep
+
+        for ep in exec_procs:
+            if ep.get("name") == name:
+                runtime = ep.get("runtimeMinutes")
+                runtime_str = None
+                if runtime:
+                    if runtime >= 60:
+                        runtime_str = f"{runtime // 60}h {runtime % 60}m"
+                    else:
+                        runtime_str = f"{runtime}m"
+                return jsonify({
+                    "name": ep["name"],
+                    "type": "exec",
+                    "state": "executing",
+                    "detail": ep.get("command", ""),
+                    "pid": ep.get("pid"),
+                    "startedAt": int(ep.get("createTime", 0) * 1000) if ep.get("createTime") else 0,
+                    "startedAtRelative": _relative_time_label(int(ep.get("createTime", 0) * 1000)) if ep.get("createTime") else None,
+                    "runtimeMinutes": runtime,
+                    "runtimeFormatted": runtime_str,
+                    "cpuSeconds": ep.get("cpuSeconds", 0),
+                    "memoryMB": ep.get("memoryMB", 0),
+                    "parentSession": ep.get("parentSession", ""),
+                    "command": ep.get("command", ""),
+                    "processName": ep.get("processName", ""),
+                })
+    except Exception:
+        pass
 
     return jsonify({"error": "Agent not found"}), 404
 
