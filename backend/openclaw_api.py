@@ -2137,31 +2137,22 @@ def _get_process_info(pid):
 def _extract_exec_output(lines, session_name, max_chars=500):
     """Find the most recent real output for an exec session from JSONL lines.
     
-    Strategy: find the line with 'Command still running (session <name>...)',
-    then look at subsequent toolResult entries for actual program output.
-    Also captures poll/log results that reference this session.
+    Strategy: ONLY look at toolResult entries that directly reference this
+    exec session name (in poll/log results or the original exec output).
+    Ignores all other toolResults in the file to avoid cross-contamination.
     """
-    # Boilerplate patterns to skip
     _SKIP_PATTERNS = [
         "Command still running",
         "Use process (list/poll/log/write/kill",
         "No session found for",
-        "Process exited with code",
     ]
     
     last_real_output = None
-    found_session = False
     
     for line in lines:
-        # Track when we've seen this exec session mentioned
-        if session_name in line and "Command still running" in line:
-            found_session = True
+        # MUST contain the session name — this scopes output to this process only
+        if session_name not in line:
             continue
-        
-        # After finding the session, look for toolResult entries with real output
-        if not found_session and session_name not in line:
-            continue
-            
         if '"toolResult"' not in line:
             continue
         
@@ -2180,8 +2171,13 @@ def _extract_exec_output(lines, session_name, max_chars=500):
             for text in texts:
                 if not text or not text.strip():
                     continue
-                # Skip boilerplate
+                # Skip boilerplate lines but keep "Process exited" as useful info
                 if any(skip in text for skip in _SKIP_PATTERNS):
+                    # But if there's real content AFTER the boilerplate on the same text, keep it
+                    # e.g., poll results that start with session name then show output
+                    after_boilerplate = text.split("\n", 1)
+                    if len(after_boilerplate) > 1 and after_boilerplate[1].strip():
+                        last_real_output = after_boilerplate[1].strip()
                     continue
                 last_real_output = text
         except Exception:
