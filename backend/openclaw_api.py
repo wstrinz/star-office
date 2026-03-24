@@ -2036,8 +2036,8 @@ def _tail_lines(filepath, n=100):
             size = f.tell()
             if size == 0:
                 return []
-            # Read up to 64KB from end — should cover 100 lines easily
-            chunk_size = min(size, 64 * 1024)
+            # Read up to 256KB from end — exec sessions can be far back in large files
+            chunk_size = min(size, 256 * 1024)
             f.seek(-chunk_size, 2)
             data = f.read(chunk_size)
             lines = data.decode("utf-8", errors="replace").splitlines()
