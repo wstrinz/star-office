@@ -180,7 +180,7 @@ def _derive_state_from_sessions():
             sessions = json.load(f)
 
         now_ms = int(time.time() * 1000)
-        freshness_ms = 15_000  # 15 seconds
+        freshness_ms = 60_000  # 60 seconds — covers response generation time
 
         active_detail = None
         most_recent_ms = 0
