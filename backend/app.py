@@ -272,18 +272,36 @@ def load_state():
 
     # --- Live session activity detection ---
     # Supplements the TTL-based auto-idle with real-time session checks.
-    # If state.json says "writing" but no session is active → force idle immediately.
-    # If state.json says "idle" but a session IS active → override to writing.
+    # Key rule: a FRESH state.json push always wins (OpenClaw pushes "writing"
+    # when it starts processing, before session updatedAt bumps).
     try:
         live = _derive_state_from_sessions()
         current = state.get("state", "idle")
 
+        # How old is the state.json push itself?
+        state_age_s = 999
+        updated_at_str = state.get("updated_at")
+        if updated_at_str:
+            try:
+                dt = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
+                if dt.tzinfo:
+                    from datetime import timezone
+                    state_age_s = (datetime.now(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds()
+                else:
+                    state_age_s = (datetime.now() - dt).total_seconds()
+            except Exception:
+                pass
+
         if current in WORKING_STATES and not live:
-            # state.json says working, but no session activity in last 15s → go idle
-            state["state"] = "idle"
-            state["detail"] = ""
-            state["progress"] = 0
-            # Don't persist here — let the next poll re-derive naturally
+            # state.json says working, no session activity — but is the push fresh?
+            if state_age_s < 60:
+                # Push is recent (< 60s) — trust it, OpenClaw is probably mid-generation
+                pass  # keep current working state
+            else:
+                # Push is stale — force idle
+                state["state"] = "idle"
+                state["detail"] = ""
+                state["progress"] = 0
         elif current == "idle" and live:
             # state.json says idle, but a session is actively being updated → writing
             state["state"] = live["state"]
