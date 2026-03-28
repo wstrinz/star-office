@@ -1,0 +1,11 @@
+{
+  "monthlyBudget": 200,
+  "warningThreshold": 0.8,
+  "anthropicMonthlyLimit": null,
+  "openaiMonthlyLimit": null,
+  "pricing": {
+    "claude-opus-4-6": {"inputPer1M": 15, "outputPer1M": 75, "cacheReadPer1M": 1.5},
+    "claude-sonnet-4-6": {"inputPer1M": 3, "outputPer1M": 15, "cacheReadPer1M": 0.3},
+    "default": {"inputPer1M": 3, "outputPer1M": 15, "cacheReadPer1M": 0.3}
+  }
+}

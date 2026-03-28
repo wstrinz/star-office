@@ -43,6 +43,29 @@ def _resolve_openclaw_dir():
 
 
 OPENCLAW_DIR = _resolve_openclaw_dir()
+
+def _resolve_agent_name():
+    """Read the main agent display name from OpenClaw IDENTITY.md, falling back to 'Star'."""
+    workspace = os.environ.get("OPENCLAW_WORKSPACE", "").strip()
+    if not workspace:
+        workspace = os.path.join(OPENCLAW_DIR, "workspace") if OPENCLAW_DIR else ""
+    identity_file = os.path.join(workspace, "IDENTITY.md") if workspace else ""
+    if identity_file and os.path.isfile(identity_file):
+        try:
+            with open(identity_file, "r", encoding="utf-8") as f:
+                content = f.read()
+            m = re.search(r"-\s*\*\*Name:\*\*\s*(.+)", content)
+            if m:
+                name = m.group(1).strip().split("\n")[0].strip()
+                # Take the first name if there are parenthetical notes
+                name = re.split(r'\s*[\(（]', name)[0].strip()
+                if name:
+                    return name
+        except Exception:
+            pass
+    return "Star"
+
+AGENT_NAME = _resolve_agent_name()
 CRON_DIR = os.path.join(OPENCLAW_DIR, "cron")
 JOBS_FILE = os.path.join(CRON_DIR, "jobs.json")
 RUNS_DIR = os.path.join(CRON_DIR, "runs")
@@ -319,20 +342,35 @@ def openclaw_status_message():
             "Quiet moment — recharging",
         ])
 
-    # Travel mode — add just ONE travel flavor (not 3) to avoid dominating
+    # Travel mode — check for any travel-mode config and read messages from it
     try:
-        trip_cfg = os.path.join(OPENCLAW_DIR, "workspace", "config", "sanibel-trip-mode.json")
-        if os.path.isfile(trip_cfg):
-            with open(trip_cfg, "r", encoding="utf-8") as f:
-                trip = json.load(f)
-            if trip.get("active"):
-                import random as _rnd
-                travel_msgs = [
-                    "🏖️ Vacation mode: Sanibel Island",
-                    "🌴 Working from the beach condo",
-                    "🐚 Gulf Coast vibes",
-                    "🌅 Sun, shells, and servers",
-                ]
+        config_dir = os.path.join(OPENCLAW_DIR, "workspace", "config")
+        trip = None
+        trip_cfg = None
+        # Check for generic travel-mode.json first, then any *-trip-mode.json or *-travel-mode.json
+        for pattern in ["travel-mode.json", "*-trip-mode.json", "*-travel-mode.json"]:
+            candidates = glob.glob(os.path.join(config_dir, pattern))
+            for c in candidates:
+                try:
+                    with open(c, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    if data.get("active"):
+                        trip = data
+                        trip_cfg = c
+                        break
+                except Exception:
+                    continue
+            if trip:
+                break
+        if trip and trip.get("active"):
+            import random as _rnd
+            # Read messages from config, with sensible defaults
+            travel_msgs = trip.get("statusMessages", [
+                "🏖️ Travel mode active",
+                "🌴 Working remotely",
+                "🌅 On the road",
+            ])
+            if travel_msgs:
                 messages.append(_rnd.choice(travel_msgs))
     except Exception:
         pass
@@ -1637,7 +1675,7 @@ def openclaw_agents_combined():
     agents = []
     dismissed = _read_dismissed()
 
-    # 1. Main agent "Cali" — derive state from the most recent active session
+    # 1. Main agent — derive state from the most recent active session
     sessions = _read_sessions()
     most_recent = None
     for sk, s in sessions.items():
@@ -1659,7 +1697,7 @@ def openclaw_agents_combined():
         main_detail = ""
 
     agents.append({
-        "name": "Cali",
+        "name": AGENT_NAME,
         "type": "main",
         "state": main_state,
         "detail": main_detail,
@@ -1736,7 +1774,7 @@ def openclaw_agents_combined():
     # 2b. Active sessions not covered by runs.json
     #     Surfaces orphaned subagents (NOT cron sessions — handled in section 3).
     #     Thread sessions are NOT included as separate agents — they are
-    #     folded into the main Cali entry as activeThreads.
+    #     folded into the main agent entry as activeThreads.
     five_min_ms = 5 * 60 * 1000
 
     # Build a set of session keys already represented by subagent runs
@@ -1746,7 +1784,7 @@ def openclaw_agents_combined():
         if child_key:
             covered_session_keys.add(child_key)
 
-    # Collect active threads for the main Cali entry
+    # Collect active threads for the main agent entry
     active_threads = []
 
     # UUID/hash detection regex — names that look like raw IDs, not labels
@@ -1864,7 +1902,7 @@ def openclaw_agents_combined():
             "updatedAt": updated_at,
         })
 
-    # Attach activeThreads to the main Cali agent entry
+    # Attach activeThreads to the main agent entry
     main_entry = next((a for a in agents if a.get("type") == "main"), None)
     if main_entry is not None:
         main_entry["activeThreads"] = active_threads
@@ -2346,7 +2384,7 @@ def openclaw_agent_detail(name):
     now_ms = time.time() * 1000
 
     # Check if it's the main agent
-    if name.lower() in ("cali", "main"):
+    if name.lower() in (AGENT_NAME.lower(), "main", "star"):
         sessions = _read_sessions()
         most_recent = None
         for sk, s in sessions.items():
@@ -2413,7 +2451,7 @@ def openclaw_agent_detail(name):
         active_threads.sort(key=lambda x: x.get("state", "") == "executing", reverse=True)
 
         return jsonify({
-            "name": "Cali",
+            "name": AGENT_NAME,
             "type": "main",
             "state": main_state,
             "detail": most_recent.get("displayName", "") if most_recent else "",

@@ -404,7 +404,8 @@ function create() {
   const plaqueY = LAYOUT.plaque.y;
   const plaqueBg = game.add.rectangle(plaqueX, plaqueY, LAYOUT.plaque.width, LAYOUT.plaque.height, 0x5d4037);
   plaqueBg.setStrokeStyle(3, 0x3e2723);
-  const plaqueText = game.add.text(plaqueX, plaqueY, 'The Hearth 🔥', {
+  const plaqueTitle = (typeof window.officeNameFromServer !== 'undefined' && window.officeNameFromServer) ? window.officeNameFromServer : "Star's Office";
+  const plaqueText = game.add.text(plaqueX, plaqueY, plaqueTitle, {
     fontFamily: 'ArkPixel, monospace',
     fontSize: '18px',
     fill: '#ffd700',

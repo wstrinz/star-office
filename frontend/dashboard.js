@@ -835,7 +835,7 @@
       return;
     }
 
-    // Filter out thread-type agents from the roster (they show as sub-items under Cali)
+    // Filter out thread-type agents from the roster (they show as sub-items under the main agent)
     var filteredAgents = agents.filter(function(a) { return a.type !== 'thread'; });
 
     el.innerHTML = filteredAgents.map(function (a) {
@@ -975,7 +975,7 @@
     panel.style.display = 'none';
     panel.innerHTML =
       '<div class="oc-panel-header">' +
-        '<span class="oc-panel-title">🔥 THE HEARTH OPS</span>' +
+        '<span class="oc-panel-title">🔥 OFFICE OPS</span>' +
         '<span id="oc-last-refresh" class="oc-refresh-ts"></span>' +
         '<button class="oc-refresh-btn" onclick="document.dispatchEvent(new Event(\'oc-refresh\'))">↻</button>' +
       '</div>' +

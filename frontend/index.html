@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Hearth - Pixel Office</title>
+    <title>Star Office - Pixel Office</title>
     <style>
         @font-face {
             font-family: 'ArkPixel';
@@ -2037,7 +2037,7 @@
 <body>
     <!-- Loading overlay -->
     <div id="loading-overlay">
-        <div id="loading-text">Warming up The Hearth...</div>
+        <div id="loading-text">Warming up the office...</div>
         <div id="loading-progress-container">
             <div id="loading-progress-bar"></div>
         </div>
@@ -2045,7 +2045,7 @@
 
     <div id="main-stage">
         <div id="game-container">
-            <div id="game-skeleton"><div class="hint">Entering The Hearth…</div></div>
+            <div id="game-skeleton"><div class="hint">Entering the office…</div></div>
             <div id="status-text">Loading...</div>
         </div>
 
@@ -2064,7 +2064,7 @@
 
         <!-- Status control bar -->
         <div id="control-bar">
-            <div id="control-bar-title">Cali Status</div>
+            <div id="control-bar-title">Agent Status</div>
             <div id="control-buttons">
                 <button id="btn-state-idle" onclick="setState('idle','Idle')">Idle</button>
                 <button id="btn-state-writing" onclick="setState('writing','Working')">Work</button>
@@ -2213,7 +2213,7 @@
         let uiLang = localStorage.getItem('uiLang') || 'en';
         const I18N = {
             zh: {
-                controlTitle: 'Cali 状态',
+                controlTitle: '{agent} 状态',
                 btnIdle: '待命', btnWork: '工作', btnSync: '同步', btnError: '报警', btnDecor: '装修房间',
                 drawerTitle: '装修房间 · 资产侧边栏', drawerClose: '关闭',
                 authTitle: '请输入装修验证码', authPlaceholder: '输入验证码', authVerify: '验证', authDefaultPassHint: '默认密码：1234（可随时让我帮你改，建议改成强密码）',
@@ -2237,11 +2237,11 @@
                 assetHintNotInScene: '当前场景未检测到此对象，仍可替换文件（刷新后生效）',
                 assetHintDefault: '通用素材：建议保持原图尺寸、透明通道与视觉重心一致，避免错位或失真',
                 showCoords: '显示坐标', hideCoords: '隐藏坐标', moveView: '移动视野', lockView: '锁定视野',
-                memoTitle: '昨 日 小 记', guestTitle: '访 客 列 表', officeTitle: 'The Hearth 🔥',
-                loadingOffice: '正在加载 The Hearth...'
+                memoTitle: '昨 日 小 记', guestTitle: '访 客 列 表', officeTitle: "{agent}'s Office 🔥",
+                loadingOffice: "正在加载 {agent}'s Office..."
             },
             en: {
-                controlTitle: 'Cali Status',
+                controlTitle: '{agent} Status',
                 btnIdle: 'Idle', btnWork: 'Work', btnSync: 'Sync', btnError: 'Alert', btnDecor: 'Decorate Room',
                 drawerTitle: 'Decorate Room · Asset Sidebar', drawerClose: 'Close',
                 authTitle: 'Enter Decor Passcode', authPlaceholder: 'Enter passcode', authVerify: 'Verify', authDefaultPassHint: 'Default passcode: 1234 (ask me anytime to change it; stronger passcode recommended)',
@@ -2265,11 +2265,11 @@
                 assetHintNotInScene: 'This object is not detected in current scene; you can still replace file (effective after refresh)',
                 assetHintDefault: 'Generic asset: keep source size, alpha channel, and visual anchor to avoid drift/distortion',
                 showCoords: 'Show Coords', hideCoords: 'Hide Coords', moveView: 'Pan View', lockView: 'Lock View',
-                memoTitle: 'YESTERDAY NOTES', guestTitle: 'VISITOR LIST', officeTitle: 'The Hearth',
-                loadingOffice: 'Warming up The Hearth...'
+                memoTitle: 'YESTERDAY NOTES', guestTitle: 'VISITOR LIST', officeTitle: "{agent}'s Office",
+                loadingOffice: "Warming up {agent}'s Office..."
             },
             ja: {
-                controlTitle: 'Cali ステータス',
+                controlTitle: '{agent} ステータス',
                 btnIdle: '待機', btnWork: '作業', btnSync: '同期', btnError: '警報', btnDecor: '部屋を編集',
                 drawerTitle: '部屋編集・アセットサイドバー', drawerClose: '閉じる',
                 authTitle: '編集パスコードを入力', authPlaceholder: 'パスコード入力', authVerify: '認証', authDefaultPassHint: '初期パスコード：1234（いつでも変更を相談可。強固なパス推奨）',
@@ -2293,12 +2293,17 @@
                 assetHintNotInScene: '現在のシーンでこのオブジェクトは未検出です。ファイル差し替えは可能（更新後に反映）',
                 assetHintDefault: '汎用素材：元サイズ・透過・視覚アンカーを維持し、ズレや崩れを防いでください',
                 showCoords: '座標表示', hideCoords: '座標非表示', moveView: '視点移動', lockView: '視点固定',
-                memoTitle: '昨日のメモ', guestTitle: '訪問者リスト', officeTitle: 'The Hearth 🔥',
-                loadingOffice: 'The Hearth を読み込み中...'
+                memoTitle: '昨日のメモ', guestTitle: '訪問者リスト', officeTitle: "{agent}'s Office 🔥",
+                loadingOffice: "{agent}'s Office を読み込み中..."
             }
         };
 
-        function t(key) { return (I18N[uiLang] && I18N[uiLang][key]) || key; }
+        // Main agent name from /openclaw/agents API (defaults to "Star")
+        var mainAgentDisplayName = 'Star';
+        function t(key) {
+            var val = (I18N[uiLang] && I18N[uiLang][key]) || key;
+            return val.replace('{agent}', mainAgentDisplayName);
+        }
         function renderBootLoadingText(percent) {
             const loadingEl = document.getElementById('loading-text');
             if (!loadingEl) return;
@@ -4951,7 +4956,7 @@ function toggleBrokerPanel() {
         function renderOcAgentsInScene() {
             if (!game) return;
             // Filter to non-main agents only (subagents + cron)
-            // SKIP type="thread" — threads are Cali in different channels, not separate characters
+            // SKIP type="thread" — threads are the main agent in different channels, not separate characters
             // SKIP agents with UUID/hash-like names
             var subagents = ocAgentsData.filter(function(a) {
                 if (a.type === 'main') return false;
@@ -5162,8 +5167,13 @@ function toggleBrokerPanel() {
                 }
             });
 
-            // Update main agent (Cali) state based on /openclaw/agents main entry
+            // Update main agent state based on /openclaw/agents main entry
             var mainAgent = ocAgentsData.find(function(a) { return a.type === 'main'; });
+            // Update the global agent display name from API (used by I18N substitution)
+            if (mainAgent && mainAgent.name && mainAgent.name !== mainAgentDisplayName) {
+                mainAgentDisplayName = mainAgent.name;
+                applyLanguage();
+            }
             if (mainAgent && mainAgent.state) {
                 var ocState = mainAgent.state;
                 var ocDetail = mainAgent.detail || '';
@@ -5199,7 +5209,7 @@ function toggleBrokerPanel() {
                             var truncDetail = ocDetail.length > 100 ? ocDetail.substring(0, 97) + '…' : ocDetail;
                             newLine = '[' + stateInfo.name + '] ' + truncDetail;
                         } else {
-                            newLine = '[' + stateInfo.name + '] ' + (stateInfo.name || 'Cali is here, office is open.');
+                            newLine = '[' + stateInfo.name + '] ' + (stateInfo.name || mainAgentDisplayName + ' is here, office is open.');
                         }
                         // Append active thread count if multiple threads are running
                         var activeThreads = mainAgent.activeThreads || [];
@@ -5207,7 +5217,7 @@ function toggleBrokerPanel() {
                             var otherCount = activeThreads.length - 1;
                             newLine += ' (+' + otherCount + ' more thread' + (otherCount !== 1 ? 's' : '') + ')';
                         } else if (activeThreads.length === 1 && mappedState === 'idle') {
-                            // If Cali looks idle but has an active thread, show it
+                            // If main agent looks idle but has an active thread, show it
                             var threadName = activeThreads[0].name || 'thread';
                             newLine = '[Working] ' + threadName;
                         }
@@ -5509,7 +5519,7 @@ function toggleBrokerPanel() {
                 star.setInteractive({ useHandCursor: true });
             }
             star.on('pointerdown', function() {
-                openAgentDetailModal('Cali', 'main');
+                openAgentDetailModal(mainAgentDisplayName, 'main');
             });
 
             // Sofa stays static when idle (no longer the main idle animation)
@@ -5772,7 +5782,7 @@ function toggleBrokerPanel() {
                 starWorking.setInteractive({ useHandCursor: true });
             }
             starWorking.on('pointerdown', function() {
-                openAgentDetailModal('Cali', 'main');
+                openAgentDetailModal(mainAgentDisplayName, 'main');
             });
             // Store reference to starWorking for state logic
             window.starWorking = starWorking;
@@ -6219,6 +6229,7 @@ function toggleBrokerPanel() {
                     try {
                         if (data.officeName) {
                             window.officeNameFromServer = data.officeName;
+                            document.title = data.officeName + ' - Pixel Office';
                             if (window.officePlaqueText && window.officePlaqueText.setText) {
                                 window.officePlaqueText.setText(data.officeName);
                             }

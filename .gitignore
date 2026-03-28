@@ -37,3 +37,23 @@ desktop-pet/src-tauri/icons/*Logo.png
 electron-shell/node_modules/
 electron-shell/release/
 join-keys.json
+dismissed_agents.json
+asset-positions.json
+
+# User backup/customization state
+frontend/backup/
+temp/
+temp-posters/
+
+# Local development/generation scripts & artifacts
+generate_*.py
+splice_*.py
+*_preview.png
+*_v2.png
+*_v3.png
+harbor_chart*.png
+maritime_oddity*.png
+poster_previews*.png
+technical_blueprint*.png
+scripts/briney-keepalive.ps1
+backend/_test_*.py

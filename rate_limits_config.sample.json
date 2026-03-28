@@ -1,0 +1,16 @@
+{
+  "anthropic": {
+    "sessionWindowHours": 5,
+    "fiveHourTokenLimit": 300000,
+    "weeklyTokenLimit": 5000000,
+    "tier": "tier-2",
+    "label": "Anthropic (Claude)"
+  },
+  "openai": {
+    "sessionWindowHours": 5,
+    "fiveHourTokenLimit": 500000,
+    "weeklyTokenLimit": 10000000,
+    "tier": "plus",
+    "label": "OpenAI (Codex)"
+  }
+}
