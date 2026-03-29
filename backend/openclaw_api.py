@@ -2301,12 +2301,26 @@ def _scan_exec_processes():
                 }
 
     # Cross-reference with OS process table
+    # System/infrastructure processes to ignore (not real work)
+    _IGNORE_PROCESSES = {
+        "conhost.exe", "conhost", "OpenConsole.exe", "openconsole",
+        "cmd.exe", "cmd", "wininit.exe", "csrss.exe", "svchost.exe",
+    }
     processes = []
     now = time.time()
     for name, info in found.items():
         pid = info["pid"]
         proc_info = _get_process_info(pid)
         if proc_info is None or not proc_info.get("alive"):
+            continue
+
+        # Skip system/terminal infrastructure processes
+        proc_name = proc_info.get("processName", "")
+        command = proc_info.get("command", "")
+        if proc_name in _IGNORE_PROCESSES:
+            continue
+        # Also skip if the primary command is a terminal emulator
+        if any(skip in command.lower() for skip in ["conhost", "openconsole", "wininit"]):
             continue
 
         runtime_minutes = None
