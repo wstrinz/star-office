@@ -405,9 +405,7 @@
       html += '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">';
       html += '<div class="oc-usage-today-badge">';
       html += '<span class="oc-usage-today-dot ' + todayCls + '"></span>';
-      html += 'Today: ' + fmtCost(today.estimatedCost);
-      if (today.dailyBudget) html += ' / ' + fmtCost(today.dailyBudget);
-      html += ' · ' + (today.sessions || 0) + ' sessions';
+      html += 'Today: ' + fmtCost(today.estimatedCost) + ' &nbsp;·&nbsp; ' + (today.sessions || 0) + ' sessions';
       html += '</div>';
       html += '</div>';
     }
